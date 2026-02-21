@@ -3,102 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crisis Pulse Analyser Pro</title>
+    <title>Crisis Pulse Analyser PRO+</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap');
-        body { font-family: 'Prompt', sans-serif; background-color: #f1f5f9; color: #0f172a; }
+        body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; color: #1e293b; }
         .glass-card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
         
-        /* Markdown Styling */
-        .markdown-body h3 { font-size: 1.25rem; font-weight: 700; color: #1e40af; margin-top: 1.5rem; margin-bottom: 0.5rem; }
-        .markdown-body p { margin-bottom: 0.75rem; line-height: 1.7; }
-        .markdown-body strong { color: #1e40af; background-color: #eff6ff; padding: 2px 4px; border-radius: 4px; }
-        .markdown-body hr { height: 2px; background: linear-gradient(to right, transparent, #e2e8f0, transparent); border: none; margin: 1.5rem 0; }
-        .markdown-body ul { list-style-type: none; padding-left: 0; }
-        .markdown-body li { margin-bottom: 0.5rem; padding-left: 1.5rem; position: relative; }
-        .markdown-body li::before { content: "•"; color: #3b82f6; position: absolute; left: 0; font-weight: bold; }
+        /* Dashboard & Table Styling */
+        .markdown-body table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; background: #f1f5f9; border-radius: 12px; overflow: hidden; }
+        .markdown-body th { background: #3b82f6; color: white; padding: 12px; text-align: left; }
+        .markdown-body td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+        .markdown-body h3 { font-size: 1.5rem; font-weight: 700; color: #1e40af; margin-bottom: 1rem; }
+        .markdown-body strong { color: #2563eb; }
 
-        /* Animations */
-        .progress-container { width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; display: none; }
-        .progress-bar { width: 0%; height: 100%; background: #3b82f6; transition: width 0.3s; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fadeIn { animation: slideUp 0.4s ease-out forwards; }
+        /* Score Gauge */
+        .score-circle { width: 100px; height: 100px; border-radius: 50%; border: 8px solid #e2e8f0; display: flex; items-center; justify-center; position: relative; }
+        .score-fill { position: absolute; top: -8px; left: -8px; width: 100px; height: 100px; border-radius: 50%; border: 8px solid #3b82f6; clip-path: inset(0 0 50% 0); transition: all 1s ease-out; }
     </style>
 </head>
-<body class="flex flex-col items-center py-12 px-6">
+<body class="flex flex-col items-center py-10 px-6">
 
-    <div class="w-full max-w-2xl text-center mb-8">
-        <h1 class="text-4xl font-bold text-blue-600 mb-2">Crisis Pulse Analyser <span class="text-sm bg-blue-100 text-blue-600 px-2 py-1 rounded">PRO</span></h1>
-        <p class="text-slate-500 uppercase tracking-widest text-xs">AI-Powered Communication Crisis Detection</p>
+    <div class="w-full max-w-2xl text-center mb-6">
+        <h1 class="text-3xl font-bold text-blue-600">Crisis Pulse Analyser <span class="text-xs bg-blue-600 text-white px-2 py-1 rounded-full uppercase">Professional</span></h1>
     </div>
 
-    <div class="w-full max-w-2xl glass-card p-6 rounded-3xl mb-6 border-l-8 border-amber-500 bg-amber-50">
-        <div class="flex items-center gap-2 mb-2">
-            <span class="text-xl">🚩</span>
-            <span class="font-bold text-amber-800 tracking-wide">CURRENT MISSION: SITUATION LOG</span>
-        </div>
-        <p class="text-slate-700 leading-relaxed bg-white/50 p-4 rounded-xl border border-amber-100">
-            <strong>สถานการณ์:</strong> เพื่อนในกลุ่มหายตัวไป ไม่ตอบแชท ไม่อ่านไลน์ และพรุ่งนี้มีพรีเซนต์งานกลุ่มตอนเช้า 
-            <br><span class="text-sm text-slate-500 mt-2 block italic">*คุณจะสื่อสารกับเพื่อนในกลุ่มอย่างไรให้มีประสิทธิภาพในภาวะนี้?*</span>
-        </p>
+    <div class="w-full max-w-2xl glass-card p-5 rounded-3xl mb-6 border-l-8 border-amber-400 bg-amber-50/50">
+        <p class="text-sm text-amber-900"><strong>🚩 ภารกิจ:</strong> เพื่อนหายตอนใกล้ส่งงานกลุ่ม พรุ่งนี้พรีเซนต์ คุณจะพูดอย่างไร?</p>
     </div>
 
-    <div class="w-full max-w-2xl glass-card p-8 rounded-3xl mb-6">
-        <label class="text-sm font-semibold text-slate-600 mb-3 block">💬 ป้อนคำพูดที่ต้องการให้ AI วิเคราะห์:</label>
-        <textarea id="userInput" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:bg-white outline-none mb-4 transition-all resize-none text-lg" rows="3" placeholder="พิมพ์ประโยคของคุณที่นี่..."></textarea>
+    <div class="w-full max-w-2xl glass-card p-8 rounded-3xl mb-8">
+        <textarea id="userInput" class="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none mb-4 transition-all text-lg" rows="3" placeholder="พิมพ์สิ่งที่คุณต้องการพูด..."></textarea>
         
-        <div class="progress-container mb-4" id="progressRoot">
-            <div class="progress-bar" id="progressBar"></div>
-        </div>
+        <button onclick="scan()" id="btn" class="w-full bg-blue-600 hover:bg-blue-800 text-white py-4 rounded-2xl font-bold shadow-lg transition-all flex justify-center items-center gap-2">
+            <span id="btnText">วิเคราะห์ประสิทธิภาพการสื่อสาร</span>
+        </button>
 
-        <div class="flex justify-between items-center">
-            <button onclick="clearHistory()" class="text-xs text-slate-400 hover:text-red-500 transition-colors">ล้างประวัติ</button>
-            <button onclick="scan()" id="btn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg active:scale-95 flex items-center gap-2">
-                <span id="btnText">INITIATE SCAN</span>
-                <span class="text-sm opacity-50">⏎</span>
-            </button>
+        <div id="loader" class="hidden mt-4 w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div id="bar" class="h-full bg-blue-500 transition-all duration-500" style="width: 0%"></div>
         </div>
     </div>
 
-    <div id="result" class="hidden w-full max-w-2xl p-8 glass-card rounded-3xl border-l-8 border-blue-500 mb-6 animate-fadeIn">
-        <div class="flex justify-between items-center mb-4 border-b pb-4">
-            <span class="font-bold text-blue-600 flex items-center gap-2">📊 ANALYSIS REPORT</span>
-            <button onclick="copyResult()" class="text-xs bg-slate-100 hover:bg-blue-600 hover:text-white px-3 py-2 rounded-lg transition-all font-semibold">
-                📋 COPY REPORT
-            </button>
+    <div id="result" class="hidden w-full max-w-2xl p-8 glass-card rounded-3xl mb-10 border-t-8 border-blue-600">
+        <div class="flex flex-col md:flex-row items-center gap-8 mb-8 pb-8 border-b border-slate-100">
+            <div class="relative flex items-center justify-center">
+                <svg class="w-32 h-32 transform -rotate-90">
+                    <circle cx="64" cy="64" r="58" stroke="currentColor" stroke-width="10" fill="transparent" class="text-slate-100" />
+                    <circle id="scoreRing" cx="64" cy="64" r="58" stroke="currentColor" stroke-width="10" fill="transparent" stroke-dasharray="364" stroke-dashoffset="364" class="text-blue-600 transition-all duration-1000" />
+                </svg>
+                <div class="absolute text-3xl font-bold" id="scoreValue">0%</div>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-slate-800 mb-1">ระดับความเป็นมืออาชีพ</h2>
+                <p id="scoreLabel" class="text-slate-500">ระบบกำลังประเมินคุณภาพการสื่อสารของคุณ...</p>
+            </div>
         </div>
-        <div id="report" class="markdown-body text-slate-700"></div>
-    </div>
 
-    <div id="historySection" class="w-full max-w-2xl hidden mb-12">
-        <h3 class="text-xs font-bold text-slate-500 mb-4 uppercase tracking-widest">📜 HISTORY LOGS</h3>
-        <div id="historyList" class="space-y-3"></div>
+        <div id="report" class="markdown-body"></div>
+        
+        <button onclick="copyResult()" class="mt-8 w-full py-3 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-bold text-slate-600 transition-all">📋 คัดลอกรายงานฉบับเต็ม</button>
     </div>
 
     <script>
-        // โหลดประวัติและโฟกัสช่องพิมพ์เมื่อเปิดหน้าเว็บ
-        window.onload = () => {
-            displayHistory();
-            document.getElementById('userInput').focus();
-        };
-
         async function scan() {
-            const input = document.getElementById('userInput');
-            const text = input.value.trim();
-            if(!text) return alert("⚠️ กรุณาพิมพ์ข้อความก่อนวิเคราะห์ครับ");
+            const text = document.getElementById('userInput').value.trim();
+            if(!text) return alert("กรุณากรอกข้อความ");
 
             const btn = document.getElementById('btn');
-            const btnText = document.getElementById('btnText');
-            const progressRoot = document.getElementById('progressRoot');
-            const progressBar = document.getElementById('progressBar');
+            const loader = document.getElementById('loader');
+            const bar = document.getElementById('bar');
             const resultBox = document.getElementById('result');
 
             btn.disabled = true;
-            btnText.innerText = "SCANNING...";
-            progressRoot.style.display = 'block';
-            progressBar.style.width = '30%';
+            loader.classList.remove('hidden');
+            bar.style.width = '30%';
 
             try {
                 const res = await fetch('/api/analyze', {
@@ -107,78 +86,50 @@
                     body: JSON.stringify({text: text})
                 });
                 
-                progressBar.style.width = '70%';
+                bar.style.width = '70%';
                 const data = await res.json();
-                if(!res.ok) throw new Error(data.error);
-
-                progressBar.style.width = '100%';
                 
-                const htmlOutput = marked.parse(data.text);
-                document.getElementById('report').innerHTML = htmlOutput;
+                // ดึงคะแนนออกมาจากข้อความ AI (SCORE: 85)
+                const scoreMatch = data.text.match(/SCORE:\s*(\d+)/);
+                const score = scoreMatch ? parseInt(scoreMatch[1]) : 0;
+                
+                // ทำความสะอาดข้อความก่อนแสดง (เอาบรรทัด SCORE ออก)
+                const cleanText = data.text.replace(/SCORE:\s*\d+/, "");
+
+                updateDashboard(score);
+                document.getElementById('report').innerHTML = marked.parse(cleanText);
                 resultBox.classList.remove('hidden');
-
-                saveToHistory(text, data.text);
-
-                // เลื่อนหน้าจอลงไปที่ผลลัพธ์
                 resultBox.scrollIntoView({ behavior: 'smooth' });
 
             } catch (err) {
-                alert("🚨 AI Error: " + err.message);
+                alert("Error: " + err.message);
             } finally {
+                bar.style.width = '100%';
                 setTimeout(() => {
+                    loader.classList.add('hidden');
                     btn.disabled = false;
-                    btnText.innerText = "INITIATE SCAN";
-                    progressRoot.style.display = 'none';
-                    progressBar.style.width = '0%';
                 }, 500);
             }
         }
 
-        // ฟังก์ชันอื่นๆ (History, Copy) ยังคงเดิมแต่ปรับ UI เล็กน้อย
-        function saveToHistory(input, output) {
-            let history = JSON.parse(localStorage.getItem('crisisHistory') || '[]');
-            history.unshift({ input, output, date: new Date().toLocaleString('th-TH') });
-            history = history.slice(0, 5);
-            localStorage.setItem('crisisHistory', JSON.stringify(history));
-            displayHistory();
-        }
+        function updateDashboard(score) {
+            const ring = document.getElementById('scoreRing');
+            const val = document.getElementById('scoreValue');
+            const label = document.getElementById('scoreLabel');
+            
+            // คำนวณวงกลม (เส้นรอบวง 2 * pi * r = 2 * 3.14 * 58 ≈ 364)
+            const offset = 364 - (score / 100 * 364);
+            ring.style.strokeDashoffset = offset;
+            val.innerText = score + "%";
 
-        function displayHistory() {
-            const history = JSON.parse(localStorage.getItem('crisisHistory') || '[]');
-            const list = document.getElementById('historyList');
-            const section = document.getElementById('historySection');
-            if(history.length > 0) {
-                section.classList.remove('hidden');
-                list.innerHTML = history.map((item, index) => `
-                    <div class="glass-card p-4 rounded-2xl text-left cursor-pointer hover:border-blue-300 transition-all border-l-4 border-slate-300" onclick="loadOld('${index}')">
-                        <div class="text-[10px] text-slate-400 font-bold mb-1">${item.date}</div>
-                        <div class="text-sm truncate text-slate-600 italic">"${item.input}"</div>
-                    </div>
-                `).join('');
-            }
-        }
-
-        function loadOld(index) {
-            const history = JSON.parse(localStorage.getItem('crisisHistory'));
-            const item = history[index];
-            document.getElementById('userInput').value = item.input;
-            document.getElementById('report').innerHTML = marked.parse(item.output);
-            document.getElementById('result').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function clearHistory() {
-            if(confirm("ล้างประวัติทั้งหมดใช่หรือไม่?")) {
-                localStorage.removeItem('crisisHistory');
-                location.reload();
-            }
+            if(score >= 80) label.innerText = "🌟 ยอดเยี่ยม! คุณสื่อสารได้อย่างมืออาชีพ";
+            else if(score >= 50) label.innerText = "⚠️ พอใช้ แต่ควรปรับปรุงน้ำเสียงบางส่วน";
+            else label.innerText = "🚨 ระวัง! คำพูดนี้อาจสร้างความขัดแย้งเพิ่ม";
         }
 
         function copyResult() {
             const report = document.getElementById('report').innerText;
-            navigator.clipboard.writeText(report).then(() => {
-                alert("คัดลอกรายงานสำเร็จ! ✅");
-            });
+            navigator.clipboard.writeText(report).then(() => alert("คัดลอกแล้ว! ✅"));
         }
     </script>
 </body>
