@@ -5,22 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crisis Pulse Analyser</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        /* ดึงฟอนต์ Prompt เพื่อให้ภาษาไทยสวยและอ่านง่าย */
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap');
         
         body { 
             font-family: 'Prompt', sans-serif; 
-            background-color: #f8fafc; /* พื้นหลังสีขาวอมเทานิดๆ ให้สบายตา */
-            color: #0f172a; /* ตัวอักษรสีดำ/เทาเข้ม */
+            background-color: #f8fafc; 
+            color: #0f172a; 
         }
         
-        /* ตกแต่งกล่องให้ดูเป็นมิติ */
         .glass-card { 
             background: #ffffff; 
             border: 1px solid #e2e8f0; 
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); 
         }
+
+        /* 🟢 ตกแต่งสไตล์ให้ Markdown ที่ถูกแปลงแล้วดูสวยงาม */
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+            font-weight: 700;
+            color: #1e3a8a; /* สีน้ำเงินเข้ม */
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .markdown-body h3 { font-size: 1.25rem; }
+        .markdown-body h4 { font-weight: 600; color: #2563eb; margin-top: 1rem; font-size: 1.1rem; }
+        .markdown-body ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
+        .markdown-body li { margin-bottom: 0.25rem; }
+        .markdown-body hr { border-color: #e2e8f0; margin: 1.5rem 0; }
+        .markdown-body strong { color: #0f172a; font-weight: 700; }
+        .markdown-body p { margin-bottom: 0.75rem; }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-6 text-center">
@@ -43,13 +57,13 @@
         <label class="text-sm font-semibold text-emerald-600 mb-4 flex items-center gap-2">
             📊 ผลการประเมินจากระบบ
         </label>
-        <div id="report" class="text-base whitespace-pre-line text-slate-700 leading-relaxed"></div>
+        <div id="report" class="text-base text-slate-700 leading-relaxed markdown-body"></div>
     </div>
 
     <script>
         async function scan() {
             const inputField = document.getElementById('userInput');
-            const text = inputField.value.trim(); // .trim() ช่วยตัดช่องว่างซ้ายขวาทิ้ง ป้องกันการพิมพ์แค่ Spacebar
+            const text = inputField.value.trim();
             const btn = document.getElementById('btn');
             const btnText = document.getElementById('btnText');
             const resultBox = document.getElementById('result');
@@ -57,7 +71,6 @@
 
             if(!text) return alert("⚠️ กรุณากรอกข้อความก่อนทำการวิเคราะห์ครับ");
             
-            // ปรับ UI สถานะกำลังโหลด และล็อคปุ่ม
             btnText.innerText = "⏳ กำลังประมวลผล...";
             btn.disabled = true;
             btn.classList.add('opacity-70', 'cursor-not-allowed');
@@ -65,7 +78,6 @@
             resultBox.classList.add('hidden');
 
             try {
-                // ส่งข้อมูลไปหา Vercel หลังบ้าน
                 const res = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -76,19 +88,14 @@
                 
                 if(!res.ok) throw new Error(data.error || "ระบบขัดข้อง");
 
-                // แปลง **ตัวหนา** เป็นแท็ก <b> และใส่คลาสให้สีดำเข้มเด่นขึ้น
-                let formattedText = data.text.replace(/\*\*(.*?)\*\*/g, '<b class="text-slate-900 font-bold">$1</b>');
+                // 🟢 ใช้เครื่องมือ marked.parse() แปลงข้อความ AI ให้เป็น HTML อัตโนมัติ
+                reportText.innerHTML = marked.parse(data.text);
                 
-                // นำข้อความที่แปลงแล้วไปแสดงผล
-                reportText.innerHTML = formattedText;
-                
-                // โชว์กล่องผลลัพธ์
                 resultBox.classList.remove('hidden');
 
             } catch (err) {
                 alert("🚨 ผิดพลาด: " + err.message);
             } finally {
-                // คืนค่า UI กลับเป็นปกติเมื่อเสร็จสิ้น
                 btnText.innerText = "✨ เริ่มการวิเคราะห์";
                 btn.disabled = false;
                 btn.classList.remove('opacity-70', 'cursor-not-allowed');
