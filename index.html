@@ -13,33 +13,34 @@
         body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; color: #1e293b; }
         .glass-card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
         
-        /* Dashboard & Table Styling */
-        .markdown-body table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; background: #f1f5f9; border-radius: 12px; overflow: hidden; }
-        .markdown-body th { background: #3b82f6; color: white; padding: 12px; text-align: left; }
-        .markdown-body td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
-        .markdown-body h3 { font-size: 1.5rem; font-weight: 700; color: #1e40af; margin-bottom: 1rem; }
-        .markdown-body strong { color: #2563eb; }
+        /* Markdown Styling - ปรับให้รองรับตารางใน iPad */
+        .markdown-body table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; overflow-x: auto; display: block; }
+        .markdown-body th { background: #3b82f6; color: white; padding: 10px; text-align: left; min-width: 120px; }
+        .markdown-body td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
+        .markdown-body h3 { font-size: 1.3rem; font-weight: 700; color: #1e40af; margin-bottom: 1rem; }
+        .markdown-body strong { color: #2563eb; background: #eff6ff; padding: 0 4px; border-radius: 4px; }
 
-        /* Score Gauge */
-        .score-circle { width: 100px; height: 100px; border-radius: 50%; border: 8px solid #e2e8f0; display: flex; items-center; justify-center; position: relative; }
-        #scoreRing { transition: stroke-dashoffset 1s ease-out; }
+        /* Smooth Transition for Score Ring */
+        #scoreRing { transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
-<body class="flex flex-col items-center py-10 px-6">
+<body class="flex flex-col items-center py-6 md:py-12 px-4 md:px-6">
 
-    <div class="w-full max-w-2xl text-center mb-6">
-        <h1 class="text-3xl font-bold text-blue-600">Crisis Pulse Analyser <span class="text-xs bg-blue-600 text-white px-2 py-1 rounded-full uppercase">Professional</span></h1>
+    <div class="w-full max-w-3xl text-center mb-8">
+        <h1 class="text-2xl md:text-4xl font-bold text-blue-600 mb-2">Crisis Pulse Analyser <span class="text-xs bg-blue-600 text-white px-2 py-1 rounded-full uppercase align-middle">PRO</span></h1>
+        <p class="text-slate-500 uppercase tracking-widest text-[10px] md:text-xs">Professional Crisis Communication Analysis</p>
     </div>
 
-    <div class="w-full max-w-2xl glass-card p-5 rounded-3xl mb-6 border-l-8 border-amber-400 bg-amber-50/50">
-        <p class="text-sm text-amber-900"><strong>🚩 ภารกิจ:</strong> เพื่อนหายตอนใกล้ส่งงานกลุ่ม พรุ่งนี้พรีเซนต์ คุณจะพูดอย่างไร?</p>
+    <div class="w-full max-w-3xl glass-card p-5 rounded-2xl md:rounded-3xl mb-6 border-l-8 border-amber-400 bg-amber-50/50">
+        <p class="text-sm md:text-base text-amber-900 leading-relaxed"><strong>🚩 ภารกิจ:</strong> เพื่อนหายตอนใกล้ส่งงานกลุ่ม พรุ่งนี้พรีเซนต์ คุณจะพูดอย่างไร?</p>
     </div>
 
-    <div class="w-full max-w-2xl glass-card p-8 rounded-3xl mb-8">
-        <textarea id="userInput" class="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none mb-4 transition-all text-lg" rows="3" placeholder="พิมพ์สิ่งที่คุณต้องการพูด..."></textarea>
+    <div class="w-full max-w-3xl glass-card p-6 md:p-8 rounded-3xl mb-8">
+        <label class="text-xs font-bold text-slate-400 mb-2 block uppercase tracking-wider">Data Input</label>
+        <textarea id="userInput" class="w-full p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none mb-4 transition-all text-base md:text-lg min-h-[120px]" placeholder="พิมพ์สิ่งที่คุณต้องการพูดเพื่อวิเคราะห์..."></textarea>
         
-        <button onclick="scan()" id="btn" class="w-full bg-blue-600 hover:bg-blue-800 text-white py-4 rounded-2xl font-bold shadow-lg transition-all flex justify-center items-center gap-2">
-            <span id="btnText">วิเคราะห์ประสิทธิภาพการสื่อสาร</span>
+        <button onclick="scan()" id="btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-lg transition-all flex justify-center items-center gap-2 text-base md:text-lg">
+            <span id="btnText">วิเคราะห์ประสิทธิภาพ</span>
         </button>
 
         <div id="loader" class="hidden mt-4 w-full h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -47,22 +48,23 @@
         </div>
     </div>
 
-    <div id="result" class="hidden w-full max-w-2xl p-8 glass-card rounded-3xl mb-10 border-t-8 border-blue-600">
-        <div id="capture-area"> <div class="flex flex-col md:flex-row items-center gap-8 mb-8 pb-8 border-b border-slate-100">
-                <div class="relative flex items-center justify-center">
-                    <svg class="w-32 h-32 transform -rotate-90">
-                        <circle cx="64" cy="64" r="58" stroke="currentColor" stroke-width="10" fill="transparent" class="text-slate-100" />
-                        <circle id="scoreRing" cx="64" cy="64" r="58" stroke="currentColor" stroke-width="10" fill="transparent" stroke-dasharray="364" stroke-dashoffset="364" class="text-blue-600" />
+    <div id="result" class="hidden w-full max-w-3xl p-6 md:p-10 glass-card rounded-3xl mb-10 border-t-8 border-blue-600 overflow-hidden">
+        <div id="capture-area">
+            <div class="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10 mb-8 pb-8 border-b border-slate-100">
+                <div class="relative flex items-center justify-center flex-shrink-0">
+                    <svg class="w-32 h-32 md:w-40 md:h-40 transform -rotate-90">
+                        <circle cx="50%" cy="50%" r="45%" stroke="currentColor" stroke-width="10" fill="transparent" class="text-slate-100" />
+                        <circle id="scoreRing" cx="50%" cy="50%" r="45%" stroke="currentColor" stroke-width="10" fill="transparent" stroke-dasharray="364" stroke-dashoffset="364" class="text-blue-600" />
                     </svg>
-                    <div class="absolute text-3xl font-bold" id="scoreValue">0%</div>
+                    <div class="absolute text-3xl md:text-4xl font-bold text-slate-800" id="scoreValue">0%</div>
                 </div>
-                <div>
-                    <h2 class="text-xl font-bold text-slate-800 mb-1 text-center md:text-left">ระดับความเป็นมืออาชีพ</h2>
-                    <p id="scoreLabel" class="text-slate-500 text-center md:text-left">ระบบกำลังประเมินคุณภาพการสื่อสารของคุณ...</p>
+                <div class="text-center md:text-left pt-2">
+                    <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-2">ระดับความเป็นมืออาชีพ</h2>
+                    <p id="scoreLabel" class="text-slate-500 text-sm md:text-base leading-relaxed">ระบบประเมินคุณภาพการสื่อสารสำเร็จ</p>
                 </div>
             </div>
 
-            <div id="report" class="markdown-body"></div>
+            <div id="report" class="markdown-body text-slate-700 text-sm md:text-base"></div>
         </div>
         
         <div class="flex flex-col sm:flex-row gap-3 mt-8">
@@ -77,7 +79,8 @@
 
     <script>
         async function scan() {
-            const text = document.getElementById('userInput').value.trim();
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
             if(!text) return alert("กรุณากรอกข้อความ");
 
             const btn = document.getElementById('btn');
@@ -106,10 +109,12 @@
                 updateDashboard(score);
                 document.getElementById('report').innerHTML = marked.parse(cleanText);
                 resultBox.classList.remove('hidden');
-                resultBox.scrollIntoView({ behavior: 'smooth' });
+                
+                // เลื่อนหน้าจอลงมาแบบนุ่มนวล
+                setTimeout(() => resultBox.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
 
             } catch (err) {
-                alert("Error: " + err.message);
+                alert("เกิดข้อผิดพลาด: " + err.message);
             } finally {
                 bar.style.width = '100%';
                 setTimeout(() => {
@@ -124,13 +129,17 @@
             const val = document.getElementById('scoreValue');
             const label = document.getElementById('scoreLabel');
             
-            const offset = 364 - (score / 100 * 364);
+            // เส้นรอบวงคำนวณจาก r=45% ของ w=160 (iPad) ประมาณ 280-360
+            const circumference = 2 * Math.PI * 58; 
+            const offset = circumference - (score / 100 * circumference);
+            
+            ring.style.strokeDasharray = circumference;
             ring.style.strokeDashoffset = offset;
             val.innerText = score + "%";
 
-            if(score >= 80) label.innerText = "🌟 ยอดเยี่ยม! คุณสื่อสารได้อย่างมืออาชีพ";
-            else if(score >= 50) label.innerText = "⚠️ พอใช้ แต่ควรปรับปรุงน้ำเสียงบางส่วน";
-            else label.innerText = "🚨 ระวัง! คำพูดนี้อาจสร้างความขัดแย้งเพิ่ม";
+            if(score >= 80) label.innerText = "🌟 ยอดเยี่ยม! คุณสื่อสารได้อย่างมืออาชีพและเข้าอกเข้าใจเพื่อนร่วมทีม";
+            else if(score >= 50) label.innerText = "⚠️ พอใช้! แต่คำพูดบางส่วนอาจดูเป็นการตำหนิมากกว่าการหาทางออก";
+            else label.innerText = "🚨 ระวัง! คำพูดนี้มีความเสี่ยงสูงที่จะทำให้เกิดความขัดแย้งในภาวะวิกฤต";
         }
 
         function copyResult() {
@@ -138,34 +147,29 @@
             navigator.clipboard.writeText(report).then(() => alert("คัดลอกรายงานสำเร็จ! ✅"));
         }
 
-        // 🟢 ฟังก์ชันสำหรับบันทึกผลเป็นรูปภาพ
         function exportImage() {
-            const area = document.getElementById('result'); // เลือกทั้งกล่องผลลัพธ์
+            const area = document.getElementById('result');
             const exportBtnText = document.getElementById('exportText');
-            
-            // ซ่อนปุ่มก่อนถ่ายรูป เพื่อไม่ให้ปุ่มติดเข้าไปในรูป
             const buttons = area.querySelectorAll('button');
-            buttons.forEach(b => b.style.opacity = '0');
             
+            buttons.forEach(b => b.style.opacity = '0');
             exportBtnText.innerText = "กำลังสร้างรูปภาพ...";
 
             html2canvas(area, {
-                backgroundColor: "#ffffff",
-                scale: 2, // เพิ่มความชัด
+                backgroundColor: "#f8fafc",
+                scale: 2,
                 logging: false,
-                useCORS: true,
-                borderRadius: 24
+                useCORS: true
             }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = `Crisis-Report-${new Date().getTime()}.png`;
                 link.href = canvas.toDataURL("image/png");
                 link.click();
                 
-                // คืนค่าปุ่มกลับมา
                 buttons.forEach(b => b.style.opacity = '1');
                 exportBtnText.innerText = "บันทึกเป็นรูปภาพ";
             }).catch(err => {
-                alert("ไม่สามารถบันทึกภาพได้: " + err.message);
+                alert("บันทึกภาพไม่สำเร็จ: " + err.message);
                 buttons.forEach(b => b.style.opacity = '1');
                 exportBtnText.innerText = "บันทึกเป็นรูปภาพ";
             });
