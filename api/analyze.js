@@ -5,9 +5,9 @@ export default async function handler(req, res) {
     }
 
     const userInput = req.body.text;
-    const apiKey = process.env.GOOGLE_API_KEY; // กุญแจซ่อนอยู่ที่ Vercel
+    const apiKey = process.env.GOOGLE_API_KEY; 
 
-    if (!apiKey) return res.status(500).json({ error: "ไม่พบ API Key ในระบบหลังบ้าน" });
+    if (!apiKey) return res.status(500).json({ error: "ไม่พบ API Key ในระบบหลังบ้าน (Vercel)" });
     if (!userInput) return res.status(400).json({ error: "กรุณากรอกข้อความ" });
 
     // 1. ตรวจคำต้องห้าม
@@ -20,14 +20,17 @@ export default async function handler(req, res) {
         }
     }
 
-    // 2. เรียกหา Gemini AI
+    // 2. เรียกหา Gemini AI (ใช้รุ่น 1.5-pro)
     try {
         const prompt = `คุณคือระบบ AI วิเคราะห์ทักษะการสื่อสารในภาวะวิกฤต 
 สถานการณ์: [เพื่อนในกลุ่มหายตัวไป ไม่อ่านไลน์ พรุ่งนี้มีพรีเซนต์]
 คำพูดผู้เล่น: "${userInput}"
 งานของคุณ: ประเมินความเป็นมืออาชีพ ให้คะแนน 0-100% พร้อมคำแนะนำ ตอบเป็นภาษาไทย ปิดท้ายด้วย [จบการวิเคราะห์] ห้ามชวนคุย`;
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        // เปลี่ยนเป็น gemini-1.5-pro และใช้ v1beta
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
+
+        const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -38,6 +41,7 @@ export default async function handler(req, res) {
         const data = await response.json();
 
         if (!response.ok) {
+            // ถ้า Error จะส่งข้อความจาก Google กลับไปให้หน้าเว็บแสดงผล
             throw new Error(data.error?.message || "Google API Error");
         }
 
