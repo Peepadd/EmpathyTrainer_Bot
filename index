@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crisis Pulse Analyser</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style> 
+        body { background-color: #0a0e17; color: white; font-family: sans-serif; } 
+        .cyber-card { border: 1px solid #1e293b; background: rgba(17, 24, 39, 0.8); } 
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-6 text-center">
+    <h1 class="text-3xl font-bold text-cyan-400 mb-2 uppercase tracking-widest" style="text-shadow: 0 0 10px #22d3ee;">CRISIS PULSE ANALYSER</h1>
+    <p class="text-xs text-cyan-600 mb-8 tracking-widest">ADVANCED SENTIMENT & CRISIS DETECTION SYSTEM</p>
+
+    <div class="w-full max-w-lg cyber-card p-6 rounded-lg text-left border-t-2 border-cyan-500">
+        <label class="text-xs text-cyan-500 tracking-widest mb-2 block">• DATA INPUT TERMINAL</label>
+        <textarea id="userInput" class="w-full p-4 bg-black border border-cyan-900 rounded focus:outline-none focus:border-cyan-400 text-cyan-50 mb-4" rows="4" placeholder="พิมพ์ข้อความของคุณ..."></textarea>
+        <div class="flex justify-end">
+            <button onclick="scan()" id="btn" class="bg-cyan-900 hover:bg-cyan-700 text-cyan-100 border border-cyan-400 px-6 py-2 rounded font-bold tracking-widest transition-all">INITIATE SCAN</button>
+        </div>
+    </div>
+
+    <div id="result" class="hidden w-full max-w-lg mt-6 p-6 cyber-card rounded-lg border-l-4 border-cyan-500 text-left">
+        <label class="text-xs text-cyan-500 tracking-widest mb-4 block">• SYSTEM REPORT</label>
+        <div id="report" class="text-sm whitespace-pre-line text-gray-300 leading-relaxed"></div>
+    </div>
+
+    <script>
+        async function scan() {
+            const text = document.getElementById('userInput').value;
+            const btn = document.getElementById('btn');
+            const resultBox = document.getElementById('result');
+            const reportText = document.getElementById('report');
+
+            if(!text) return alert("กรุณากรอกข้อความ");
+            
+            btn.innerText = "SCANNING...";
+            btn.disabled = true;
+            resultBox.classList.add('hidden');
+
+            try {
+                // เรียกไปที่ระบบหลังบ้านของ Vercel
+                const res = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text: text})
+                });
+                
+                const data = await res.json();
+                
+                if(!res.ok) throw new Error(data.error || "ระบบขัดข้อง");
+
+                reportText.innerText = data.text;
+                resultBox.classList.remove('hidden');
+            } catch (err) {
+                alert("🚨 ผิดพลาด: " + err.message);
+            } finally {
+                btn.innerText = "INITIATE SCAN";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
