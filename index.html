@@ -12,13 +12,12 @@
         body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-font-smoothing: antialiased; }
         .glass-card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.5s ease; }
         
-        /* Markdown Style - Optimized for Safari/iPad */
+        /* ตาราง Markdown สำหรับ iPad/Mobile */
         .markdown-body table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.85rem; border-radius: 12px; overflow: hidden; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .markdown-body th { background: #2563eb; color: white; padding: 12px; text-align: left; min-width: 140px; }
         .markdown-body td { padding: 12px; border-bottom: 1px solid #e2e8f0; background: white; }
-        .markdown-body strong { color: #2563eb; font-weight: 700; }
 
-        /* Progress Bar & SVG Animation */
+        /* Safari Animations */
         #bar { will-change: width; transition: width 0.4s ease; -webkit-transition: width 0.4s ease; }
         #scoreRing { transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1); -webkit-transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1); stroke-linecap: round; }
         
@@ -32,16 +31,16 @@
 <body class="flex flex-col items-center py-8 px-4 md:px-8">
 
     <div class="w-full max-w-3xl text-center mb-6">
-        <h1 class="text-3xl font-bold text-blue-600 mb-1">Crisis Pulse Analyser <span class="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full uppercase align-middle">PRO</span></h1>
-        <p class="text-slate-400 uppercase tracking-tighter text-[10px]">Professional Crisis Analysis System</p>
+        <h1 class="text-3xl font-bold text-blue-600 mb-1">Crisis Pulse Analyser <span class="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full uppercase">PRO</span></h1>
+        <p class="text-slate-400 uppercase tracking-tighter text-[10px]">Professional Crisis Communication Analysis</p>
     </div>
 
     <div class="w-full max-w-3xl glass-card p-5 rounded-2xl mb-6 border-l-[6px] border-amber-400 bg-amber-50/30">
-        <p class="text-sm md:text-base text-amber-900 leading-relaxed italic">🚩 ภารกิจ: เพื่อนหายตอนใกล้ส่งงานกลุ่ม พรุ่งนี้พรีเซนต์ คุณจะพูดอย่างไร?</p>
+        <p class="text-sm md:text-base text-amber-900 italic">🚩 ภารกิจ: เพื่อนหายตอนใกล้ส่งงานกลุ่ม พรุ่งนี้พรีเซนต์ คุณจะพูดอย่างไร?</p>
     </div>
 
     <div class="w-full max-w-3xl glass-card p-6 md:p-8 rounded-[2rem] mb-8">
-        <textarea id="userInput" class="w-full p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none mb-4 transition-all text-base md:text-lg min-h-[100px]" placeholder="พิมพ์ประโยคที่ต้องการวิเคราะห์..."></textarea>
+        <textarea id="userInput" class="w-full p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none mb-4 text-base md:text-lg min-h-[100px]" placeholder="พิมพ์ประโยคที่ต้องการวิเคราะห์..."></textarea>
         <button onclick="scan()" id="btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-md transition-all active:scale-[0.98]">วิเคราะห์ประสิทธิภาพการสื่อสาร</button>
         
         <div id="loader" class="hidden mt-6 w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -62,7 +61,7 @@
                 <div class="text-center md:text-left">
                     <div id="toneBadge" class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase mb-2 bg-slate-100 text-slate-500">DETECTING TONE...</div>
                     <h2 class="text-xl font-bold text-slate-800 mb-1">ระดับความเป็นมืออาชีพ</h2>
-                    <p id="scoreLabel" class="text-slate-500 text-sm leading-relaxed">กำลังประมวลผลข้อมูล...</p>
+                    <p id="scoreLabel" class="text-slate-500 text-sm leading-relaxed">ผลการวิเคราะห์จาก AI</p>
                 </div>
             </div>
             <div id="report" class="markdown-body text-slate-700"></div>
@@ -70,14 +69,14 @@
         
         <div class="flex flex-col sm:flex-row gap-4 mt-10">
             <button onclick="copyResult()" class="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm font-bold text-slate-600 border border-slate-200 transition-all">📋 คัดลอกรายงาน</button>
-            <button onclick="exportImage()" id="exportBtn" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm font-bold text-white shadow-lg transition-all flex justify-center items-center gap-2">📸 บันทึกเป็นรูปภาพ</button>
+            <button onclick="exportImage()" id="exportBtn" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm font-bold text-white shadow-lg flex justify-center items-center gap-2">📸 บันทึกเป็นรูปภาพ</button>
         </div>
     </div>
 
     <div id="historySection" class="w-full max-w-3xl hidden mb-20">
         <div class="flex justify-between items-center mb-4 px-2">
             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">📜 ประวัติล่าสุด</h3>
-            <button onclick="clearHistory()" class="text-[10px] text-red-400 hover:text-red-600 font-bold uppercase transition-colors">ล้างทั้งหมด</button>
+            <button onclick="clearHistory()" class="text-[10px] text-red-400 font-bold uppercase">ล้างทั้งหมด</button>
         </div>
         <div id="historyList" class="space-y-3"></div>
     </div>
@@ -88,12 +87,11 @@
         async function scan() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
-            if(!text) return alert("กรุณากรอกข้อความก่อนวิเคราะห์");
+            if(!text) return alert("กรุณากรอกข้อความก่อน");
 
             const btn = document.getElementById('btn');
             const loader = document.getElementById('loader');
             const bar = document.getElementById('bar');
-            const resultBox = document.getElementById('result');
 
             // --- Reset State ---
             btn.disabled = true;
@@ -116,33 +114,30 @@
                 
                 const data = await res.json();
 
-                // 🔴 Smart Error Handling
+                // 🔴 Smart Error Handling (แก้ปัญหา Quota)
                 if (!res.ok) {
                     if (res.status === 429) {
-                        throw new Error("ตอนนี้คนใช้งานเยอะเกินไป (Quota Limit) กรุณารอสัก 30 วินาทีแล้วลองใหม่นะครับ");
+                        throw new Error("ตอนนี้คนใช้เยอะเกินไป (Quota Limit) กรุณารอสัก 30 วินาทีแล้วกดใหม่นะครับ");
                     }
-                    throw new Error(data.error || "เกิดข้อผิดพลาดในการเชื่อมต่อกับ AI");
+                    throw new Error(data.error || "เกิดข้อผิดพลาดในการเชื่อมต่อ");
                 }
 
-                bar.style.width = '70%';
-
+                bar.style.width = '100%';
+                
                 const score = (data.text.match(/SCORE:\s*(\d+)/) || [0, 0])[1];
                 const tone = (data.text.match(/TONE:\s*(\w+)/) || [0, "Neutral"])[1];
                 const cleanText = data.text.replace(/SCORE:\s*\d+/, "").replace(/TONE:\s*\w+/, "");
 
-                bar.style.width = '100%';
                 updateUI(parseInt(score), tone, cleanText);
                 saveToHistory(text, parseInt(score), tone, cleanText);
-                
-                resultBox.classList.remove('hidden');
-                setTimeout(() => resultBox.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+                document.getElementById('result').classList.remove('hidden');
+                setTimeout(() => document.getElementById('result').scrollIntoView({ behavior: 'smooth' }), 300);
 
             } catch (err) {
-                // แจ้งเตือนข้อผิดพลาด
                 alert("⚠️ " + err.message);
                 bar.style.width = '0%';
             } finally {
-                // คืนสถานะปุ่มเสมอ ป้องกันการค้าง
+                // คืนสถานะปุ่มเสมอ ไม่ให้ค้าง
                 setTimeout(() => { 
                     loader.classList.add('hidden'); 
                     btn.disabled = false; 
@@ -153,91 +148,69 @@
 
         function updateUI(score, tone, report) {
             const ring = document.getElementById('scoreRing');
-            const val = document.getElementById('scoreValue');
-            const label = document.getElementById('scoreLabel');
-            const resultBox = document.getElementById('result');
-            const badge = document.getElementById('toneBadge');
-
             const radius = ring.r.baseVal.value;
             const circumference = 2 * Math.PI * radius;
             ring.style.strokeDasharray = circumference;
             ring.style.strokeDashoffset = circumference - (score / 100 * circumference);
-            val.innerText = score + "%";
+            document.getElementById('scoreValue').innerText = score + "%";
 
-            resultBox.className = "w-full max-w-3xl p-6 md:p-10 glass-card rounded-[2rem] mb-12 border-t-[10px] transition-all duration-500";
-            
+            const resultBox = document.getElementById('result');
+            const badge = document.getElementById('toneBadge');
             const tones = {
                 'Aggressive': { class: 'tone-aggressive', label: '🔴 ก้าวร้าว/กดดัน', badge: 'bg-red-100 text-red-600' },
                 'Professional': { class: 'tone-professional', label: '🟢 มืออาชีพ/สุภาพ', badge: 'bg-emerald-100 text-emerald-600' },
                 'Passive': { class: 'tone-passive', label: '⚪ นิ่งเฉย/เพิกเฉย', badge: 'bg-slate-100 text-slate-600' },
                 'Neutral': { class: 'tone-neutral', label: '🔵 ปกติ/ทั่วไป', badge: 'bg-blue-100 text-blue-600' }
             };
-
             const selected = tones[tone] || tones['Neutral'];
-            resultBox.classList.add(selected.class);
+            resultBox.className = "w-full max-w-3xl p-6 md:p-10 glass-card rounded-[2rem] mb-12 border-t-[10px] " + selected.class;
             badge.innerText = selected.label;
-            badge.className = `inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase mb-2 ${selected.badge}`;
-
-            label.innerText = score >= 80 ? "🌟 ยอดเยี่ยม! สื่อสารได้อย่างมืออาชีพ" : score >= 50 ? "⚠️ พอใช้! ควรปรับน้ำเสียง" : "🚨 ระวัง! คำพูดนี้เสี่ยงต่อความขัดแย้ง";
+            badge.className = "inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase mb-2 " + selected.badge;
             document.getElementById('report').innerHTML = marked.parse(report);
         }
 
         function saveToHistory(input, score, tone, report) {
             let history = JSON.parse(localStorage.getItem('crisisHistory') || '[]');
             history.unshift({ input, score, tone, report, date: new Date().toLocaleString('th-TH') });
-            history = history.slice(0, 5);
-            localStorage.setItem('crisisHistory', JSON.stringify(history));
+            localStorage.setItem('crisisHistory', JSON.stringify(history.slice(0, 5)));
             displayHistory();
         }
 
         function displayHistory() {
             const history = JSON.parse(localStorage.getItem('crisisHistory') || '[]');
             const list = document.getElementById('historyList');
-            const section = document.getElementById('historySection');
             if(history.length > 0) {
-                section.classList.remove('hidden');
+                document.getElementById('historySection').classList.remove('hidden');
                 list.innerHTML = history.map((item, index) => `
                     <div class="glass-card p-4 rounded-xl cursor-pointer hover:bg-slate-50 border-l-4 transition-all" onclick="loadHistory(${index})">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-[10px] text-slate-400 font-bold">${item.date}</span>
-                            <span class="text-xs font-bold text-blue-600">${item.score}%</span>
+                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-400">
+                            <span>${item.date}</span><span>${item.score}%</span>
                         </div>
-                        <div class="text-sm text-slate-600 truncate italic">"${item.input}"</div>
+                        <div class="text-sm text-slate-600 truncate mt-1 italic">"${item.input}"</div>
                     </div>
                 `).join('');
             }
         }
 
         function loadHistory(index) {
-            const history = JSON.parse(localStorage.getItem('crisisHistory'));
-            const item = history[index];
+            const item = JSON.parse(localStorage.getItem('crisisHistory'))[index];
             document.getElementById('userInput').value = item.input;
             updateUI(item.score, item.tone, item.report);
             document.getElementById('result').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function clearHistory() {
-            if(confirm("ลบประวัติการวิเคราะห์ทั้งหมด?")) {
-                localStorage.removeItem('crisisHistory');
-                location.reload();
-            }
-        }
+        function clearHistory() { if(confirm("ล้างประวัติ?")) { localStorage.removeItem('crisisHistory'); location.reload(); } }
 
         function exportImage() {
             const area = document.getElementById('result');
             const btn = document.getElementById('exportBtn');
-            btn.innerText = "⏳ กำลังสร้างรูปภาพ...";
-            html2canvas(area, {
-                backgroundColor: "#ffffff",
-                scale: 3,
-                useCORS: true,
-                onclone: (clonedDoc) => {
-                    const el = clonedDoc.getElementById('result');
-                    el.style.padding = "40px"; el.style.borderRadius = "0";
-                    el.querySelectorAll('button').forEach(b => b.style.display = 'none');
-                }
-            }).then(canvas => {
+            btn.innerText = "⏳ กำลังสร้างรูป...";
+            html2canvas(area, { backgroundColor: "#ffffff", scale: 3, useCORS: true, onclone: (doc) => {
+                const el = doc.getElementById('result');
+                el.style.padding = "40px"; el.style.borderRadius = "0";
+                el.querySelectorAll('button').forEach(b => b.style.display = 'none');
+            }}).then(canvas => {
                 const link = document.createElement('a');
                 link.download = `Crisis-Report-${Date.now()}.png`;
                 link.href = canvas.toDataURL("image/png");
@@ -246,10 +219,7 @@
             });
         }
 
-        function copyResult() {
-            const report = document.getElementById('report').innerText;
-            navigator.clipboard.writeText(report).then(() => alert("คัดลอกรายงานสำเร็จ! ✅"));
-        }
+        function copyResult() { navigator.clipboard.writeText(document.getElementById('report').innerText).then(() => alert("คัดลอกแล้ว ✅")); }
     </script>
 </body>
 </html>
