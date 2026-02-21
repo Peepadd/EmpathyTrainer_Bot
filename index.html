@@ -12,18 +12,15 @@
         body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-font-smoothing: antialiased; }
         .glass-card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.5s ease; }
         
-        .markdown-body table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.85rem; border-radius: 12px; overflow: hidden; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .markdown-body th { background: #2563eb; color: white; padding: 12px; text-align: left; min-width: 140px; }
-        .markdown-body td { padding: 12px; border-bottom: 1px solid #e2e8f0; background: white; }
-
-        #bar { will-change: width; transition: width 0.4s ease; -webkit-transition: width 0.4s ease; }
-        #scoreRing { transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1); -webkit-transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1); stroke-linecap: round; }
-        
         /* Modal Animation */
         .modal-enter { opacity: 0; transform: scale(0.9); }
         .modal-active { opacity: 1; transform: scale(1); transition: all 0.3s ease-out; }
 
-        /* Tone Styles */
+        /* Progress Bar Animation */
+        #bar { will-change: width; transition: width 0.4s ease; -webkit-transition: width 0.4s ease; }
+        #scoreRing { transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1); stroke-linecap: round; }
+
+        /* Tone Themes */
         .tone-aggressive { border-top-color: #ef4444 !important; border-top-width: 12px !important; }
         .tone-professional { border-top-color: #10b981 !important; border-top-width: 12px !important; }
         .tone-passive { border-top-color: #64748b !important; border-top-width: 12px !important; }
@@ -36,10 +33,10 @@
         <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-8 text-center modal-enter transition-all" id="modalContainer">
             <div class="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
             </div>
-            <h3 class="text-xl font-bold text-slate-800 mb-2">แจ้งเตือนจากระบบ</h3>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">แจ้งเตือนระบบ</h3>
             <p id="modalMsg" class="text-slate-500 text-sm leading-relaxed mb-8 whitespace-pre-line">ข้อความแจ้งเตือน...</p>
             <button onclick="closeModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-95">รับทราบ</button>
         </div>
@@ -47,16 +44,12 @@
 
     <div class="w-full max-w-3xl text-center mb-6">
         <h1 class="text-3xl font-bold text-blue-600 mb-1">Crisis Pulse Analyser <span class="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full uppercase">PRO</span></h1>
-        <p class="text-slate-400 uppercase tracking-tighter text-[10px]">Professional Crisis Communication Analysis</p>
-    </div>
-
-    <div class="w-full max-w-3xl glass-card p-5 rounded-2xl mb-6 border-l-[6px] border-amber-400 bg-amber-50/30">
-        <p class="text-sm md:text-base text-amber-900 italic">🚩 ภารกิจ: เพื่อนหายตอนใกล้ส่งงานกลุ่ม พรุ่งนี้พรีเซนต์ คุณจะพูดอย่างไร?</p>
+        <p class="text-slate-400 uppercase tracking-tighter text-[10px]">Professional Crisis Communication System</p>
     </div>
 
     <div class="w-full max-w-3xl glass-card p-6 md:p-8 rounded-[2rem] mb-8">
-        <textarea id="userInput" class="w-full p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none mb-4 text-base md:text-lg min-h-[110px]" placeholder="พิมพ์ประโยคที่คุณต้องการพูดในสถานการณ์นี้..."></textarea>
-        <button onclick="scan()" id="btn" class="w-full bg-blue-600 hover:bg-blue-800 text-white py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]">วิเคราะห์ประสิทธิภาพการสื่อสาร</button>
+        <textarea id="userInput" class="w-full p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none mb-4 text-base md:text-lg min-h-[110px]" placeholder="พิมพ์ประโยคที่ต้องการวิเคราะห์..."></textarea>
+        <button onclick="scan()" id="btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]">วิเคราะห์ประสิทธิภาพการสื่อสาร</button>
         <div id="loader" class="hidden mt-6 w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
             <div id="bar" class="h-full bg-blue-500 w-0"></div>
         </div>
@@ -66,7 +59,7 @@
         <div id="capture-area">
             <div class="flex flex-col md:flex-row items-center gap-6 md:gap-10 mb-8 pb-8 border-b border-slate-100">
                 <div class="relative flex items-center justify-center">
-                    <svg class="w-32 h-32 md:w-36 md:h-36" viewBox="0 0 128 128" style="transform: rotate(-90deg); -webkit-transform: rotate(-90deg);">
+                    <svg class="w-32 h-32 md:w-36 md:h-36" viewBox="0 0 128 128" style="transform: rotate(-90deg);">
                         <circle cx="64" cy="64" r="56" stroke="#f1f5f9" stroke-width="12" fill="transparent" />
                         <circle id="scoreRing" cx="64" cy="64" r="56" stroke="#2563eb" stroke-width="12" fill="transparent" stroke-dasharray="351.85" stroke-dashoffset="351.85" />
                     </svg>
@@ -75,22 +68,19 @@
                 <div class="text-center md:text-left">
                     <div id="toneBadge" class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase mb-2 bg-slate-100 text-slate-500">DETECTING...</div>
                     <h2 class="text-xl font-bold text-slate-800 mb-1">ระดับความเป็นมืออาชีพ</h2>
-                    <p id="scoreLabel" class="text-slate-500 text-sm leading-relaxed">ประมวลผลโดย AI สำเร็จ</p>
+                    <p id="scoreLabel" class="text-slate-500 text-sm">ผลการวิเคราะห์ AI</p>
                 </div>
             </div>
             <div id="report" class="markdown-body text-slate-700"></div>
         </div>
         <div class="flex flex-col sm:flex-row gap-4 mt-10">
-            <button onclick="copyResult()" class="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm font-bold text-slate-600 border border-slate-200 transition-all">📋 คัดลอกข้อความ</button>
-            <button onclick="exportImage()" id="exportBtn" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm font-bold text-white shadow-lg transition-all flex justify-center items-center gap-2">📸 บันทึกเป็นรูปภาพ</button>
+            <button onclick="copyResult()" class="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm font-bold text-slate-600 border border-slate-200">📋 คัดลอกรายงาน</button>
+            <button onclick="exportImage()" id="exportBtn" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm font-bold text-white shadow-lg flex justify-center items-center gap-2">📸 บันทึกเป็นรูปภาพ</button>
         </div>
     </div>
 
     <div id="historySection" class="w-full max-w-3xl hidden mb-20 px-2">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono">📜 HISTORY LOG</h3>
-            <button onclick="clearHistory()" class="text-[10px] text-red-400 font-bold uppercase hover:underline">Clear All</button>
-        </div>
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">📜 ประวัติล่าสุด</h3>
         <div id="historyList" class="space-y-3"></div>
     </div>
 
@@ -112,28 +102,39 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
+        // 🕒 ฟังก์ชัน Countdown บนปุ่ม
+        function startCountdown(seconds) {
+            const btn = document.getElementById('btn');
+            let remaining = Math.ceil(seconds);
+            
+            btn.disabled = true;
+            btn.classList.replace('bg-blue-600', 'bg-slate-400');
+
+            const timer = setInterval(() => {
+                btn.innerText = `⏳ กรุณารออีก ${remaining} วินาที...`;
+                remaining--;
+                if (remaining < 0) {
+                    clearInterval(timer);
+                    btn.disabled = false;
+                    btn.innerText = "วิเคราะห์ประสิทธิภาพการสื่อสาร";
+                    btn.classList.replace('bg-slate-400', 'bg-blue-600');
+                }
+            }, 1000);
+        }
+
         async function scan() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
-            
-            if(!text) {
-                return showError("ดูเหมือนคุณจะลืมพิมพ์ข้อความนะ!\nลองบอก AI หน่อยว่าคุณอยากพูดอะไรในสถานการณ์นี้ครับ");
-            }
+            if(!text) return showError("ดูเหมือนคุณจะลืมพิมพ์ข้อความนะ!");
 
             const btn = document.getElementById('btn');
             const loader = document.getElementById('loader');
             const bar = document.getElementById('bar');
 
             btn.disabled = true;
-            btn.innerText = "กำลังส่งข้อมูลให้ AI วิเคราะห์...";
+            btn.innerText = "กำลังประมวลผล...";
             loader.classList.remove('hidden');
-            bar.style.transition = 'none';
-            bar.style.width = '0%';
-            
-            setTimeout(() => {
-                bar.style.transition = 'width 0.4s ease';
-                bar.style.width = '30%';
-            }, 50);
+            bar.style.width = '30%';
 
             try {
                 const res = await fetch('/api/analyze', {
@@ -146,10 +147,13 @@
 
                 if (!res.ok) {
                     if (res.status === 429) {
+                        // 🔍 Smart Parsing: ดึงเลขวินาทีจาก error
                         const waitSec = (data.error.match(/retry in (\d+)/) || [0, 30])[1];
-                        throw new Error(`🤖 ขออภัยครับ! ตอนนี้ AI กำลังทำงานหนักมาก (โควตาเต็มชั่วคราว)\n\nกรุณารอสักประมาณ ${waitSec} วินาที แล้วลองกดใหม่อีกครั้งนะครับ`);
+                        showError(`🤖 ขออภัยครับ! โควตาเต็มชั่วคราว\nกรุณารอสักประมาณ ${waitSec} วินาทีนะครับ`);
+                        startCountdown(waitSec); // เริ่มนับถอยหลังที่ปุ่ม
+                        throw new Error("Quota Full");
                     }
-                    throw new Error("ขออภัยครับ ระบบเชื่อมต่อขัดข้องเล็กน้อย\nกรุณาลองใหม่อีกครั้งนะครับ");
+                    throw new Error(data.error || "Connection Error");
                 }
 
                 bar.style.width = '100%';
@@ -164,31 +168,33 @@
                 setTimeout(() => document.getElementById('result').scrollIntoView({ behavior: 'smooth' }), 300);
 
             } catch (err) {
-                showError(err.message);
+                if(err.message !== "Quota Full") showError(err.message);
                 bar.style.width = '0%';
             } finally {
-                setTimeout(() => { 
+                // ถ้าไม่ใช่กรณีติด Quota ให้รีเซ็ตปุ่มปกติ
+                if (btn.innerText !== "วิเคราะห์ประสิทธิภาพการสื่อสาร" && !btn.innerText.includes("รออีก")) {
                     loader.classList.add('hidden'); 
                     btn.disabled = false; 
                     btn.innerText = "วิเคราะห์ประสิทธิภาพการสื่อสาร";
-                }, 800);
+                } else {
+                    loader.classList.add('hidden');
+                }
             }
         }
 
         function updateUI(score, tone, report) {
             const ring = document.getElementById('scoreRing');
-            const circumference = 2 * Math.PI * 56;
-            ring.style.strokeDasharray = circumference;
+            const circumference = 351.85;
             ring.style.strokeDashoffset = circumference - (score / 100 * circumference);
             document.getElementById('scoreValue').innerText = score + "%";
 
             const resultBox = document.getElementById('result');
             const badge = document.getElementById('toneBadge');
             const tones = {
-                'Aggressive': { class: 'tone-aggressive', label: '🔴 ก้าวร้าว/กดดัน', badge: 'bg-red-100 text-red-600' },
-                'Professional': { class: 'tone-professional', label: '🟢 มืออาชีพ/สุภาพ', badge: 'bg-emerald-100 text-emerald-600' },
-                'Passive': { class: 'tone-passive', label: '⚪ นิ่งเฉย/เพิกเฉย', badge: 'bg-slate-100 text-slate-600' },
-                'Neutral': { class: 'tone-neutral', label: '🔵 ปกติ/ทั่วไป', badge: 'bg-blue-100 text-blue-600' }
+                'Aggressive': { class: 'tone-aggressive', label: '🔴 ก้าวร้าว', badge: 'bg-red-100 text-red-600' },
+                'Professional': { class: 'tone-professional', label: '🟢 มืออาชีพ', badge: 'bg-emerald-100 text-emerald-600' },
+                'Passive': { class: 'tone-passive', label: '⚪ นิ่งเฉย', badge: 'bg-slate-100 text-slate-600' },
+                'Neutral': { class: 'tone-neutral', label: '🔵 ปกติ', badge: 'bg-blue-100 text-blue-600' }
             };
             const selected = tones[tone] || tones['Neutral'];
             resultBox.className = "w-full max-w-3xl p-6 md:p-10 glass-card rounded-[2rem] mb-12 border-t-[10px] " + selected.class;
@@ -210,11 +216,11 @@
             if(history.length > 0) {
                 document.getElementById('historySection').classList.remove('hidden');
                 list.innerHTML = history.map((item, index) => `
-                    <div class="glass-card p-4 rounded-xl cursor-pointer hover:bg-slate-50 border-l-4 transition-all" onclick="loadHistory(${index})">
-                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 mb-1">
+                    <div class="glass-card p-4 rounded-xl cursor-pointer hover:bg-slate-50 border-l-4" onclick="loadHistory(${index})">
+                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-400">
                             <span>${item.date}</span><span>${item.score}%</span>
                         </div>
-                        <div class="text-sm text-slate-600 truncate italic">"${item.input}"</div>
+                        <div class="text-sm text-slate-600 truncate mt-1 italic">"${item.input}"</div>
                     </div>
                 `).join('');
             }
@@ -228,30 +234,24 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function clearHistory() { if(confirm("ต้องการล้างประวัติการวิเคราะห์ทั้งหมดหรือไม่?")) { localStorage.removeItem('crisisHistory'); location.reload(); } }
-
         function exportImage() {
             const area = document.getElementById('result');
             const btn = document.getElementById('exportBtn');
             btn.innerText = "⏳ กำลังสร้างรูป...";
-            html2canvas(area, { backgroundColor: "#ffffff", scale: 3, useCORS: true, onclone: (doc) => {
+            html2canvas(area, { backgroundColor: "#ffffff", scale: 2, useCORS: true, onclone: (doc) => {
                 const el = doc.getElementById('result');
                 el.style.padding = "40px"; el.style.borderRadius = "0";
                 el.querySelectorAll('button').forEach(b => b.style.display = 'none');
             }}).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `Crisis-Report-${Date.now()}.png`;
+                link.download = `Crisis-Report.png`;
                 link.href = canvas.toDataURL("image/png");
                 link.click();
                 btn.innerText = "📸 บันทึกเป็นรูปภาพ";
             });
         }
 
-        function copyResult() { 
-            navigator.clipboard.writeText(document.getElementById('report').innerText).then(() => {
-                alert("คัดลอกรายงานลงคลิปบอร์ดแล้ว! ✅");
-            }); 
-        }
+        function copyResult() { navigator.clipboard.writeText(document.getElementById('report').innerText).then(() => alert("คัดลอกแล้ว ✅")); }
     </script>
 </body>
 </html>
