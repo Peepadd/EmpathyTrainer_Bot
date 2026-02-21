@@ -1,16 +1,17 @@
 export default async function handler(req, res) {
-    // รับเฉพาะคำสั่ง POST
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
     const userInput = req.body.text;
-    const apiKey = process.env.GOOGLE_API_KEY; 
+    
+    // 🧹 ทริคสำคัญ: ดึง API Key มาตัดช่องว่างและเครื่องหมายคำพูดทิ้งให้หมด
+    let apiKey = process.env.GOOGLE_API_KEY || "";
+    apiKey = apiKey.replace(/['"]/g, '').trim(); 
 
-    if (!apiKey) return res.status(500).json({ error: "ไม่พบ API Key ในระบบหลังบ้าน (Vercel)" });
+    if (!apiKey) return res.status(500).json({ error: "ไม่พบ API Key ในระบบหลังบ้าน" });
     if (!userInput) return res.status(400).json({ error: "กรุณากรอกข้อความ" });
 
-    // 1. ตรวจคำต้องห้าม
     const FORBIDDEN = ['ขี้เกียจ', 'ภาระ'];
     for (let word of FORBIDDEN) {
         if (userInput.includes(word)) {
@@ -20,15 +21,14 @@ export default async function handler(req, res) {
         }
     }
 
-    // 2. เรียกหา Gemini AI (ใช้รุ่น 1.5-pro)
     try {
         const prompt = `คุณคือระบบ AI วิเคราะห์ทักษะการสื่อสารในภาวะวิกฤต 
 สถานการณ์: [เพื่อนในกลุ่มหายตัวไป ไม่อ่านไลน์ พรุ่งนี้มีพรีเซนต์]
 คำพูดผู้เล่น: "${userInput}"
 งานของคุณ: ประเมินความเป็นมืออาชีพ ให้คะแนน 0-100% พร้อมคำแนะนำ ตอบเป็นภาษาไทย ปิดท้ายด้วย [จบการวิเคราะห์] ห้ามชวนคุย`;
 
-        // เปลี่ยนเป็น gemini-1.5-pro และใช้ v1beta
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+        // กลับมาใช้ 1.5-flash ที่เป็นมาตรฐานปัจจุบัน
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
         const response = await fetch(url, {
             method: 'POST',
@@ -41,7 +41,6 @@ export default async function handler(req, res) {
         const data = await response.json();
 
         if (!response.ok) {
-            // ถ้า Error จะส่งข้อความจาก Google กลับไปให้หน้าเว็บแสดงผล
             throw new Error(data.error?.message || "Google API Error");
         }
 
