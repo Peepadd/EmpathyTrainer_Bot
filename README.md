@@ -27,21 +27,6 @@
 
 ---
 
-## 🚀 วิธีการติดตั้ง (Quick Start)
-
-1.  **Clone Repository**
-    ```bash
-    git clone [https://github.com/your-username/crisis-pulse-analyser.git](https://github.com/your-username/crisis-pulse-analyser.git)
-    ```
-2.  **ตั้งค่า Environment Variables**
-    สร้างไฟล์ `.env` และใส่ API Key ของคุณ:
-    ```env
-    GEMINI_API_KEY=your_api_key_here
-    ```
-3.  **Deploy บน Vercel**
-    เชื่อมต่อ Repository กับ Vercel และตั้งค่า Environment Variable บน Dashboard ของ Vercel
-
----
 
 ## 📖 วิธีการใช้งาน
 
