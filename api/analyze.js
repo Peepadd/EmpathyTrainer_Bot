@@ -28,7 +28,7 @@ export default async function handler(req, res) {
 งานของคุณ: ประเมินความเป็นมืออาชีพ ให้คะแนน 0-100% พร้อมคำแนะนำ ตอบเป็นภาษาไทย ปิดท้ายด้วย [จบการวิเคราะห์] ห้ามชวนคุย`;
 
         // กลับมาใช้ 1.5-flash ที่เป็นมาตรฐานปัจจุบัน
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
         const response = await fetch(url, {
             method: 'POST',
