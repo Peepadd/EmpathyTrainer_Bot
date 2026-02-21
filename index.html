@@ -7,74 +7,69 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap');
         body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-font-smoothing: antialiased; }
-        .glass-card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .glass-card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: border-color 0.5s ease; }
         
-        /* Markdown Style for iPad */
-        .markdown-body table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.85rem; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
-        .markdown-body th { background: #2563eb; color: white; padding: 12px; text-align: left; }
+        /* Markdown Style - ป้องกันตารางล้นใน iPad */
+        .markdown-body table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.85rem; border-radius: 12px; overflow: hidden; display: block; overflow-x: auto; }
+        .markdown-body th { background: #2563eb; color: white; padding: 12px; text-align: left; min-width: 120px; }
         .markdown-body td { padding: 12px; border-bottom: 1px solid #e2e8f0; background: white; }
-        .markdown-body h3 { font-size: 1.25rem; font-weight: 700; color: #1e40af; margin: 1.5rem 0 0.5rem 0; }
         .markdown-body strong { color: #2563eb; font-weight: 700; }
 
-        /* Progress Bar Fix for Safari */
-        #bar { will-change: width; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); -webkit-transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-
-        /* Score Ring Safari Fix */
-        #scoreRing { transition: stroke-dashoffset 1s ease-in-out; -webkit-transition: stroke-dashoffset 1s ease-in-out; stroke-linecap: round; }
+        /* Animation Fixes */
+        #bar { will-change: width; transition: width 0.4s ease; -webkit-transition: width 0.4s ease; }
+        #scoreRing { transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1); -webkit-transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1); stroke-linecap: round; }
+        
+        /* Tone Colors */
+        .tone-aggressive { border-top-color: #ef4444 !important; border-top-width: 12px !important; }
+        .tone-professional { border-top-color: #10b981 !important; border-top-width: 12px !important; }
+        .tone-passive { border-top-color: #64748b !important; border-top-width: 12px !important; }
+        .tone-neutral { border-top-color: #3b82f6 !important; border-top-width: 12px !important; }
     </style>
 </head>
 <body class="flex flex-col items-center py-8 px-4 md:px-8">
 
     <div class="w-full max-w-3xl text-center mb-6">
-        <h1 class="text-3xl font-bold text-blue-600 mb-1">Crisis Pulse Analyser <span class="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full align-middle">PRO</span></h1>
-        <p class="text-slate-400 uppercase tracking-tighter text-[10px]">Professional Communication Analysis System</p>
+        <h1 class="text-3xl font-bold text-blue-600 mb-1">Crisis Pulse Analyser <span class="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full uppercase align-middle">PRO</span></h1>
+        <p class="text-slate-400 uppercase tracking-tighter text-[10px]">Professional Crisis Analysis System</p>
     </div>
 
     <div class="w-full max-w-3xl glass-card p-5 rounded-2xl mb-6 border-l-[6px] border-amber-400 bg-amber-50/30">
-        <p class="text-sm md:text-base text-amber-900 leading-relaxed"><strong>🚩 ภารกิจ:</strong> เพื่อนหายตอนใกล้ส่งงานกลุ่ม พรุ่งนี้พรีเซนต์ คุณจะพูดอย่างไร?</p>
+        <p class="text-sm md:text-base text-amber-900 leading-relaxed italic">🚩 ภารกิจ: เพื่อนหายตอนใกล้ส่งงานกลุ่ม พรุ่งนี้พรีเซนต์ คุณจะพูดอย่างไร?</p>
     </div>
 
     <div class="w-full max-w-3xl glass-card p-6 md:p-8 rounded-[2rem] mb-8">
         <textarea id="userInput" class="w-full p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none mb-4 transition-all text-base md:text-lg min-h-[100px]" placeholder="พิมพ์ประโยคที่ต้องการวิเคราะห์..."></textarea>
-        
-        <button onclick="scan()" id="btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-md transition-all active:scale-[0.98] text-base md:text-lg">
-            <span id="btnText">วิเคราะห์ประสิทธิภาพ</span>
-        </button>
-
-        <div id="loader" class="hidden mt-6 w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+        <button onclick="scan()" id="btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-md transition-all active:scale-[0.98]">วิเคราะห์ประสิทธิภาพการสื่อสาร</button>
+        <div id="loader" class="hidden mt-6 w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
             <div id="bar" class="h-full bg-blue-500 w-0"></div>
         </div>
     </div>
 
-    <div id="result" class="hidden w-full max-w-3xl p-6 md:p-10 glass-card rounded-[2rem] mb-12 border-t-[8px] border-blue-600">
-        <div id="capture-area" class="bg-white"> <div class="flex flex-col md:flex-row items-center gap-6 md:gap-10 mb-8 pb-8 border-b border-slate-100">
+    <div id="result" class="hidden w-full max-w-3xl p-6 md:p-10 glass-card rounded-[2rem] mb-12 border-t-[10px] tone-neutral">
+        <div id="capture-area">
+            <div class="flex flex-col md:flex-row items-center gap-6 md:gap-10 mb-8 pb-8 border-b border-slate-100">
                 <div class="relative flex items-center justify-center">
                     <svg class="w-32 h-32 md:w-36 md:h-36" viewBox="0 0 128 128" style="transform: rotate(-90deg); -webkit-transform: rotate(-90deg);">
                         <circle cx="64" cy="64" r="56" stroke="#f1f5f9" stroke-width="12" fill="transparent" />
-                        <circle id="scoreRing" cx="64" cy="64" r="56" stroke="#2563eb" stroke-width="12" fill="transparent" 
-                                stroke-dasharray="351.8" stroke-dashoffset="351.8" />
+                        <circle id="scoreRing" cx="64" cy="64" r="56" stroke="#2563eb" stroke-width="12" fill="transparent" stroke-dasharray="351.85" stroke-dashoffset="351.85" />
                     </svg>
                     <div class="absolute text-3xl font-bold text-slate-800" id="scoreValue">0%</div>
                 </div>
                 <div class="text-center md:text-left">
+                    <div id="toneBadge" class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase mb-2 bg-slate-100 text-slate-500">DETECTING TONE...</div>
                     <h2 class="text-xl font-bold text-slate-800 mb-1">ระดับความเป็นมืออาชีพ</h2>
-                    <p id="scoreLabel" class="text-slate-500 text-sm leading-relaxed max-w-xs">กำลังคำนวณผลลัพธ์จาก AI...</p>
+                    <p id="scoreLabel" class="text-slate-500 text-sm leading-relaxed">กำลังประเมินผล...</p>
                 </div>
             </div>
             <div id="report" class="markdown-body text-slate-700"></div>
         </div>
         
         <div class="flex flex-col sm:flex-row gap-4 mt-10">
-            <button onclick="copyResult()" class="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm font-bold text-slate-600 border border-slate-200 transition-all">
-                📋 คัดลอกรายงาน
-            </button>
-            <button onclick="exportImage()" id="exportBtn" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm font-bold text-white shadow-lg transition-all flex justify-center items-center gap-2">
-                📸 บันทึกเป็นรูปภาพ
-            </button>
+            <button onclick="copyResult()" class="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm font-bold text-slate-600 border border-slate-200 transition-all">📋 คัดลอกรายงาน</button>
+            <button onclick="exportImage()" id="exportBtn" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm font-bold text-white shadow-lg transition-all flex justify-center items-center gap-2">📸 บันทึกเป็นรูปภาพ</button>
         </div>
     </div>
 
@@ -91,9 +86,7 @@
 
             btn.disabled = true;
             loader.classList.remove('hidden');
-            
-            // Step-by-step progress for Safari smoothness
-            setTimeout(() => bar.style.width = '35%', 50);
+            setTimeout(() => bar.style.width = '30%', 50);
 
             try {
                 const res = await fetch('/api/analyze', {
@@ -102,90 +95,85 @@
                     body: JSON.stringify({text: text})
                 });
                 
-                bar.style.width = '75%';
+                bar.style.width = '70%';
                 const data = await res.json();
                 if(!res.ok) throw new Error(data.error);
 
-                const scoreMatch = data.text.match(/SCORE:\s*(\d+)/);
-                const score = scoreMatch ? parseInt(scoreMatch[1]) : 0;
-                const cleanText = data.text.replace(/SCORE:\s*\d+/, "");
+                const score = (data.text.match(/SCORE:\s*(\d+)/) || [0, 0])[1];
+                const tone = (data.text.match(/TONE:\s*(\w+)/) || [0, "Neutral"])[1];
+                const cleanText = data.text.replace(/SCORE:\s*\d+/, "").replace(/TONE:\s*\w+/, "");
 
                 bar.style.width = '100%';
-                
-                updateDashboard(score);
-                document.getElementById('report').innerHTML = marked.parse(cleanText);
+                updateUI(parseInt(score), tone, cleanText);
                 resultBox.classList.remove('hidden');
-                
-                setTimeout(() => {
-                    resultBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 300);
+                setTimeout(() => resultBox.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
 
             } catch (err) {
                 alert("🚨 AI Error: " + err.message);
-                bar.style.width = '0%';
             } finally {
-                setTimeout(() => {
-                    loader.classList.add('hidden');
-                    bar.style.width = '0%';
-                    btn.disabled = false;
-                }, 800);
+                setTimeout(() => { loader.classList.add('hidden'); bar.style.width = '0%'; btn.disabled = false; }, 800);
             }
         }
 
-        function updateDashboard(score) {
+        function updateUI(score, tone, report) {
             const ring = document.getElementById('scoreRing');
             const val = document.getElementById('scoreValue');
             const label = document.getElementById('scoreLabel');
-            
-            const circumference = 2 * Math.PI * 56; // r=56
-            const offset = circumference - (score / 100 * circumference);
-            
-            ring.style.strokeDashoffset = offset;
+            const resultBox = document.getElementById('result');
+            const badge = document.getElementById('toneBadge');
+
+            // 🟢 แก้ไขตัวเลขวงกลมให้แม่นยำ
+            const circumference = 2 * Math.PI * 56;
+            ring.style.strokeDasharray = circumference;
+            ring.style.strokeDashoffset = circumference - (score / 100 * circumference);
             val.innerText = score + "%";
 
-            if(score >= 80) label.innerText = "🌟 ยอดเยี่ยม! คุณสื่อสารได้อย่างมืออาชีพ";
-            else if(score >= 50) label.innerText = "⚠️ พอใช้! ควรปรับปรุงน้ำเสียงให้ดูแก้ปัญหามากขึ้น";
-            else label.innerText = "🚨 ระวัง! คำพูดนี้เสี่ยงต่อการเกิดความขัดแย้ง";
-        }
+            // 🔴 ฟีเจอร์ลับ: Badge อารมณ์และเปลี่ยนสีขอบ
+            resultBox.className = "w-full max-w-3xl p-6 md:p-10 glass-card rounded-[2rem] mb-12 border-t-[10px] transition-all duration-500";
+            
+            const tones = {
+                'Aggressive': { class: 'tone-aggressive', label: '🔴 ก้าวร้าว/กดดัน', badge: 'bg-red-100 text-red-600' },
+                'Professional': { class: 'tone-professional', label: '🟢 มืออาชีพ/สุภาพ', badge: 'bg-emerald-100 text-emerald-600' },
+                'Passive': { class: 'tone-passive', label: '⚪ นิ่งเฉย/เพิกเฉย', badge: 'bg-slate-100 text-slate-600' },
+                'Neutral': { class: 'tone-neutral', label: '🔵 ปกติ/ทั่วไป', badge: 'bg-blue-100 text-blue-600' }
+            };
 
-        function copyResult() {
-            const report = document.getElementById('report').innerText;
-            navigator.clipboard.writeText(report).then(() => alert("คัดลอกสำเร็จ! ✅"));
+            const selected = tones[tone] || tones['Neutral'];
+            resultBox.classList.add(selected.class);
+            badge.innerText = selected.label;
+            badge.className = `inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase mb-2 ${selected.badge}`;
+
+            label.innerText = score >= 80 ? "🌟 ยอดเยี่ยม! สื่อสารได้ดีมาก" : score >= 50 ? "⚠️ พอใช้! ควรปรับน้ำเสียง" : "🚨 ระวัง! อาจเกิดความขัดแย้ง";
+            document.getElementById('report').innerHTML = marked.parse(report);
         }
 
         function exportImage() {
             const area = document.getElementById('result');
             const btn = document.getElementById('exportBtn');
-            const originalText = btn.innerHTML;
+            btn.innerText = "⏳ GENERATING...";
             
-            btn.innerHTML = "⏳ กำลังประมวลผล...";
-            btn.disabled = true;
-
-            // ซ่อนปุ่มขณะถ่ายรูป
-            const buttons = area.querySelectorAll('button');
-            buttons.forEach(b => b.style.visibility = 'hidden');
-
             html2canvas(area, {
                 backgroundColor: "#ffffff",
-                scale: 3, // เพิ่มความละเอียดเป็น 3 เท่าเพื่อความสวยงามใน iPad
+                scale: 3, // ชัดระดับ 4K
                 useCORS: true,
-                logging: false,
                 onclone: (clonedDoc) => {
-                    // ปรับแต่งองค์ประกอบในตัว Cloned ก่อนถ่ายจริง
-                    const clonedResult = clonedDoc.getElementById('result');
-                    clonedResult.style.padding = "40px"; // เพิ่มพื้นที่ขอบในรูปที่เซฟ
-                    clonedResult.style.borderRadius = "0px"; // เอาขอบมนออกในรูปเพื่อให้ดูเป็นทางการ
+                    const el = clonedDoc.getElementById('result');
+                    el.style.padding = "40px";
+                    el.style.borderRadius = "0";
+                    el.querySelectorAll('button').forEach(b => b.style.display = 'none');
                 }
             }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `Crisis-Analysis-${Date.now()}.png`;
+                link.download = `Crisis-Report-${Date.now()}.png`;
                 link.href = canvas.toDataURL("image/png");
                 link.click();
-            }).finally(() => {
-                buttons.forEach(b => b.style.visibility = 'visible');
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                btn.innerText = "📸 บันทึกเป็นรูปภาพ";
             });
+        }
+
+        function copyResult() {
+            const report = document.getElementById('report').innerText;
+            navigator.clipboard.writeText(report).then(() => alert("คัดลอกสำเร็จ! ✅"));
         }
     </script>
 </body>
