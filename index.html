@@ -33,15 +33,15 @@
 <body class="flex flex-col items-center py-8 px-4 md:px-8">
 
     <div id="errorModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-sm p-4">
-        <div class="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl p-8 text-center modal-enter transition-all" id="modalContainer">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-8 text-center modal-enter transition-all" id="modalContainer">
             <div class="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             </div>
-            <h3 class="text-xl font-bold text-slate-800 mb-2">แจ้งเตือนระบบ</h3>
-            <p id="modalMsg" class="text-slate-500 text-sm leading-relaxed mb-8">ข้อความแจ้งเตือน...</p>
-            <button onclick="closeModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-2xl font-bold shadow-lg transition-all active:scale-95">ตกลง</button>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">แจ้งเตือนจากระบบ</h3>
+            <p id="modalMsg" class="text-slate-500 text-sm leading-relaxed mb-8 whitespace-pre-line">ข้อความแจ้งเตือน...</p>
+            <button onclick="closeModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-95">รับทราบ</button>
         </div>
     </div>
 
@@ -55,8 +55,8 @@
     </div>
 
     <div class="w-full max-w-3xl glass-card p-6 md:p-8 rounded-[2rem] mb-8">
-        <textarea id="userInput" class="w-full p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none mb-4 text-base md:text-lg min-h-[100px]" placeholder="พิมพ์ประโยคที่ต้องการวิเคราะห์..."></textarea>
-        <button onclick="scan()" id="btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-md transition-all active:scale-[0.98]">วิเคราะห์ประสิทธิภาพการสื่อสาร</button>
+        <textarea id="userInput" class="w-full p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none mb-4 text-base md:text-lg min-h-[110px]" placeholder="พิมพ์ประโยคที่คุณต้องการพูดในสถานการณ์นี้..."></textarea>
+        <button onclick="scan()" id="btn" class="w-full bg-blue-600 hover:bg-blue-800 text-white py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]">วิเคราะห์ประสิทธิภาพการสื่อสาร</button>
         <div id="loader" class="hidden mt-6 w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
             <div id="bar" class="h-full bg-blue-500 w-0"></div>
         </div>
@@ -73,23 +73,23 @@
                     <div class="absolute text-3xl font-bold text-slate-800" id="scoreValue">0%</div>
                 </div>
                 <div class="text-center md:text-left">
-                    <div id="toneBadge" class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase mb-2 bg-slate-100 text-slate-500">DETECTING TONE...</div>
+                    <div id="toneBadge" class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase mb-2 bg-slate-100 text-slate-500">DETECTING...</div>
                     <h2 class="text-xl font-bold text-slate-800 mb-1">ระดับความเป็นมืออาชีพ</h2>
-                    <p id="scoreLabel" class="text-slate-500 text-sm leading-relaxed">ผลการวิเคราะห์สำเร็จ</p>
+                    <p id="scoreLabel" class="text-slate-500 text-sm leading-relaxed">ประมวลผลโดย AI สำเร็จ</p>
                 </div>
             </div>
             <div id="report" class="markdown-body text-slate-700"></div>
         </div>
         <div class="flex flex-col sm:flex-row gap-4 mt-10">
-            <button onclick="copyResult()" class="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm font-bold text-slate-600 border border-slate-200 transition-all">📋 คัดลอกรายงาน</button>
+            <button onclick="copyResult()" class="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm font-bold text-slate-600 border border-slate-200 transition-all">📋 คัดลอกข้อความ</button>
             <button onclick="exportImage()" id="exportBtn" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm font-bold text-white shadow-lg transition-all flex justify-center items-center gap-2">📸 บันทึกเป็นรูปภาพ</button>
         </div>
     </div>
 
     <div id="historySection" class="w-full max-w-3xl hidden mb-20 px-2">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">📜 ประวัติล่าสุด</h3>
-            <button onclick="clearHistory()" class="text-[10px] text-red-400 font-bold uppercase">ล้างทั้งหมด</button>
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono">📜 HISTORY LOG</h3>
+            <button onclick="clearHistory()" class="text-[10px] text-red-400 font-bold uppercase hover:underline">Clear All</button>
         </div>
         <div id="historyList" class="space-y-3"></div>
     </div>
@@ -97,7 +97,6 @@
     <script>
         window.onload = displayHistory;
 
-        // ฟังก์ชันควบคุม Modal
         function showError(msg) {
             const modal = document.getElementById('errorModal');
             const container = document.getElementById('modalContainer');
@@ -116,14 +115,17 @@
         async function scan() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
-            if(!text) return showError("กรุณากรอกข้อความก่อนวิเคราะห์ครับ");
+            
+            if(!text) {
+                return showError("ดูเหมือนคุณจะลืมพิมพ์ข้อความนะ!\nลองบอก AI หน่อยว่าคุณอยากพูดอะไรในสถานการณ์นี้ครับ");
+            }
 
             const btn = document.getElementById('btn');
             const loader = document.getElementById('loader');
             const bar = document.getElementById('bar');
 
             btn.disabled = true;
-            btn.innerText = "กำลังติดต่อ AI...";
+            btn.innerText = "กำลังส่งข้อมูลให้ AI วิเคราะห์...";
             loader.classList.remove('hidden');
             bar.style.transition = 'none';
             bar.style.width = '0%';
@@ -144,9 +146,10 @@
 
                 if (!res.ok) {
                     if (res.status === 429) {
-                        throw new Error("ตอนนี้คนใช้งานเยอะเกินไป (Quota Limit) กรุณารอสัก 30 วินาทีแล้วลองใหม่นะครับ");
+                        const waitSec = (data.error.match(/retry in (\d+)/) || [0, 30])[1];
+                        throw new Error(`🤖 ขออภัยครับ! ตอนนี้ AI กำลังทำงานหนักมาก (โควตาเต็มชั่วคราว)\n\nกรุณารอสักประมาณ ${waitSec} วินาที แล้วลองกดใหม่อีกครั้งนะครับ`);
                     }
-                    throw new Error(data.error || "เกิดข้อผิดพลาดในการเชื่อมต่อ");
+                    throw new Error("ขออภัยครับ ระบบเชื่อมต่อขัดข้องเล็กน้อย\nกรุณาลองใหม่อีกครั้งนะครับ");
                 }
 
                 bar.style.width = '100%';
@@ -161,7 +164,7 @@
                 setTimeout(() => document.getElementById('result').scrollIntoView({ behavior: 'smooth' }), 300);
 
             } catch (err) {
-                showError(err.message); // ใช้ Modal แทน alert
+                showError(err.message);
                 bar.style.width = '0%';
             } finally {
                 setTimeout(() => { 
@@ -208,10 +211,10 @@
                 document.getElementById('historySection').classList.remove('hidden');
                 list.innerHTML = history.map((item, index) => `
                     <div class="glass-card p-4 rounded-xl cursor-pointer hover:bg-slate-50 border-l-4 transition-all" onclick="loadHistory(${index})">
-                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-400">
+                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 mb-1">
                             <span>${item.date}</span><span>${item.score}%</span>
                         </div>
-                        <div class="text-sm text-slate-600 truncate mt-1 italic">"${item.input}"</div>
+                        <div class="text-sm text-slate-600 truncate italic">"${item.input}"</div>
                     </div>
                 `).join('');
             }
@@ -225,7 +228,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function clearHistory() { if(confirm("ล้างประวัติ?")) { localStorage.removeItem('crisisHistory'); location.reload(); } }
+        function clearHistory() { if(confirm("ต้องการล้างประวัติการวิเคราะห์ทั้งหมดหรือไม่?")) { localStorage.removeItem('crisisHistory'); location.reload(); } }
 
         function exportImage() {
             const area = document.getElementById('result');
@@ -244,7 +247,11 @@
             });
         }
 
-        function copyResult() { navigator.clipboard.writeText(document.getElementById('report').innerText).then(() => alert("คัดลอกแล้ว ✅")); }
+        function copyResult() { 
+            navigator.clipboard.writeText(document.getElementById('report').innerText).then(() => {
+                alert("คัดลอกรายงานลงคลิปบอร์ดแล้ว! ✅");
+            }); 
+        }
     </script>
 </body>
 </html>
