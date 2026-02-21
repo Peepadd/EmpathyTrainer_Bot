@@ -20,10 +20,9 @@
         .markdown-body li { margin-bottom: 0.5rem; padding-left: 1.5rem; position: relative; }
         .markdown-body li::before { content: "•"; color: #3b82f6; position: absolute; left: 0; font-weight: bold; }
 
-        /* Progress Bar Animation */
+        /* Animations */
         .progress-container { width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; display: none; }
         .progress-bar { width: 0%; height: 100%; background: #3b82f6; transition: width 0.3s; }
-        
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fadeIn { animation: slideUp 0.4s ease-out forwards; }
     </style>
@@ -35,9 +34,20 @@
         <p class="text-slate-500 uppercase tracking-widest text-xs">AI-Powered Communication Crisis Detection</p>
     </div>
 
+    <div class="w-full max-w-2xl glass-card p-6 rounded-3xl mb-6 border-l-8 border-amber-500 bg-amber-50">
+        <div class="flex items-center gap-2 mb-2">
+            <span class="text-xl">🚩</span>
+            <span class="font-bold text-amber-800 tracking-wide">CURRENT MISSION: SITUATION LOG</span>
+        </div>
+        <p class="text-slate-700 leading-relaxed bg-white/50 p-4 rounded-xl border border-amber-100">
+            <strong>สถานการณ์:</strong> เพื่อนในกลุ่มหายตัวไป ไม่ตอบแชท ไม่อ่านไลน์ และพรุ่งนี้มีพรีเซนต์งานกลุ่มตอนเช้า 
+            <br><span class="text-sm text-slate-500 mt-2 block italic">*คุณจะสื่อสารกับเพื่อนในกลุ่มอย่างไรให้มีประสิทธิภาพในภาวะนี้?*</span>
+        </p>
+    </div>
+
     <div class="w-full max-w-2xl glass-card p-8 rounded-3xl mb-6">
-        <label class="text-sm font-semibold text-slate-600 mb-3 block">💬 ข้อมูลที่ต้องการวิเคราะห์</label>
-        <textarea id="userInput" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-400 focus:bg-white outline-none mb-4 transition-all resize-none" rows="4" placeholder="พิมพ์ข้อความที่นี่..."></textarea>
+        <label class="text-sm font-semibold text-slate-600 mb-3 block">💬 ป้อนคำพูดที่ต้องการให้ AI วิเคราะห์:</label>
+        <textarea id="userInput" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:bg-white outline-none mb-4 transition-all resize-none text-lg" rows="3" placeholder="พิมพ์ประโยคของคุณที่นี่..."></textarea>
         
         <div class="progress-container mb-4" id="progressRoot">
             <div class="progress-bar" id="progressBar"></div>
@@ -45,15 +55,16 @@
 
         <div class="flex justify-between items-center">
             <button onclick="clearHistory()" class="text-xs text-slate-400 hover:text-red-500 transition-colors">ล้างประวัติ</button>
-            <button onclick="scan()" id="btn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg active:scale-95">
+            <button onclick="scan()" id="btn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg active:scale-95 flex items-center gap-2">
                 <span id="btnText">INITIATE SCAN</span>
+                <span class="text-sm opacity-50">⏎</span>
             </button>
         </div>
     </div>
 
     <div id="result" class="hidden w-full max-w-2xl p-8 glass-card rounded-3xl border-l-8 border-blue-500 mb-6 animate-fadeIn">
         <div class="flex justify-between items-center mb-4 border-b pb-4">
-            <span class="font-bold text-blue-600">📊 ผลการวิเคราะห์ล่าสุด</span>
+            <span class="font-bold text-blue-600 flex items-center gap-2">📊 ANALYSIS REPORT</span>
             <button onclick="copyResult()" class="text-xs bg-slate-100 hover:bg-blue-600 hover:text-white px-3 py-2 rounded-lg transition-all font-semibold">
                 📋 COPY REPORT
             </button>
@@ -61,19 +72,22 @@
         <div id="report" class="markdown-body text-slate-700"></div>
     </div>
 
-    <div id="historySection" class="w-full max-w-2xl hidden">
-        <h3 class="text-sm font-bold text-slate-500 mb-4 uppercase tracking-widest">📜 ประวัติการใช้งาน</h3>
+    <div id="historySection" class="w-full max-w-2xl hidden mb-12">
+        <h3 class="text-xs font-bold text-slate-500 mb-4 uppercase tracking-widest">📜 HISTORY LOGS</h3>
         <div id="historyList" class="space-y-3"></div>
     </div>
 
     <script>
-        // โหลดประวัติเมื่อเปิดหน้าเว็บ
-        window.onload = () => displayHistory();
+        // โหลดประวัติและโฟกัสช่องพิมพ์เมื่อเปิดหน้าเว็บ
+        window.onload = () => {
+            displayHistory();
+            document.getElementById('userInput').focus();
+        };
 
         async function scan() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
-            if(!text) return alert("กรุณากรอกข้อความ");
+            if(!text) return alert("⚠️ กรุณาพิมพ์ข้อความก่อนวิเคราะห์ครับ");
 
             const btn = document.getElementById('btn');
             const btnText = document.getElementById('btnText');
@@ -81,7 +95,6 @@
             const progressBar = document.getElementById('progressBar');
             const resultBox = document.getElementById('result');
 
-            // Start Animation
             btn.disabled = true;
             btnText.innerText = "SCANNING...";
             progressRoot.style.display = 'block';
@@ -100,16 +113,17 @@
 
                 progressBar.style.width = '100%';
                 
-                // แสดงผล
                 const htmlOutput = marked.parse(data.text);
                 document.getElementById('report').innerHTML = htmlOutput;
                 resultBox.classList.remove('hidden');
 
-                // บันทึกประวัติ
                 saveToHistory(text, data.text);
 
+                // เลื่อนหน้าจอลงไปที่ผลลัพธ์
+                resultBox.scrollIntoView({ behavior: 'smooth' });
+
             } catch (err) {
-                alert("Error: " + err.message);
+                alert("🚨 AI Error: " + err.message);
             } finally {
                 setTimeout(() => {
                     btn.disabled = false;
@@ -120,10 +134,11 @@
             }
         }
 
+        // ฟังก์ชันอื่นๆ (History, Copy) ยังคงเดิมแต่ปรับ UI เล็กน้อย
         function saveToHistory(input, output) {
             let history = JSON.parse(localStorage.getItem('crisisHistory') || '[]');
-            history.unshift({ input, output, date: new Date().toLocaleString() });
-            history = history.slice(0, 5); // เก็บแค่ 5 ล่าสุด
+            history.unshift({ input, output, date: new Date().toLocaleString('th-TH') });
+            history = history.slice(0, 5);
             localStorage.setItem('crisisHistory', JSON.stringify(history));
             displayHistory();
         }
@@ -132,13 +147,12 @@
             const history = JSON.parse(localStorage.getItem('crisisHistory') || '[]');
             const list = document.getElementById('historyList');
             const section = document.getElementById('historySection');
-
             if(history.length > 0) {
                 section.classList.remove('hidden');
                 list.innerHTML = history.map((item, index) => `
-                    <div class="glass-card p-4 rounded-2xl text-left cursor-pointer hover:border-blue-300 transition-all" onclick="loadOld('${index}')">
-                        <div class="text-xs text-slate-400 mb-1">${item.date}</div>
-                        <div class="text-sm font-semibold truncate text-slate-600 italic">"${item.input}"</div>
+                    <div class="glass-card p-4 rounded-2xl text-left cursor-pointer hover:border-blue-300 transition-all border-l-4 border-slate-300" onclick="loadOld('${index}')">
+                        <div class="text-[10px] text-slate-400 font-bold mb-1">${item.date}</div>
+                        <div class="text-sm truncate text-slate-600 italic">"${item.input}"</div>
                     </div>
                 `).join('');
             }
@@ -163,7 +177,7 @@
         function copyResult() {
             const report = document.getElementById('report').innerText;
             navigator.clipboard.writeText(report).then(() => {
-                alert("คัดลอกรายงานเรียบร้อยแล้ว! ✅");
+                alert("คัดลอกรายงานสำเร็จ! ✅");
             });
         }
     </script>
