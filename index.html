@@ -3,79 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crisis Pulse Analyser</title>
+    <title>Crisis Pulse Analyser Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap');
+        body { font-family: 'Prompt', sans-serif; background-color: #f1f5f9; color: #0f172a; }
+        .glass-card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
         
-        body { 
-            font-family: 'Prompt', sans-serif; 
-            background-color: #f8fafc; 
-            color: #0f172a; 
-        }
-        
-        .glass-card { 
-            background: #ffffff; 
-            border: 1px solid #e2e8f0; 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); 
-        }
+        /* Markdown Styling */
+        .markdown-body h3 { font-size: 1.25rem; font-weight: 700; color: #1e40af; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .markdown-body p { margin-bottom: 0.75rem; line-height: 1.7; }
+        .markdown-body strong { color: #1e40af; background-color: #eff6ff; padding: 2px 4px; border-radius: 4px; }
+        .markdown-body hr { height: 2px; background: linear-gradient(to right, transparent, #e2e8f0, transparent); border: none; margin: 1.5rem 0; }
+        .markdown-body ul { list-style-type: none; padding-left: 0; }
+        .markdown-body li { margin-bottom: 0.5rem; padding-left: 1.5rem; position: relative; }
+        .markdown-body li::before { content: "•"; color: #3b82f6; position: absolute; left: 0; font-weight: bold; }
 
-        /* 🟢 ตกแต่งสไตล์ให้ Markdown ที่ถูกแปลงแล้วดูสวยงาม */
-        .markdown-body h1, .markdown-body h2, .markdown-body h3 {
-            font-weight: 700;
-            color: #1e3a8a; /* สีน้ำเงินเข้ม */
-            margin-top: 1.5rem;
-            margin-bottom: 0.5rem;
-        }
-        .markdown-body h3 { font-size: 1.25rem; }
-        .markdown-body h4 { font-weight: 600; color: #2563eb; margin-top: 1rem; font-size: 1.1rem; }
-        .markdown-body ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
-        .markdown-body li { margin-bottom: 0.25rem; }
-        .markdown-body hr { border-color: #e2e8f0; margin: 1.5rem 0; }
-        .markdown-body strong { color: #0f172a; font-weight: 700; }
-        .markdown-body p { margin-bottom: 0.75rem; }
+        /* Progress Bar Animation */
+        .progress-container { width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; display: none; }
+        .progress-bar { width: 0%; height: 100%; background: #3b82f6; transition: width 0.3s; }
+        
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fadeIn { animation: slideUp 0.4s ease-out forwards; }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-6 text-center">
-    
-    <h1 class="text-4xl font-bold text-blue-600 mb-2 tracking-wide">Crisis Pulse Analyser</h1>
-    <p class="text-sm text-slate-500 mb-8 tracking-widest uppercase">ระบบประเมินการสื่อสารในภาวะวิกฤต</p>
+<body class="flex flex-col items-center py-12 px-6">
 
-    <div class="w-full max-w-2xl glass-card p-8 rounded-2xl text-left border-t-4 border-blue-500 transition-all">
-        <label class="text-sm font-semibold text-slate-600 mb-3 block">💬 ระบุข้อความที่คุณต้องการวิเคราะห์:</label>
-        <textarea id="userInput" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white text-slate-800 mb-4 transition-all resize-none" rows="4" placeholder="พิมพ์คำพูดของคุณที่นี่ เช่น 'ทำไมไม่ช่วยเพื่อนล่ะ...'"></textarea>
+    <div class="w-full max-w-2xl text-center mb-8">
+        <h1 class="text-4xl font-bold text-blue-600 mb-2">Crisis Pulse Analyser <span class="text-sm bg-blue-100 text-blue-600 px-2 py-1 rounded">PRO</span></h1>
+        <p class="text-slate-500 uppercase tracking-widest text-xs">AI-Powered Communication Crisis Detection</p>
+    </div>
+
+    <div class="w-full max-w-2xl glass-card p-8 rounded-3xl mb-6">
+        <label class="text-sm font-semibold text-slate-600 mb-3 block">💬 ข้อมูลที่ต้องการวิเคราะห์</label>
+        <textarea id="userInput" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-400 focus:bg-white outline-none mb-4 transition-all resize-none" rows="4" placeholder="พิมพ์ข้อความที่นี่..."></textarea>
         
-        <div class="flex justify-end">
-            <button onclick="scan()" id="btn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold tracking-wide transition-all shadow-md flex items-center gap-2">
-                <span id="btnText">✨ เริ่มการวิเคราะห์</span>
+        <div class="progress-container mb-4" id="progressRoot">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="flex justify-between items-center">
+            <button onclick="clearHistory()" class="text-xs text-slate-400 hover:text-red-500 transition-colors">ล้างประวัติ</button>
+            <button onclick="scan()" id="btn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg active:scale-95">
+                <span id="btnText">INITIATE SCAN</span>
             </button>
         </div>
     </div>
 
-    <div id="result" class="hidden w-full max-w-2xl mt-6 p-8 glass-card rounded-2xl border-l-4 border-emerald-500 text-left transition-all">
-        <label class="text-sm font-semibold text-emerald-600 mb-4 flex items-center gap-2">
-            📊 ผลการประเมินจากระบบ
-        </label>
-        <div id="report" class="text-base text-slate-700 leading-relaxed markdown-body"></div>
+    <div id="result" class="hidden w-full max-w-2xl p-8 glass-card rounded-3xl border-l-8 border-blue-500 mb-6 animate-fadeIn">
+        <div class="flex justify-between items-center mb-4 border-b pb-4">
+            <span class="font-bold text-blue-600">📊 ผลการวิเคราะห์ล่าสุด</span>
+            <button onclick="copyResult()" class="text-xs bg-slate-100 hover:bg-blue-600 hover:text-white px-3 py-2 rounded-lg transition-all font-semibold">
+                📋 COPY REPORT
+            </button>
+        </div>
+        <div id="report" class="markdown-body text-slate-700"></div>
+    </div>
+
+    <div id="historySection" class="w-full max-w-2xl hidden">
+        <h3 class="text-sm font-bold text-slate-500 mb-4 uppercase tracking-widest">📜 ประวัติการใช้งาน</h3>
+        <div id="historyList" class="space-y-3"></div>
     </div>
 
     <script>
+        // โหลดประวัติเมื่อเปิดหน้าเว็บ
+        window.onload = () => displayHistory();
+
         async function scan() {
-            const inputField = document.getElementById('userInput');
-            const text = inputField.value.trim();
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if(!text) return alert("กรุณากรอกข้อความ");
+
             const btn = document.getElementById('btn');
             const btnText = document.getElementById('btnText');
+            const progressRoot = document.getElementById('progressRoot');
+            const progressBar = document.getElementById('progressBar');
             const resultBox = document.getElementById('result');
-            const reportText = document.getElementById('report');
 
-            if(!text) return alert("⚠️ กรุณากรอกข้อความก่อนทำการวิเคราะห์ครับ");
-            
-            btnText.innerText = "⏳ กำลังประมวลผล...";
+            // Start Animation
             btn.disabled = true;
-            btn.classList.add('opacity-70', 'cursor-not-allowed');
-            inputField.disabled = true;
-            resultBox.classList.add('hidden');
+            btnText.innerText = "SCANNING...";
+            progressRoot.style.display = 'block';
+            progressBar.style.width = '30%';
 
             try {
                 const res = await fetch('/api/analyze', {
@@ -84,23 +94,77 @@
                     body: JSON.stringify({text: text})
                 });
                 
+                progressBar.style.width = '70%';
                 const data = await res.json();
-                
-                if(!res.ok) throw new Error(data.error || "ระบบขัดข้อง");
+                if(!res.ok) throw new Error(data.error);
 
-                // 🟢 ใช้เครื่องมือ marked.parse() แปลงข้อความ AI ให้เป็น HTML อัตโนมัติ
-                reportText.innerHTML = marked.parse(data.text);
+                progressBar.style.width = '100%';
                 
+                // แสดงผล
+                const htmlOutput = marked.parse(data.text);
+                document.getElementById('report').innerHTML = htmlOutput;
                 resultBox.classList.remove('hidden');
 
+                // บันทึกประวัติ
+                saveToHistory(text, data.text);
+
             } catch (err) {
-                alert("🚨 ผิดพลาด: " + err.message);
+                alert("Error: " + err.message);
             } finally {
-                btnText.innerText = "✨ เริ่มการวิเคราะห์";
-                btn.disabled = false;
-                btn.classList.remove('opacity-70', 'cursor-not-allowed');
-                inputField.disabled = false;
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btnText.innerText = "INITIATE SCAN";
+                    progressRoot.style.display = 'none';
+                    progressBar.style.width = '0%';
+                }, 500);
             }
+        }
+
+        function saveToHistory(input, output) {
+            let history = JSON.parse(localStorage.getItem('crisisHistory') || '[]');
+            history.unshift({ input, output, date: new Date().toLocaleString() });
+            history = history.slice(0, 5); // เก็บแค่ 5 ล่าสุด
+            localStorage.setItem('crisisHistory', JSON.stringify(history));
+            displayHistory();
+        }
+
+        function displayHistory() {
+            const history = JSON.parse(localStorage.getItem('crisisHistory') || '[]');
+            const list = document.getElementById('historyList');
+            const section = document.getElementById('historySection');
+
+            if(history.length > 0) {
+                section.classList.remove('hidden');
+                list.innerHTML = history.map((item, index) => `
+                    <div class="glass-card p-4 rounded-2xl text-left cursor-pointer hover:border-blue-300 transition-all" onclick="loadOld('${index}')">
+                        <div class="text-xs text-slate-400 mb-1">${item.date}</div>
+                        <div class="text-sm font-semibold truncate text-slate-600 italic">"${item.input}"</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function loadOld(index) {
+            const history = JSON.parse(localStorage.getItem('crisisHistory'));
+            const item = history[index];
+            document.getElementById('userInput').value = item.input;
+            document.getElementById('report').innerHTML = marked.parse(item.output);
+            document.getElementById('result').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function clearHistory() {
+            if(confirm("ล้างประวัติทั้งหมดใช่หรือไม่?")) {
+                localStorage.removeItem('crisisHistory');
+                location.reload();
+            }
+        }
+
+        function copyResult() {
+            const report = document.getElementById('report').innerText;
+            navigator.clipboard.writeText(report).then(() => {
+                alert("คัดลอกรายงานเรียบร้อยแล้ว! ✅");
+            });
         }
     </script>
 </body>
