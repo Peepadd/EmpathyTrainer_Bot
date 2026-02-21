@@ -45,4 +45,4 @@
 
 ---
 
-**Developed by [Peepadd]** *Project for Empathy & Professional Communication Training*
+**Developed by [Peepadd] "Developed with the assistance of AI"** *Project for Empathy & Professional Communication Training*
