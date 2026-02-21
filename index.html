@@ -6,6 +6,8 @@
     <title>Crisis Pulse Analyser PRO+</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap');
         body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; color: #1e293b; }
@@ -20,7 +22,7 @@
 
         /* Score Gauge */
         .score-circle { width: 100px; height: 100px; border-radius: 50%; border: 8px solid #e2e8f0; display: flex; items-center; justify-center; position: relative; }
-        .score-fill { position: absolute; top: -8px; left: -8px; width: 100px; height: 100px; border-radius: 50%; border: 8px solid #3b82f6; clip-path: inset(0 0 50% 0); transition: all 1s ease-out; }
+        #scoreRing { transition: stroke-dashoffset 1s ease-out; }
     </style>
 </head>
 <body class="flex flex-col items-center py-10 px-6">
@@ -46,23 +48,31 @@
     </div>
 
     <div id="result" class="hidden w-full max-w-2xl p-8 glass-card rounded-3xl mb-10 border-t-8 border-blue-600">
-        <div class="flex flex-col md:flex-row items-center gap-8 mb-8 pb-8 border-b border-slate-100">
-            <div class="relative flex items-center justify-center">
-                <svg class="w-32 h-32 transform -rotate-90">
-                    <circle cx="64" cy="64" r="58" stroke="currentColor" stroke-width="10" fill="transparent" class="text-slate-100" />
-                    <circle id="scoreRing" cx="64" cy="64" r="58" stroke="currentColor" stroke-width="10" fill="transparent" stroke-dasharray="364" stroke-dashoffset="364" class="text-blue-600 transition-all duration-1000" />
-                </svg>
-                <div class="absolute text-3xl font-bold" id="scoreValue">0%</div>
+        <div id="capture-area"> <div class="flex flex-col md:flex-row items-center gap-8 mb-8 pb-8 border-b border-slate-100">
+                <div class="relative flex items-center justify-center">
+                    <svg class="w-32 h-32 transform -rotate-90">
+                        <circle cx="64" cy="64" r="58" stroke="currentColor" stroke-width="10" fill="transparent" class="text-slate-100" />
+                        <circle id="scoreRing" cx="64" cy="64" r="58" stroke="currentColor" stroke-width="10" fill="transparent" stroke-dasharray="364" stroke-dashoffset="364" class="text-blue-600" />
+                    </svg>
+                    <div class="absolute text-3xl font-bold" id="scoreValue">0%</div>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 mb-1 text-center md:text-left">ระดับความเป็นมืออาชีพ</h2>
+                    <p id="scoreLabel" class="text-slate-500 text-center md:text-left">ระบบกำลังประเมินคุณภาพการสื่อสารของคุณ...</p>
+                </div>
             </div>
-            <div>
-                <h2 class="text-xl font-bold text-slate-800 mb-1">ระดับความเป็นมืออาชีพ</h2>
-                <p id="scoreLabel" class="text-slate-500">ระบบกำลังประเมินคุณภาพการสื่อสารของคุณ...</p>
-            </div>
-        </div>
 
-        <div id="report" class="markdown-body"></div>
+            <div id="report" class="markdown-body"></div>
+        </div>
         
-        <button onclick="copyResult()" class="mt-8 w-full py-3 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-bold text-slate-600 transition-all">📋 คัดลอกรายงานฉบับเต็ม</button>
+        <div class="flex flex-col sm:flex-row gap-3 mt-8">
+            <button onclick="copyResult()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-bold text-slate-600 transition-all">
+                📋 คัดลอกรายงาน
+            </button>
+            <button onclick="exportImage()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm font-bold text-white transition-all shadow-md flex justify-center items-center gap-2">
+                📸 <span id="exportText">บันทึกเป็นรูปภาพ</span>
+            </button>
+        </div>
     </div>
 
     <script>
@@ -89,11 +99,8 @@
                 bar.style.width = '70%';
                 const data = await res.json();
                 
-                // ดึงคะแนนออกมาจากข้อความ AI (SCORE: 85)
                 const scoreMatch = data.text.match(/SCORE:\s*(\d+)/);
                 const score = scoreMatch ? parseInt(scoreMatch[1]) : 0;
-                
-                // ทำความสะอาดข้อความก่อนแสดง (เอาบรรทัด SCORE ออก)
                 const cleanText = data.text.replace(/SCORE:\s*\d+/, "");
 
                 updateDashboard(score);
@@ -117,7 +124,6 @@
             const val = document.getElementById('scoreValue');
             const label = document.getElementById('scoreLabel');
             
-            // คำนวณวงกลม (เส้นรอบวง 2 * pi * r = 2 * 3.14 * 58 ≈ 364)
             const offset = 364 - (score / 100 * 364);
             ring.style.strokeDashoffset = offset;
             val.innerText = score + "%";
@@ -129,7 +135,40 @@
 
         function copyResult() {
             const report = document.getElementById('report').innerText;
-            navigator.clipboard.writeText(report).then(() => alert("คัดลอกแล้ว! ✅"));
+            navigator.clipboard.writeText(report).then(() => alert("คัดลอกรายงานสำเร็จ! ✅"));
+        }
+
+        // 🟢 ฟังก์ชันสำหรับบันทึกผลเป็นรูปภาพ
+        function exportImage() {
+            const area = document.getElementById('result'); // เลือกทั้งกล่องผลลัพธ์
+            const exportBtnText = document.getElementById('exportText');
+            
+            // ซ่อนปุ่มก่อนถ่ายรูป เพื่อไม่ให้ปุ่มติดเข้าไปในรูป
+            const buttons = area.querySelectorAll('button');
+            buttons.forEach(b => b.style.opacity = '0');
+            
+            exportBtnText.innerText = "กำลังสร้างรูปภาพ...";
+
+            html2canvas(area, {
+                backgroundColor: "#ffffff",
+                scale: 2, // เพิ่มความชัด
+                logging: false,
+                useCORS: true,
+                borderRadius: 24
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Crisis-Report-${new Date().getTime()}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+                
+                // คืนค่าปุ่มกลับมา
+                buttons.forEach(b => b.style.opacity = '1');
+                exportBtnText.innerText = "บันทึกเป็นรูปภาพ";
+            }).catch(err => {
+                alert("ไม่สามารถบันทึกภาพได้: " + err.message);
+                buttons.forEach(b => b.style.opacity = '1');
+                exportBtnText.innerText = "บันทึกเป็นรูปภาพ";
+            });
         }
     </script>
 </body>
