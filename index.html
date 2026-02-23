@@ -147,7 +147,7 @@
             }, 1000);
         }
 
-        // 🎙️ Bulletproof Audio Recording Logic (แก้ปัญหาสระ/ช่องว่างของ iPad 100%)
+        // 🎙️ Super Bulletproof Audio Recording (แก้ปัญหา iPad Safari 100%)
         async function toggleRecording() {
             const btn = document.getElementById('recordBtn');
             const icon = document.getElementById('micIcon');
@@ -164,30 +164,33 @@
                     };
 
                     mediaRecorder.onstop = () => {
-                        // 1. บังคับทำความสะอาด MIME Type ให้เป๊ะตาม Google Regex
-                        let rawMime = mediaRecorder.mimeType || 'audio/mp4';
-                        currentMimeType = rawMime.split(';')[0].trim().toLowerCase();
-                        
-                        // ถ้าเจอช่องว่างหรืออักษรประหลาด ให้เปลี่ยนเป็นมาตรฐานทันที
-                        if (!/^[-\w.]+\/[-\w.]+$/.test(currentMimeType)) {
-                            currentMimeType = 'audio/mp4';
-                        }
-
-                        const audioBlob = new Blob(audioChunks, { type: currentMimeType });
-                        
+                        const blob = new Blob(audioChunks);
                         const reader = new FileReader();
-                        reader.readAsDataURL(audioBlob);
+                        reader.readAsDataURL(blob);
+                        
                         reader.onloadend = () => {
-                            const resultStr = reader.result;
-                            if (resultStr && resultStr.includes(',')) {
-                                // 2. บังคับทำความสะอาด Base64 (ลบทุกอย่างที่ไม่ใช่อักษร Base64)
-                                currentAudioBase64 = resultStr.split(',')[1].replace(/[^a-zA-Z0-9+/=]/g, '');
+                            const dataUrl = reader.result;
+                            
+                            // ใช้ Regex ดึงข้อมูล Data URL ออกมาให้เป๊ะที่สุด
+                            const match = dataUrl.match(/^data:([^;]*);base64,(.+)$/);
+                            
+                            if (match) {
+                                let detectedMime = match[1];
+                                let base64Data = match[2];
+
+                                // 🔴 กฎเหล็ก: ถ้า iPad ไม่ยอมส่ง MimeType มา หรือส่งมาเป็นค่าขยะ ให้บังคับเป็น audio/mp4
+                                if (!detectedMime || detectedMime === 'application/octet-stream' || !detectedMime.startsWith('audio/')) {
+                                    detectedMime = 'audio/mp4'; 
+                                }
+
+                                currentMimeType = detectedMime;
+                                currentAudioBase64 = base64Data;
                                 
                                 document.getElementById('userInput').value = "🎙️ [อัดเสียงสำเร็จ พร้อมวิเคราะห์แล้ว]";
                                 document.getElementById('userInput').disabled = true;
                                 document.getElementById('userInput').classList.add('bg-blue-50', 'text-blue-600', 'font-bold');
                             } else {
-                                showError("เกิดข้อผิดพลาดในการประมวลผลไฟล์เสียงครับ");
+                                showError("ไม่สามารถประมวลผลไฟล์เสียงบนอุปกรณ์นี้ได้ครับ");
                             }
                         };
                     };
@@ -201,7 +204,7 @@
                     document.getElementById('userInput').value = ""; 
 
                 } catch (err) {
-                    showError("ไม่สามารถเข้าถึงไมโครโฟนได้ กรุณาอนุญาตให้เบราว์เซอร์ใช้งานไมค์ในตั้งค่าก่อนครับ");
+                    showError("ไม่สามารถเข้าถึงไมโครโฟนได้ กรุณาอนุญาตให้ Safari ใช้งานไมค์ในตั้งค่าก่อนครับ");
                 }
             } else {
                 mediaRecorder.stop();
@@ -233,6 +236,7 @@
             loader.classList.remove('hidden');
             bar.style.width = '30%';
 
+            // Payload ส่งไป Vercel
             const payload = { 
                 text: currentAudioBase64 ? null : text,
                 audio: currentAudioBase64,
