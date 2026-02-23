@@ -31,7 +31,7 @@
         textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
         .dark textarea::-webkit-scrollbar-thumb { background: #475569; }
 
-        /* การตั้งค่าสำหรับป้องกัน PDF ตัดข้อความหรือตารางขาดครึ่ง */
+        /* การตั้งค่าสำหรับป้องกันข้อความขาดครึ่ง (ช่วยเสริม) */
         .avoid-break { page-break-inside: avoid; break-inside: avoid; }
         
         @keyframes pulse-ring {
@@ -280,7 +280,6 @@
                 skeleton.classList.add('hidden');
                 updateUI(data);
                 
-                // Save JSON for history
                 saveToHistory(text, data);
                 
                 resultBox.classList.remove('hidden');
@@ -295,12 +294,10 @@
             }
         }
 
-        // ฟังก์ชันอัปเดต UI แบบเขียน HTML เอง (กันตารางแหว่ง 100%)
         function updateUI(data) {
             const score = data.score || 0;
             const tone = data.tone || 'Neutral';
 
-            // 1. Animate Score
             let currentScore = 0;
             const scoreEl = document.getElementById('scoreValue');
             const ring = document.getElementById('scoreRing');
@@ -314,7 +311,6 @@
                 }, 15);
             }, 100);
 
-            // 2. Set Tone Badge & Border
             const resultBox = document.getElementById('result');
             const badge = document.getElementById('toneBadge');
             const tones = {
@@ -329,10 +325,8 @@
             badge.innerHTML = selected.label;
             badge.className = "inline-flex items-center px-4 py-1.5 rounded-full text-xs font-extrabold uppercase mb-4 tracking-wider shadow-sm transition-all " + selected.badge;
             
-            // 3. Build UI Content manually based on JSON Object
             let html = ``;
             
-            // Summary
             if(data.summary) {
                 html += `<div class="mb-8 avoid-break">
                     <h3 class="text-xl font-bold text-blue-800 dark:text-blue-400 mb-3 flex items-center">📝 บทสรุปการประเมิน</h3>
@@ -340,7 +334,6 @@
                 </div>`;
             }
 
-            // Pros & Cons
             html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 avoid-break">`;
             
             if(data.pros && data.pros.length > 0) {
@@ -364,7 +357,6 @@
             }
             html += `</div>`;
 
-            // Comparison Table
             if(data.comparison_table && data.comparison_table.length > 0) {
                 html += `
                 <div class="mt-8 mb-4 avoid-break">
@@ -437,7 +429,7 @@
         }
 
         // ----------------------------------------
-        // การส่งออก PDF / รูปภาพ 
+        // การส่งออก PDF (ทำเป็นหน้าเดียวแบบ Dynamic Height)
         // ----------------------------------------
         function exportPDF() {
             const area = document.getElementById('capture-area');
@@ -450,8 +442,12 @@
             if(wasDark) document.documentElement.classList.remove('dark');
 
             setTimeout(() => {
+                // คำนวณความกว้างและความสูงจริงของเนื้อหาเพื่อล็อกขนาดหน้ากระดาษเป็นหน้าเดียว 100%
+                const clientWidth = area.clientWidth;
+                const clientHeight = area.clientHeight;
+
                 const opt = {
-                    margin:       [10, 10, 15, 10], // เพิ่ม margin ล่างให้หน้าไม่ตัดน่าเกลียด
+                    margin:       [20, 0, 20, 0], // เว้นขอบบนล่างเล็กน้อยกันความอึดอัด
                     filename:     `Crisis-Report_${new Date().getTime()}.pdf`,
                     image:        { type: 'jpeg', quality: 1.0 },
                     html2canvas:  { 
@@ -460,8 +456,8 @@
                         backgroundColor: '#ffffff',
                         scrollY: 0
                     },
-                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                    pagebreak:    { mode: ['css', 'legacy'] } // บังคับใช้ CSS กันกระดาษตัด
+                    // *** จุดสำคัญ *** ปรับให้หน้ากระดาษยืดตามเนื้อหา (ยาวเป็นหน้าเดียวไม่มีตัดตารางขาด)
+                    jsPDF:        { unit: 'px', format: [clientWidth, clientHeight + 40], orientation: 'portrait' }
                 };
 
                 html2pdf().set(opt).from(area).save().then(() => {
