@@ -1,70 +1,76 @@
 /**
- * Refactored Gemini Analysis API
- * Clean Code: Early returns, explicit types, and structured prompting.
+ * ระบบวิเคราะห์คำพูดด้วย AI (Refactored)
  */
 export default async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+    if (req.method !== 'POST') return res.status(405).json({ error: 'ห้ามเข้าถึงโดยตรง' });
 
     const { text: userInput, situation, forbiddenWords } = req.body;
     
-    // 1. Backend Security Check
+    // ดึงและทำความสะอาด API Key
     const apiKey = (process.env.GOOGLE_API_KEY || "").replace(/['"]/g, '').trim();
-    if (!apiKey) return res.status(500).json({ error: "System Configuration Error: Missing API Key" });
-    if (!userInput) return res.status(400).json({ error: "Input text is required" });
+    if (!apiKey) return res.status(500).json({ error: "การตั้งค่าระบบไม่สมบูรณ์: ไม่พบ API Key" });
+    if (!userInput) return res.status(400).json({ error: "กรุณากรอกข้อความที่ต้องการวิเคราะห์" });
 
-    // 2. Prepare Context
     const forbiddenList = (forbiddenWords || []).filter(w => w).join(', ');
+
+    // สั่ง AI เป็นภาษาไทยเพื่อให้ได้ผลลัพธ์ที่เป็นธรรมชาติตามบริบทสังคมไทย
     const prompt = `
-        Role: Specialist in Crisis Communication.
-        Task: Analyze user's text based on the provided situation.
+        คุณคือ AI ผู้เชี่ยวชาญด้านการสื่อสารและการแก้ไขความขัดแย้ง (Crisis Communication Specialist)
         
-        Context:
-        - Situation: "${situation || "General"}"
-        - User's Message: "${userInput}"
-        - Forbidden Keywords/Intent: [${forbiddenList}]
+        สถานการณ์ที่เกิดขึ้น: "${situation || "สถานการณ์ทั่วไป"}"
+        ข้อความที่ผู้ใช้ตอบโต้: "${userInput}"
+        คำต้องห้าม/เจตนาต้องห้าม: [${forbiddenList}]
         
-        Rules:
-        1. If forbidden keywords are found, set score to 0.
-        2. Evaluate "Professionalism", "Empathy", and "Clarity" (Score 0-100).
-        3. Determine tone: Aggressive, Professional, Passive, or Neutral.
-        4. Output strictly in JSON format.
+        กติกาการวิเคราะห์:
+        1. หากพบคำต้องห้าม หรือมีเจตนาตามลิสต์ ให้คะแนน score เป็น 0 ทันที
+        2. ประเมินคะแนนความเป็นมืออาชีพ ความเห็นอกเห็นใจ และความชัดเจน (0-100)
+        3. ระบุโทนเสียง (Tone): Professional, Aggressive, Passive, หรือ Neutral
+        4. ตอบกลับเป็นรูปแบบ JSON เท่านั้น ห้ามพิมพ์ข้อความอื่นนอกเหนือจาก JSON
         
-        JSON Structure:
+        รูปแบบ JSON ที่ต้องตอบกลับ:
         {
-          "score": number,
-          "tone": "string",
-          "summary": "markdown_string",
-          "pros": ["string"],
-          "cons": ["string"],
-          "comparison_table": [{"aspect": "string", "original": "string", "better": "string"}]
+          "score": (ตัวเลข),
+          "tone": "ชื่อโทนเสียงภาษาอังกฤษ",
+          "summary": "บทสรุปสั้นๆ (ใช้ ** เพื่อทำตัวหนา)",
+          "pros": ["ข้อดีที่ 1", "ข้อดีที่ 2"],
+          "cons": ["จุดที่ควรแก้ที่ 1", "จุดที่ควรแก้ที่ 2"],
+          "comparison_table": [
+            {
+              "aspect": "ประเด็นที่วิเคราะห์",
+              "original": "ข้อความเดิมของผู้ใช้",
+              "better": "ข้อความแนะนำที่ดูดีกว่า"
+            }
+          ]
         }
     `;
 
     try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
         
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { response_mime_type: "application/json" }
+                generationConfig: { 
+                    response_mime_type: "application/json" 
+                }
             })
         });
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error?.message || "Gemini API failure");
+            throw new Error(errorData.error?.message || "Gemini API Error");
         }
 
         const data = await response.json();
         const result = JSON.parse(data.candidates[0].content.parts[0].text);
 
-        // Sanitize and return
+        // ส่งผลลัพธ์กลับไปยังหน้าเว็บ
         return res.status(200).json({
             score: result.score ?? 0,
             tone: result.tone ?? "Neutral",
-            summary: result.summary ?? "วิเคราะห์เสร็จสิ้น",
+            summary: result.summary ?? "วิเคราะห์ข้อมูลเรียบร้อย",
             pros: result.pros || [],
             cons: result.cons || [],
             comparison_table: result.comparison_table || []
@@ -72,8 +78,9 @@ export default async function handler(req, res) {
 
     } catch (error) {
         console.error("API Error:", error);
+        const isQuotaError = error.message.includes("quota") || error.message.includes("429");
         return res.status(500).json({ 
-            error: error.message.includes("quota") ? "AI Limit reached. Please try again later." : "Analysis failed." 
+            error: isQuotaError ? "AI กำลังทำงานหนักเกินไป กรุณารอสัก 15 วินาทีแล้วลองใหม่ครับ" : "เกิดข้อผิดพลาดในการวิเคราะห์: " + error.message 
         });
     }
 }
