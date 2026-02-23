@@ -12,11 +12,14 @@
         body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-font-smoothing: antialiased; }
         .glass-card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.5s ease; }
         
+        /* Modal Animation */
         .modal-enter { opacity: 0; transform: scale(0.9); }
         .modal-active { opacity: 1; transform: scale(1); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
         #bar { will-change: width; transition: width 0.4s ease; }
         #scoreRing { transition: stroke-dashoffset 1s ease-in-out; stroke-linecap: round; }
 
+        /* Tone Themes */
         .tone-aggressive { border-top: 12px solid #ef4444 !important; }
         .tone-professional { border-top: 12px solid #10b981 !important; }
         .tone-passive { border-top: 12px solid #64748b !important; }
@@ -25,50 +28,30 @@
         .markdown-body table { width: 100%; border-collapse: collapse; display: block; overflow-x: auto; border-radius: 12px; }
         .markdown-body th { background: #2563eb; color: white; padding: 12px; text-align: left; }
         .markdown-body td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
-
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-        .recording { animation: pulse-red 1.5s infinite; background-color: #fef2f2 !important; border-color: #ef4444 !important; color: #ef4444 !important; }
     </style>
 </head>
 <body class="flex flex-col items-center py-8 px-4 md:px-8">
 
     <div id="errorModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-sm p-4">
         <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-8 text-center modal-enter transition-all" id="modalContainer">
-            <div class="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6" id="modalIcon">
+            <div class="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
             </div>
             <h3 class="text-xl font-bold text-slate-800 mb-2">แจ้งเตือนจากระบบ</h3>
-            <p id="modalMsg" class="text-slate-500 text-sm leading-relaxed mb-8 whitespace-pre-line">ข้อความ...</p>
+            <p id="modalMsg" class="text-slate-500 text-sm leading-relaxed mb-8 whitespace-pre-line">ข้อความแจ้งเตือน...</p>
             <button onclick="closeModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-95">รับทราบ</button>
         </div>
     </div>
 
     <div class="w-full max-w-3xl text-center mb-6">
         <h1 class="text-3xl font-bold text-blue-600 mb-1">Crisis Pulse Analyser <span class="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full uppercase">PRO</span></h1>
-        <p class="text-slate-400 uppercase tracking-tighter text-[10px]">Professional Audio & Text Analysis</p>
-    </div>
-
-    <div class="w-full max-w-3xl glass-card p-5 rounded-2xl mb-6 border-l-[6px] border-amber-400 bg-amber-50/30">
-        <p class="text-sm md:text-base text-amber-900 italic">🚩 ภารกิจ: เพื่อนหายตอนใกล้ส่งงานกลุ่ม พรุ่งนี้พรีเซนต์ คุณจะพูดอย่างไร?</p>
+        <p class="text-slate-400 uppercase tracking-tighter text-[10px]">Professional Crisis Analysis System</p>
     </div>
 
     <div class="w-full max-w-3xl glass-card p-6 md:p-8 rounded-[2rem] mb-8">
-        <div class="flex flex-col md:flex-row gap-4 mb-4">
-            <textarea id="userInput" class="flex-1 p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none text-base md:text-lg min-h-[110px]" placeholder="พิมพ์ประโยค หรือ กดปุ่มไมค์เพื่ออัดเสียง (ไม่เกิน 10 วินาที)..."></textarea>
-            
-            <button id="recordBtn" onclick="toggleRecording()" class="md:w-32 py-4 bg-slate-50 border border-slate-200 text-slate-600 rounded-2xl flex flex-col items-center justify-center hover:bg-slate-100 transition-all font-bold relative overflow-hidden">
-                <span class="text-2xl mb-1" id="micIcon">🎙️</span>
-                <span class="text-xs uppercase tracking-widest" id="recordText">อัดเสียง</span>
-                <div id="recordProgress" class="absolute bottom-0 left-0 h-1 bg-red-500 transition-all duration-[10000ms] ease-linear w-0"></div>
-            </button>
-        </div>
-
+        <textarea id="userInput" class="w-full p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none mb-4 text-base md:text-lg min-h-[110px]" placeholder="พิมพ์ประโยคที่ต้องการวิเคราะห์..."></textarea>
         <button onclick="scan()" id="btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]">วิเคราะห์ประสิทธิภาพการสื่อสาร</button>
         <div id="loader" class="hidden mt-6 w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
             <div id="bar" class="h-full bg-blue-500 w-0"></div>
@@ -94,30 +77,12 @@
             <div id="report" class="markdown-body text-slate-700"></div>
         </div>
         <div class="flex flex-col sm:flex-row gap-4 mt-10">
-            <button onclick="copyResult()" class="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm font-bold text-slate-600 border border-slate-200">📋 คัดลอกข้อมูล</button>
+            <button onclick="copyResult()" class="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm font-bold text-slate-600 border border-slate-200 transition-all">📋 คัดลอกข้อมูล</button>
             <button onclick="exportImage()" id="exportBtn" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm font-bold text-white shadow-lg flex justify-center items-center gap-2">📸 บันทึกเป็นรูปภาพ</button>
         </div>
     </div>
 
-    <div id="historySection" class="w-full max-w-3xl hidden mb-20 px-2">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono">📜 HISTORY LOG</h3>
-            <button onclick="clearHistory()" class="text-[10px] text-red-400 font-bold uppercase hover:underline">Clear All</button>
-        </div>
-        <div id="historyList" class="space-y-3"></div>
-    </div>
-
     <script>
-        window.onload = displayHistory;
-
-        let mediaStream = null; // 🔴 เพิ่มตัวแปรเก็บ Stream ไมโครโฟน
-        let mediaRecorder;
-        let audioChunks = [];
-        let isRecording = false;
-        let currentAudioBase64 = null;
-        let currentMimeType = null;
-        let recordingTimeout;
-
         function showError(msg) {
             const modal = document.getElementById('errorModal');
             const container = document.getElementById('modalContainer');
@@ -133,13 +98,14 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
+        // 🕒 Smart Countdown (ภาพที่ 16)
         function startCountdown(seconds) {
             const btn = document.getElementById('btn');
             let remaining = Math.ceil(seconds);
             btn.disabled = true;
             btn.classList.replace('bg-blue-600', 'bg-slate-400');
             const timer = setInterval(() => {
-                btn.innerText = `⏳ รออีก ${remaining} วิ...`;
+                btn.innerText = `⏳ กรุณารออีก ${remaining} วินาที...`;
                 remaining--;
                 if (remaining < 0) {
                     clearInterval(timer);
@@ -150,128 +116,34 @@
             }, 1000);
         }
 
-        // 🎙️ แก้ปัญหาไมค์ค้าง 100%
-        async function toggleRecording() {
-            const btn = document.getElementById('recordBtn');
-            const icon = document.getElementById('micIcon');
-            const text = document.getElementById('recordText');
-            const progressBar = document.getElementById('recordProgress');
-
-            if (!isRecording) {
-                try {
-                    // เปิดไมค์
-                    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(mediaStream);
-                    audioChunks = [];
-
-                    mediaRecorder.ondataavailable = event => {
-                        if (event.data.size > 0) audioChunks.push(event.data);
-                    };
-
-                    mediaRecorder.onstop = () => {
-                        const blob = new Blob(audioChunks);
-                        const reader = new FileReader();
-                        reader.readAsDataURL(blob);
-                        reader.onloadend = () => {
-                            const dataUrl = reader.result;
-                            const match = dataUrl.match(/^data:([^;]*);base64,(.+)$/);
-                            if (match) {
-                                let detectedMime = match[1];
-                                if (!detectedMime || detectedMime === 'application/octet-stream' || !detectedMime.startsWith('audio/')) {
-                                    detectedMime = 'audio/mp4'; 
-                                }
-                                currentMimeType = detectedMime;
-                                currentAudioBase64 = match[2];
-                                document.getElementById('userInput').value = "🎙️ [อัดเสียงสำเร็จ พร้อมวิเคราะห์แล้ว]";
-                                document.getElementById('userInput').disabled = true;
-                                document.getElementById('userInput').classList.add('bg-blue-50', 'text-blue-600', 'font-bold');
-                            }
-                        };
-                    };
-
-                    mediaRecorder.start();
-                    isRecording = true;
-                    btn.classList.add('recording');
-                    icon.innerText = "🔴";
-                    text.innerText = "กำลังอัด...";
-                    currentAudioBase64 = null; 
-                    document.getElementById('userInput').value = "";
-                    
-                    progressBar.style.width = '100%';
-                    recordingTimeout = setTimeout(() => {
-                        if(isRecording) {
-                            toggleRecording();
-                        }
-                    }, 10000); 
-
-                } catch (err) {
-                    showError("ไม่สามารถเข้าถึงไมค์ได้ (ตรวจสอบการอนุญาตในเบราว์เซอร์)");
-                }
-            } else {
-                // หยุดอัด
-                mediaRecorder.stop();
-                isRecording = false;
-                
-                // 🔴 บรรทัดนี้สำคัญมาก! สั่งปิดฮาร์ดแวร์ไมโครโฟน เพื่อดับไฟสถานะ
-                if (mediaStream) {
-                    mediaStream.getTracks().forEach(track => track.stop());
-                }
-
-                clearTimeout(recordingTimeout); 
-                btn.classList.remove('recording');
-                progressBar.style.width = '0%'; 
-                icon.innerText = "✅";
-                text.innerText = "อัดเสร็จแล้ว";
-                
-                setTimeout(() => {
-                    icon.innerText = "🎙️";
-                    text.innerText = "อัดใหม่";
-                }, 2000);
-            }
-        }
-
         async function scan() {
-            const inputEl = document.getElementById('userInput');
-            const text = inputEl.value.trim();
-            
-            if(!text && !currentAudioBase64) return showError("กรุณาพิมพ์ข้อความ หรือกดปุ่มไมค์เพื่ออัดเสียงครับ");
-            if(isRecording) return showError("กรุณากดหยุดอัดเสียงก่อนวิเคราะห์ครับ");
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if(!text) return showError("กรุณาพิมพ์ข้อความที่ต้องการวิเคราะห์ครับ");
 
             const btn = document.getElementById('btn');
             const loader = document.getElementById('loader');
             const bar = document.getElementById('bar');
 
             btn.disabled = true;
-            btn.innerText = "AI กำลังฟังและวิเคราะห์...";
+            btn.innerText = "กำลังประมวลผล...";
             loader.classList.remove('hidden');
             bar.style.width = '30%';
-
-            const payload = { 
-                text: currentAudioBase64 ? null : text,
-                audio: currentAudioBase64,
-                mimeType: currentMimeType
-            };
 
             try {
                 const res = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({text: text})
                 });
                 
-                const responseText = await res.text();
-                let data;
-                try {
-                    data = JSON.parse(responseText);
-                } catch (e) {
-                    console.error("Vercel Crashed:", responseText);
-                    throw new Error("ระบบเซิร์ฟเวอร์ฟรี (Vercel) หมดเวลาประมวลผล (เกิน 10 วินาที) ครับ 😭\n\nการฟังเสียงใช้พลังงาน AI สูงมาก แนะนำให้ใช้วิธี 'พิมพ์ข้อความ' แทนชั่วคราวนะครับ");
-                }
+                const data = await res.json();
 
                 if (!res.ok) {
                     if (res.status === 429) {
-                        const waitSec = (data.error && data.error.match(/retry in (\d+)/)) ? data.error.match(/retry in (\d+)/)[1] : 30;
-                        showError(`🤖 โควตาเต็มชั่วคราว\nรอประมาณ ${Math.ceil(waitSec)} วินาทีนะครับ`);
+                        // 🔍 Smart Parsing: ดึงเวลาจาก Error จริง (ภาพที่ 15)
+                        const waitSec = (data.error.match(/retry in (\d+)/) || [0, 30])[1];
+                        showError(`🤖 ขออภัยครับ! ตอนนี้ AI กำลังพัก (โควตาเต็ม)\nกรุณารอสักประมาณ ${Math.ceil(waitSec)} วินาทีนะครับ`);
                         startCountdown(waitSec);
                         throw new Error("Quota Full");
                     }
@@ -284,20 +156,13 @@
                 const cleanText = data.text.replace(/SCORE:\s*\d+/, "").replace(/TONE:\s*\w+/, "");
 
                 updateUI(parseInt(score), tone, cleanText);
-                const historyText = currentAudioBase64 ? "🎙️ [วิเคราะห์จากไฟล์เสียง]" : text;
-                saveToHistory(historyText, parseInt(score), tone, cleanText);
                 document.getElementById('result').classList.remove('hidden');
                 setTimeout(() => document.getElementById('result').scrollIntoView({ behavior: 'smooth' }), 300);
 
             } catch (err) {
-                if(err.message !== "Quota Full") showError(err.message);
+                if(err.message !== "Quota Full") showError("เกิดข้อผิดพลาด: " + err.message);
                 bar.style.width = '0%';
             } finally {
-                currentAudioBase64 = null;
-                inputEl.disabled = false;
-                inputEl.classList.remove('bg-blue-50', 'text-blue-600', 'font-bold');
-                if (inputEl.value.includes("[อัดเสียงสำเร็จ")) inputEl.value = ""; 
-
                 if (!btn.innerText.includes("รออีก")) {
                     loader.classList.add('hidden'); 
                     btn.disabled = false; 
@@ -329,44 +194,6 @@
             document.getElementById('report').innerHTML = marked.parse(report);
         }
 
-        function saveToHistory(input, score, tone, report) {
-            let history = JSON.parse(localStorage.getItem('crisisHistory') || '[]');
-            history.unshift({ input, score, tone, report, date: new Date().toLocaleString('th-TH') });
-            localStorage.setItem('crisisHistory', JSON.stringify(history.slice(0, 5)));
-            displayHistory();
-        }
-
-        function displayHistory() {
-            const history = JSON.parse(localStorage.getItem('crisisHistory') || '[]');
-            const list = document.getElementById('historyList');
-            if(history.length > 0) {
-                document.getElementById('historySection').classList.remove('hidden');
-                list.innerHTML = history.map((item, index) => `
-                    <div class="glass-card p-4 rounded-xl cursor-pointer hover:bg-slate-50 border-l-4" onclick="loadHistory(${index})">
-                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-400">
-                            <span>${item.date}</span><span>${item.score}%</span>
-                        </div>
-                        <div class="text-sm text-slate-600 truncate mt-1 italic">"${item.input}"</div>
-                    </div>
-                `).join('');
-            }
-        }
-
-        function loadHistory(index) {
-            const item = JSON.parse(localStorage.getItem('crisisHistory'))[index];
-            document.getElementById('userInput').value = item.input;
-            updateUI(item.score, item.tone, item.report);
-            document.getElementById('result').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function clearHistory() { 
-            if(confirm("ต้องการล้างประวัติการวิเคราะห์ทั้งหมดหรือไม่?")) { 
-                localStorage.removeItem('crisisHistory'); 
-                location.reload(); 
-            } 
-        }
-
         function exportImage() {
             const area = document.getElementById('result');
             const btn = document.getElementById('exportBtn');
@@ -384,11 +211,7 @@
             });
         }
 
-        function copyResult() { 
-            navigator.clipboard.writeText(document.getElementById('report').innerText).then(() => {
-                alert("คัดลอกลงคลิปบอร์ดแล้ว! ✅");
-            }); 
-        }
+        function copyResult() { navigator.clipboard.writeText(document.getElementById('report').innerText).then(() => alert("คัดลอกแล้ว ✅")); }
     </script>
 </body>
 </html>
