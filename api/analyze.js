@@ -48,7 +48,7 @@ export default async function handler(req, res) {
 - ใช้ Emoji ตกแต่งให้สวยงามน่าอ่าน
 - ปิดท้ายด้วย [จบการวิเคราะห์]`;
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.0-pro:generateContent?key=${apiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
 
         const response = await fetch(url, {
             method: 'POST',
