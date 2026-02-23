@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Crisis Pulse Analyser PRO+</title>
+    <title>Crisis Pulse Analyser PRO+ 🚀</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -25,53 +25,55 @@
 </head>
 <body class="flex flex-col items-center py-10 px-4 bg-slate-50 dark:bg-slate-900 min-h-screen text-slate-800 dark:text-slate-100">
 
-    <button onclick="UI.toggleDarkMode()" class="absolute top-4 right-4 p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg z-10">
+    <button onclick="UI.toggleDarkMode()" class="absolute top-4 right-4 p-3 rounded-full bg-white dark:bg-slate-800 shadow-lg z-10 hover:scale-110 transition-transform">
         <span id="themeIcon">🌙</span>
     </button>
 
     <div id="errorModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-sm p-4">
-        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[2.5rem] p-8 text-center shadow-2xl">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[2.5rem] p-8 text-center shadow-2xl scale-in">
             <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
             </div>
-            <h3 class="text-xl font-bold mb-2">แจ้งเตือนระบบ</h3>
+            <h3 class="text-xl font-bold mb-2">อุ๊ปส์! มีบางอย่างผิดพลาด ⚠️</h3>
             <p id="modalMsg" class="text-slate-500 dark:text-slate-400 text-sm mb-6"></p>
-            <button onclick="UI.closeModal()" class="w-full bg-slate-800 dark:bg-blue-600 text-white py-3 rounded-xl font-bold">รับทราบ</button>
+            <button onclick="UI.closeModal()" class="w-full bg-slate-800 dark:bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg">เข้าใจแล้ว 👌</button>
         </div>
     </div>
 
     <header class="w-full max-w-3xl text-center mb-10">
-        <h1 class="text-4xl font-extrabold text-blue-900 dark:text-blue-400">Crisis Pulse <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded-md uppercase">PRO+</span></h1>
-        <p class="mt-2 text-slate-500 font-medium">ระบบวิเคราะห์ทักษะการสื่อสารในภาวะวิกฤตด้วย AI</p>
+        <h1 class="text-4xl md:text-5xl font-extrabold text-blue-900 dark:text-blue-400 tracking-tight">Crisis Pulse <span class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs px-3 py-1 rounded-full uppercase">PRO+ 🚀</span></h1>
+        <p class="mt-3 text-slate-500 font-medium">วิเคราะห์การสื่อสารของคุณให้ "คม" และ "มืออาชีพ" ยิ่งขึ้นด้วย AI ✨</p>
     </header>
 
-    <main class="w-full max-w-3xl glass-card p-6 md:p-10 rounded-[2.5rem] shadow-xl relative mb-10">
-        <div class="grid md:grid-cols-2 gap-4 mb-6">
+    <main class="w-full max-w-3xl glass-card p-6 md:p-10 rounded-[2.5rem] shadow-2xl relative mb-10 overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500"></div>
+        
+        <div class="grid md:grid-cols-2 gap-5 mb-8">
             <div>
-                <label class="block text-sm font-bold mb-2 text-blue-900 dark:text-blue-300">🎭 เลือกสถานการณ์</label>
-                <select id="situationSelect" onchange="UI.toggleCustomSituation()" class="w-full p-3 rounded-xl border dark:bg-slate-800 dark:border-slate-700 outline-none">
-                    <option value="เพื่อนหาย ไม่อ่านไลน์ พรุ่งนี้มีพรีเซนต์">เพื่อนหาย/พรีเซนต์งาน</option>
-                    <option value="ลูกค้า VIP โวยวายสินค้ามีปัญหาหน้างาน">ลูกค้าโวยวาย</option>
-                    <option value="เจ้านายสั่งงานด่วนนอกเวลา ทำไม่ทัน">งานด่วนนอกเวลา</option>
+                <label class="block text-sm font-bold mb-2 text-blue-900 dark:text-blue-300">🎭 เลือกสถานการณ์วิกฤต</label>
+                <select id="situationSelect" onchange="UI.toggleCustomSituation()" class="w-full p-3.5 rounded-xl border-2 border-slate-100 dark:border-slate-700 dark:bg-slate-800 focus:border-blue-400 outline-none transition-all">
+                    <option value="เพื่อนหาย ไม่อ่านไลน์ พรุ่งนี้มีพรีเซนต์">📱 เพื่อนหาย/พรุ่งนี้มีพรีเซนต์</option>
+                    <option value="ลูกค้า VIP โวยวายสินค้ามีปัญหาหน้างาน">😤 ลูกค้าโวยวายสินค้ามีปัญหา</option>
+                    <option value="เจ้านายสั่งงานด่วนนอกเวลา ทำไม่ทัน">💼 เจ้านายสั่งงานด่วน (ทำไม่ทัน)</option>
                     <option value="custom">✨ กำหนดสถานการณ์เอง...</option>
                 </select>
-                <input type="text" id="customSituation" class="hidden mt-2 w-full p-3 rounded-xl border dark:bg-slate-800" placeholder="ระบุสถานการณ์ของคุณที่นี่...">
+                <input type="text" id="customSituation" class="hidden mt-3 w-full p-3.5 rounded-xl border-2 border-blue-100 dark:bg-slate-800 focus:border-blue-400 outline-none" placeholder="พิมพ์สถานการณ์ของคุณที่นี่...">
             </div>
             <div>
-                <label class="block text-sm font-bold mb-2 text-blue-900 dark:text-blue-300">🚫 คำต้องห้าม (คั่นด้วยลูกน้ำ)</label>
-                <input type="text" id="forbiddenWordsInput" class="w-full p-3 rounded-xl border dark:bg-slate-800 dark:border-slate-700 outline-none" value="ขี้เกียจ, ภาระ">
+                <label class="block text-sm font-bold mb-2 text-blue-900 dark:text-blue-300">🚫 คำต้องห้ามที่ไม่ควรใช้</label>
+                <input type="text" id="forbiddenWordsInput" class="w-full p-3.5 rounded-xl border-2 border-slate-100 dark:border-slate-700 dark:bg-slate-800 focus:border-red-300 outline-none transition-all" value="ขี้เกียจ, ภาระ, ปัญหาของคุณ">
             </div>
         </div>
 
-        <div class="flex justify-between items-center mb-2">
-            <label class="text-sm font-bold">💬 สิ่งที่คุณจะพูดหรือตอบกลับ:</label>
-            <button id="micBtn" onclick="Voice.toggle()" class="text-xs bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-full flex items-center gap-1 font-bold text-blue-600">
+        <div class="flex justify-between items-center mb-3">
+            <label class="text-sm font-bold text-slate-700 dark:text-slate-300">💬 สิ่งที่คุณจะพิมพ์หรือพูดตอบกลับ:</label>
+            <button id="micBtn" onclick="Voice.toggle()" class="text-xs bg-blue-100 dark:bg-blue-900/40 px-4 py-2 rounded-full flex items-center gap-2 font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-200 transition-colors">
                 🎤 <span id="micText">กดเพื่อพูด</span>
             </button>
         </div>
-        <textarea id="userInput" class="w-full p-4 rounded-2xl border dark:bg-slate-900 min-h-[140px] focus:ring-2 focus:ring-blue-400 outline-none shadow-inner" placeholder="พิมพ์ข้อความของคุณที่นี่..."></textarea>
+        <textarea id="userInput" class="w-full p-5 rounded-3xl border-2 border-slate-100 dark:bg-slate-900 dark:border-slate-800 min-h-[160px] focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 outline-none shadow-inner text-lg" placeholder="พิมพ์ข้อความตอบโต้ของคุณที่นี่..."></textarea>
 
-        <button onclick="App.analyze()" id="btn" class="w-full mt-6 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white py-4 rounded-2xl font-bold transition-all transform active:scale-95 shadow-lg">
+        <button onclick="App.analyze()" id="btn" class="w-full mt-8 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white py-5 rounded-2xl font-bold text-lg transition-all transform active:scale-95 shadow-xl flex justify-center items-center gap-2">
             🚀 เริ่มวิเคราะห์ประสิทธิภาพ
         </button>
     </main>
@@ -82,44 +84,41 @@
         <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2 mx-auto"></div>
     </div>
 
-    <section id="result" class="hidden w-full max-w-3xl p-8 md:p-12 glass-card rounded-[3rem] mb-10 shadow-2xl">
-        <div id="capture-area" class="bg-white dark:bg-slate-800 p-4 rounded-2xl">
-            <div class="flex flex-col md:flex-row items-center gap-8 border-b pb-8 mb-8 avoid-break">
+    <section id="result" class="hidden w-full max-w-3xl p-8 md:p-12 glass-card rounded-[3rem] mb-10 shadow-2xl border-t-[12px]">
+        <div id="capture-area" class="bg-white dark:bg-slate-800 p-6 rounded-3xl">
+            <div class="flex flex-col md:flex-row items-center gap-10 border-b border-slate-100 dark:border-slate-700 pb-10 mb-8 avoid-break">
                 <div class="relative flex items-center justify-center">
-                    <svg class="w-32 h-32" viewBox="0 0 128 128" style="transform: rotate(-90deg);">
+                    <svg class="w-36 h-36 drop-shadow-md" viewBox="0 0 128 128" style="transform: rotate(-90deg);">
                         <circle cx="64" cy="64" r="56" stroke="currentColor" class="text-slate-100 dark:text-slate-700" stroke-width="10" fill="none" />
                         <circle id="scoreRing" cx="64" cy="64" r="56" stroke="#3b82f6" stroke-width="10" fill="none" stroke-dasharray="351.85" stroke-dashoffset="351.85" />
                     </svg>
-                    <span id="scoreValue" class="absolute text-3xl font-extrabold">0%</span>
+                    <span id="scoreValue" class="absolute text-4xl font-black text-blue-900 dark:text-white">0%</span>
                 </div>
-                <div class="text-center md:text-left">
-                    <div id="toneBadge" class="inline-block px-3 py-1 rounded-full text-[10px] font-extrabold uppercase mb-2 shadow-sm">Analyzing</div>
-                    <h2 class="text-2xl font-bold text-slate-800 dark:text-white">ผลการประเมินจาก AI</h2>
-                    <p class="text-slate-500 text-sm">วิเคราะห์ตามหลักการสื่อสารในภาวะวิกฤต</p>
+                <div class="text-center md:text-left flex-1">
+                    <div id="toneBadge" class="inline-flex items-center px-4 py-1.5 rounded-full text-[11px] font-black uppercase mb-3 shadow-sm tracking-widest">Analyzing...</div>
+                    <h2 class="text-3xl font-extrabold text-slate-800 dark:text-white mb-1">ผลประเมินรายบุคคล 📋</h2>
+                    <p class="text-slate-500 font-medium">ให้คำแนะนำโดยระบบ AI ผู้เชี่ยวชาญด้านการสื่อสาร</p>
                 </div>
             </div>
-            <div id="reportContent"></div>
+            <div id="reportContent" class="space-y-8"></div>
         </div>
         
-        <div class="grid grid-cols-2 gap-4 mt-8">
-            <button onclick="Exporter.run('pdf')" class="py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold text-sm shadow-md transition-colors">📄 บันทึกเป็น PDF</button>
-            <button onclick="Exporter.run('image')" class="py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm shadow-md transition-colors">📸 บันทึกเป็นรูปภาพ</button>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-10">
+            <button onclick="Exporter.run('pdf')" id="pdfBtn" class="py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold flex justify-center items-center gap-2 shadow-lg transition-all">📄 บันทึกเป็นเอกสาร PDF</button>
+            <button onclick="Exporter.run('image')" id="imgBtn" class="py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-bold flex justify-center items-center gap-2 shadow-lg transition-all">📸 บันทึกเป็นรูปภาพ</button>
         </div>
     </section>
 
-    <section id="historySection" class="w-full max-w-3xl hidden mb-20">
-        <h3 class="text-center text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-4">📜 ประวัติการวิเคราะห์ล่าสุด</h3>
-        <div id="historyList" class="grid gap-3"></div>
+    <section id="historySection" class="w-full max-w-3xl hidden mb-24">
+        <h3 class="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6">📜 ประวัติการวิเคราะห์ 5 ครั้งล่าสุด</h3>
+        <div id="historyList" class="grid gap-4"></div>
     </section>
 
     <script>
-        /**
-         * ส่วนจัดการ Logic หลัก (App)
-         */
         const App = {
             async analyze() {
                 const text = document.getElementById('userInput').value.trim();
-                if (!text) return UI.showError("กรุณาพิมพ์ข้อความที่คุณต้องการสื่อสารก่อนครับ");
+                if (!text) return UI.showError("อย่าลืมพิมพ์หรือพูดข้อความที่ต้องการวิเคราะห์ก่อนนะคร้าบ! 😊");
 
                 const situation = UI.getSituation();
                 const forbidden = document.getElementById('forbiddenWordsInput').value.split(',').map(s => s.trim());
@@ -134,7 +133,7 @@
                     });
 
                     const data = await response.json();
-                    if (!response.ok) throw new Error(data.error || "ไม่สามารถเชื่อมต่อกับ AI ได้");
+                    if (!response.ok) throw new Error(data.error || "ระบบขัดข้องชั่วคราว ลองใหม่อีกครั้งนะ!");
 
                     this.renderResult(data);
                     this.saveHistory(text, data);
@@ -151,57 +150,56 @@
 
                 const report = document.getElementById('reportContent');
                 report.innerHTML = `
-                    <div class="mb-6 avoid-break">
-                        <h4 class="font-bold text-blue-800 dark:text-blue-400 mb-2">📝 บทสรุป:</h4>
-                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed">${this.format(data.summary)}</p>
+                    <div class="avoid-break bg-blue-50/50 dark:bg-slate-700/30 p-6 rounded-[2rem] border border-blue-100 dark:border-slate-700">
+                        <h4 class="font-bold text-blue-900 dark:text-blue-300 text-xl mb-3 flex items-center gap-2">📝 บทสรุปภาพรวม</h4>
+                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-lg">${this.format(data.summary)}</p>
                     </div>
-                    <div class="grid md:grid-cols-2 gap-4 mb-6">
-                        <div class="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800/50">
-                            <h4 class="font-bold text-emerald-700 mb-2">✅ จุดเด่น:</h4>
-                            <ul class="text-xs space-y-1">${data.pros.map(p => `<li>• ${this.format(p)}</li>`).join('')}</ul>
+                    
+                    <div class="grid md:grid-cols-2 gap-6 avoid-break">
+                        <div class="p-6 bg-emerald-50/60 dark:bg-emerald-900/10 rounded-[2rem] border border-emerald-100 dark:border-emerald-800/30">
+                            <h4 class="font-bold text-emerald-700 dark:text-emerald-400 mb-4 flex items-center gap-2">✅ จุดเด่นของคุณ</h4>
+                            <ul class="space-y-3">${data.pros.map(p => `<li class="flex items-start gap-2 text-sm"><span class="text-emerald-500">✔</span><span>${this.format(p)}</span></li>`).join('')}</ul>
                         </div>
-                        <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800/50">
-                            <h4 class="font-bold text-red-700 mb-2">⚠️ จุดที่ควรปรับปรุง:</h4>
-                            <ul class="text-xs space-y-1">${data.cons.map(c => `<li>• ${this.format(c)}</li>`).join('')}</ul>
+                        <div class="p-6 bg-red-50/60 dark:bg-red-900/10 rounded-[2rem] border border-red-100 dark:border-red-800/30">
+                            <h4 class="font-bold text-red-700 dark:text-red-400 mb-4 flex items-center gap-2">⚠️ สิ่งที่ปรับปรุงได้</h4>
+                            <ul class="space-y-3">${data.cons.map(c => `<li class="flex items-start gap-2 text-sm"><span class="text-red-500">✘</span><span>${this.format(c)}</span></li>`).join('')}</ul>
                         </div>
                     </div>
-                    ${this.renderTable(data.comparison_table)}
+
+                    <div class="avoid-break">
+                        <h4 class="font-bold text-slate-800 dark:text-white text-xl mb-4 flex items-center gap-2">💡 แนวทางที่แนะนำ (Best Practice)</h4>
+                        <div class="border dark:border-slate-700 rounded-3xl overflow-hidden shadow-sm">
+                            <table class="w-full text-left">
+                                <thead class="bg-slate-800 dark:bg-slate-700 text-white text-xs uppercase tracking-wider">
+                                    <tr>
+                                        <th class="p-4 w-1/4">ประเด็น</th><th class="p-4 w-1/3 text-red-200">เดิม</th><th class="p-4 text-emerald-300">ดีกว่า ✨</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y dark:divide-slate-700">
+                                    ${data.comparison_table.map(row => `
+                                        <tr class="bg-white dark:bg-slate-800/50 hover:bg-slate-50 transition-colors">
+                                            <td class="p-4 text-sm font-bold text-slate-700 dark:text-slate-300">${row.aspect}</td>
+                                            <td class="p-4 text-xs text-slate-500 italic">"${row.original}"</td>
+                                            <td class="p-4 text-sm text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50/20">${this.format(row.better)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 `;
             },
 
-            renderTable(table) {
-                if (!table?.length) return '';
-                return `
-                    <div class="mt-4 border dark:border-slate-700 rounded-xl overflow-hidden text-sm avoid-break">
-                        <table class="w-full text-left border-collapse">
-                            <tr class="bg-slate-50 dark:bg-slate-700/50 font-bold">
-                                <th class="p-3">ประเด็น</th><th class="p-3">คำพูดเดิม</th><th class="p-3">แนะนำ</th>
-                            </tr>
-                            ${table.map(row => `
-                                <tr class="border-t dark:border-slate-700">
-                                    <td class="p-3 font-semibold text-slate-700 dark:text-slate-300">${row.aspect}</td>
-                                    <td class="p-3 text-slate-500">${row.original}</td>
-                                    <td class="p-3 text-emerald-600 font-bold">${row.better}</td>
-                                </tr>
-                            `).join('')}
-                        </table>
-                    </div>
-                `;
-            },
-
-            format: (t) => t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'),
+            format: (t) => t.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-900 dark:text-white">$1</strong>'),
 
             saveHistory(input, data) {
-                const history = JSON.parse(localStorage.getItem('crisis_history') || '[]');
-                history.unshift({ input, data, time: new Date().toLocaleTimeString('th-TH') });
-                localStorage.setItem('crisis_history', JSON.stringify(history.slice(0, 5)));
+                const history = JSON.parse(localStorage.getItem('crisis_history_v2') || '[]');
+                history.unshift({ input, data, time: new Date().toLocaleString('th-TH') });
+                localStorage.setItem('crisis_history_v2', JSON.stringify(history.slice(0, 5)));
                 UI.updateHistoryUI();
             }
         };
 
-        /**
-         * ส่วนจัดการหน้าจอ (UI)
-         */
         const UI = {
             toggleDarkMode() {
                 const isDark = document.documentElement.classList.toggle('dark');
@@ -219,9 +217,9 @@
             setLoading(isLoading) {
                 const btn = document.getElementById('btn');
                 btn.disabled = isLoading;
-                btn.innerText = isLoading ? '⏳ AI กำลังวิเคราะห์ข้อมูล...' : '🚀 เริ่มวิเคราะห์ประสิทธิภาพ';
+                btn.innerHTML = isLoading ? '⏳ AI กำลังอ่านใจคุณ...' : '🚀 เริ่มวิเคราะห์ประสิทธิภาพ';
                 document.getElementById('skeletonLoader').classList.toggle('hidden', !isLoading);
-                document.getElementById('result').classList.toggle('hidden', isLoading);
+                if(isLoading) document.getElementById('result').classList.add('hidden');
             },
             showError(msg) {
                 document.getElementById('modalMsg').innerText = msg;
@@ -234,119 +232,105 @@
                 ring.style.strokeDashoffset = 351.85 - (target / 100 * 351.85);
                 let current = 0;
                 const timer = setInterval(() => {
-                    if (current >= target) {
-                        clearInterval(timer);
-                        val.innerText = `${target}%`;
-                    } else {
-                        current++;
-                        val.innerText = `${current}%`;
-                    }
+                    if (current >= target) { clearInterval(timer); val.innerText = `${target}%`; } 
+                    else { current++; val.innerText = `${current}%`; }
                 }, 15);
+                document.getElementById('result').classList.remove('hidden');
             },
             setTone(tone) {
                 const config = {
-                    Professional: { color: 'bg-emerald-100 text-emerald-700', border: 'tone-professional', label: '🟢 มืออาชีพ' },
-                    Aggressive: { color: 'bg-red-100 text-red-700', border: 'tone-aggressive', label: '🔴 ก้าวร้าว' },
-                    Passive: { color: 'bg-slate-100 text-slate-600', border: 'tone-passive', label: '⚪ นิ่งเฉย' },
-                    Neutral: { color: 'bg-blue-100 text-blue-700', border: 'tone-neutral', label: '🔵 ปกติ' }
+                    Professional: { color: 'bg-emerald-100 text-emerald-700', border: 'tone-professional', label: '🟢 มืออาชีพสุดๆ' },
+                    Aggressive: { color: 'bg-red-100 text-red-700', border: 'tone-aggressive', label: '🔴 เสี่ยงปะทะ' },
+                    Passive: { color: 'bg-slate-200 text-slate-600', border: 'tone-passive', label: '⚪ เงียบเหงาไปนิด' },
+                    Neutral: { color: 'bg-blue-100 text-blue-700', border: 'tone-neutral', label: '🔵 ปกติทั่วไป' }
                 };
                 const { color, border, label } = config[tone] || config.Neutral;
                 const res = document.getElementById('result');
-                res.className = `w-full max-w-3xl p-8 md:p-12 glass-card rounded-[3rem] mb-10 transition-all ${border}`;
+                res.className = `w-full max-w-3xl p-8 md:p-12 glass-card rounded-[3rem] mb-10 shadow-2xl transition-all ${border}`;
                 const badge = document.getElementById('toneBadge');
-                badge.className = `inline-block px-3 py-1 rounded-full text-[10px] font-extrabold uppercase mb-2 ${color}`;
+                badge.className = `inline-flex items-center px-4 py-1.5 rounded-full text-[11px] font-black uppercase mb-3 shadow-sm tracking-widest ${color}`;
                 badge.innerText = label;
             },
             updateHistoryUI() {
-                const history = JSON.parse(localStorage.getItem('crisis_history') || '[]');
+                const history = JSON.parse(localStorage.getItem('crisis_history_v2') || '[]');
                 if (!history.length) return;
                 document.getElementById('historySection').classList.remove('hidden');
                 document.getElementById('historyList').innerHTML = history.map((h, i) => `
-                    <div class="p-4 glass-card rounded-2xl text-sm flex justify-between items-center cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-800" onclick="UI.loadFromHistory(${i})">
-                        <span class="truncate pr-4 italic">"${h.input}"</span>
-                        <span class="font-bold text-blue-600">${h.data.score}%</span>
+                    <div class="p-5 glass-card rounded-2xl text-sm flex justify-between items-center cursor-pointer hover:border-blue-400 transition-colors shadow-sm" onclick="UI.loadFromHistory(${i})">
+                        <div class="flex-1 truncate pr-4 italic text-slate-500">"${h.input}"</div>
+                        <div class="font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">${h.data.score}%</div>
                     </div>
                 `).join('');
             },
             loadFromHistory(index) {
-                const item = JSON.parse(localStorage.getItem('crisis_history'))[index];
+                const item = JSON.parse(localStorage.getItem('crisis_history_v2'))[index];
                 document.getElementById('userInput').value = item.input;
                 App.renderResult(item.data);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         };
 
-        /**
-         * ส่วนจัดการเสียง (Voice)
-         */
         const Voice = {
-            recognition: null,
-            isRecording: false,
+            recognition: null, isRecording: false,
             init() {
                 const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
                 if (!Speech) return document.getElementById('micBtn').remove();
-                this.recognition = new Speech();
-                this.recognition.lang = 'th-TH';
-                this.recognition.onresult = (e) => {
-                    const transcript = e.results[0][0].transcript;
-                    document.getElementById('userInput').value += transcript;
-                };
+                this.recognition = new Speech(); this.recognition.lang = 'th-TH';
+                this.recognition.onresult = (e) => document.getElementById('userInput').value += e.results[0][0].transcript;
                 this.recognition.onend = () => this.stop();
             },
             toggle() { this.isRecording ? this.stop() : this.start(); },
-            start() {
-                try {
-                    this.recognition.start();
-                    this.isRecording = true;
-                    document.getElementById('micBtn').classList.add('recording');
-                    document.getElementById('micText').innerText = 'กำลังฟัง...';
-                } catch(e) {}
+            start() { 
+                try { this.recognition.start(); this.isRecording = true; document.getElementById('micBtn').classList.add('recording'); document.getElementById('micText').innerText = 'กำลังฟัง... (กดเพื่อหยุด)'; } 
+                catch(e) {} 
             },
-            stop() {
-                this.recognition.stop();
-                this.isRecording = false;
-                document.getElementById('micBtn').classList.remove('recording');
-                document.getElementById('micText').innerText = 'กดเพื่อพูด';
-            }
+            stop() { this.recognition.stop(); this.isRecording = false; document.getElementById('micBtn').classList.remove('recording'); document.getElementById('micText').innerText = 'กดเพื่อพูด'; }
         };
 
-        /**
-         * ส่วนจัดการ Export (PDF/Image)
-         */
         const Exporter = {
             async run(type) {
                 const area = document.getElementById('capture-area');
                 const isDark = document.documentElement.classList.contains('dark');
-                
-                // สลับเป็น Light Mode ชั่วคราวเพื่อให้ไฟล์ที่เซฟออกมาสีปกติ
+                const btn = type === 'pdf' ? document.getElementById('pdfBtn') : document.getElementById('imgBtn');
+                const originalText = btn.innerHTML;
+
+                btn.innerHTML = '⏳ กำลังเตรียมไฟล์...';
+                btn.disabled = true;
+
+                // แก้ปัญหา PDF ว่าง: ปิด Dark Mode ชั่วคราวและรอให้ UI นิ่ง
                 if (isDark) document.documentElement.classList.remove('dark');
-                await new Promise(r => setTimeout(r, 500));
+                await new Promise(r => setTimeout(r, 800)); 
 
-                if (type === 'pdf') {
-                    const opt = { 
-                        margin: 10, filename: `Crisis-Report-${Date.now()}.pdf`, 
-                        image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2 },
-                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
-                    };
-                    await html2pdf().set(opt).from(area).save();
-                } else {
-                    const canvas = await html2canvas(area, { scale: 2 });
-                    const link = document.createElement('a');
-                    link.download = `Crisis-Report-${Date.now()}.png`;
-                    link.href = canvas.toDataURL();
-                    link.click();
+                try {
+                    if (type === 'pdf') {
+                        const opt = { 
+                            margin: [10, 10, 10, 10], 
+                            filename: `Crisis-Pulse-Report-${Date.now()}.pdf`, 
+                            image: { type: 'jpeg', quality: 0.98 },
+                            html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+                        };
+                        await html2pdf().set(opt).from(area).save();
+                    } else {
+                        const canvas = await html2canvas(area, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+                        const link = document.createElement('a');
+                        link.download = `Crisis-Pulse-Report-${Date.now()}.png`;
+                        link.href = canvas.toDataURL();
+                        link.click();
+                    }
+                } catch (err) {
+                    UI.showError("บันทึกไฟล์ไม่สำเร็จ กรุณาลองใหม่ครับ");
+                } finally {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    if (isDark) document.documentElement.classList.add('dark');
                 }
-
-                if (isDark) document.documentElement.classList.add('dark');
             }
         };
 
-        // เริ่มต้นการทำงานเมื่อหน้าโหลดเสร็จ
         window.onload = () => {
-            Voice.init();
-            UI.updateHistoryUI();
-            if(localStorage.getItem('theme') === 'dark') UI.toggleDarkMode();
+            Voice.init(); UI.updateHistoryUI();
+            if(localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) UI.toggleDarkMode();
         };
     </script>
 </body>
