@@ -10,32 +10,28 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap');
         body { font-family: 'Prompt', sans-serif; -webkit-font-smoothing: antialiased; transition: background-color 0.3s ease, color 0.3s ease; }
         
-        /* Light/Dark Mode Glass Card */
         .glass-card { background: #ffffff; border: 1px solid #dbeafe; box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.1); transition: all 0.5s ease; }
         .dark .glass-card { background: #1e293b; border: 1px solid #334155; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); }
         
-        /* Modal & Animations */
         .modal-enter { opacity: 0; transform: scale(0.9); }
         .modal-active { opacity: 1; transform: scale(1); transition: all 0.3s ease-out; }
         #scoreRing { transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1); stroke-linecap: round; }
 
-        /* Tone Themes (Dynamic Border) */
         .tone-aggressive { border-top-color: #ef4444 !important; border-top-width: 12px !important; }
         .tone-professional { border-top-color: #10b981 !important; border-top-width: 12px !important; }
         .tone-passive { border-top-color: #64748b !important; border-top-width: 12px !important; }
         .tone-neutral { border-top-color: #3b82f6 !important; border-top-width: 12px !important; }
         
-        /* Scrollbar */
         textarea::-webkit-scrollbar { width: 8px; }
         textarea::-webkit-scrollbar-track { background: transparent; }
         textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
         .dark textarea::-webkit-scrollbar-thumb { background: #475569; }
 
-        /* --- Beautiful Markdown Styles --- */
         .markdown-body { font-family: 'Prompt', sans-serif; color: #334155; line-height: 1.75; }
         .dark .markdown-body { color: #cbd5e1; }
         .markdown-body h1, .markdown-body h2, .markdown-body h3 { color: #1e3a8a; font-weight: 700; margin-top: 1.5em; margin-bottom: 0.75em; }
@@ -48,7 +44,6 @@
         .markdown-body li { margin-bottom: 0.5em; }
         .markdown-body ul li::before { content: "•"; color: #3b82f6; font-weight: bold; display: inline-block; width: 1em; margin-left: -1em; }
 
-        /* Table Styles (Crucial for UI) */
         .markdown-body table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 2em 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; }
         .dark .markdown-body table { border-color: #334155; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5); }
         .markdown-body th { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 14px; text-align: left; font-size: 0.95rem; font-weight: 600; }
@@ -57,6 +52,14 @@
         .markdown-body tr:last-child td { border-bottom: none; }
         .markdown-body tr:nth-child(even) td { background-color: #f8fafc; }
         .dark .markdown-body tr:nth-child(even) td { background-color: #0f172a; }
+        
+        /* Mic pulsing animation */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .recording { animation: pulse-ring 2s infinite; background-color: #ef4444 !important; color: white !important; }
     </style>
 </head>
 <body class="flex flex-col items-center py-10 px-4 md:px-8 bg-slate-50 dark:bg-slate-900 min-h-screen">
@@ -87,7 +90,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 bg-slate-50/80 dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-700">
             <div>
                 <label class="block text-sm font-bold text-blue-900 dark:text-blue-300 mb-3">🎭 เลือกสถานการณ์ (Situation)</label>
-                <select id="situationSelect" class="w-full p-4 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-600 rounded-2xl focus:border-blue-400 focus:ring-4 outline-none text-sm text-slate-700 dark:text-slate-200 transition-all cursor-pointer" onchange="toggleCustomSituation()">
+                <select id="situationSelect" class="w-full p-4 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-600 rounded-2xl focus:border-blue-400 outline-none text-sm text-slate-700 dark:text-slate-200 transition-all cursor-pointer" onchange="toggleCustomSituation()">
                     <option value="เพื่อนในกลุ่มหายตัวไป ไม่อ่านไลน์ พรุ่งนี้มีพรีเซนต์">เพื่อนหาย ไม่อ่านไลน์ พรุ่งนี้มีพรีเซนต์</option>
                     <option value="ลูกค้าวีไอพีโกรธจัด โวยวายเรื่องสินค้ามีปัญหาหน้างาน">ลูกค้า VIP โวยวายสินค้ามีปัญหาหน้างาน</option>
                     <option value="เจ้านายสั่งงานด่วนนอกเวลางาน และคุณทำไม่ทันแน่ๆ">เจ้านายสั่งงานด่วนนอกเวลา ทำไม่ทัน</option>
@@ -99,12 +102,18 @@
             <div>
                 <label class="block text-sm font-bold text-blue-900 dark:text-blue-300 mb-3">🚫 คำต้องห้าม (คั่นด้วยลูกน้ำ)</label>
                 <input type="text" id="forbiddenWordsInput" class="w-full p-4 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-600 rounded-2xl focus:border-red-400 outline-none text-sm text-slate-700 dark:text-slate-200" placeholder="เช่น: ขี้เกียจ, ภาระ" value="ขี้เกียจ, ภาระ">
-                <p class="text-[11px] text-red-500 mt-2 ml-1 font-medium">หากพบคำเหล่านี้ หรือบริบทคล้ายกัน จะประเมินว่าล้มเหลว</p>
+                <p class="text-[11px] text-red-500 mt-2 ml-1 font-medium">หากพบเจตนาแบบนี้ จะประเมินว่าล้มเหลวทันที</p>
             </div>
         </div>
 
-        <label class="block text-sm font-bold text-blue-900 dark:text-blue-300 mb-3 ml-1">💬 สิ่งที่คุณจะพูดหรือพิมพ์ตอบกลับ:</label>
-        <textarea id="userInput" class="w-full p-5 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-600 rounded-3xl focus:border-blue-400 outline-none mb-8 text-lg min-h-[140px] text-slate-800 dark:text-white resize-y" placeholder="พิมพ์ประโยคของคุณที่นี่..."></textarea>
+        <div class="flex justify-between items-end mb-3 ml-1">
+            <label class="block text-sm font-bold text-blue-900 dark:text-blue-300">💬 สิ่งที่คุณจะพูดหรือพิมพ์ตอบกลับ:</label>
+            <button id="micBtn" onclick="toggleRecording()" class="flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 rounded-full text-xs font-bold hover:bg-blue-200 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                <span id="micText">กดเพื่อพูด</span>
+            </button>
+        </div>
+        <textarea id="userInput" class="w-full p-5 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-600 rounded-3xl focus:border-blue-400 outline-none mb-8 text-lg min-h-[140px] text-slate-800 dark:text-white resize-y shadow-inner" placeholder="พิมพ์หรือกดปุ่มไมค์เพื่อพูดประโยคของคุณ..."></textarea>
         
         <button onclick="scan()" id="btn" class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white py-5 rounded-3xl font-bold text-lg shadow-xl transition-all active:scale-[0.99] group">
             <span class="relative z-10">🚀 เริ่มวิเคราะห์ประสิทธิภาพการสื่อสาร</span>
@@ -130,7 +139,7 @@
     </div>
 
     <div id="result" class="hidden w-full max-w-3xl p-8 md:p-12 glass-card rounded-[3rem] mb-16 border-t-[12px] tone-neutral shadow-2xl">
-        <div id="capture-area" class="bg-white dark:bg-slate-800 rounded-[2rem] p-2 transition-colors">
+        <div id="capture-area" class="bg-white dark:bg-slate-800 rounded-[2rem] p-4 transition-colors">
             <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-10 pb-10 border-b border-slate-100 dark:border-slate-700">
                 <div class="relative flex items-center justify-center p-2 bg-white dark:bg-slate-700 rounded-full shadow-lg">
                     <svg class="w-40 h-40 drop-shadow-sm" viewBox="0 0 128 128" style="transform: rotate(-90deg);">
@@ -150,7 +159,9 @@
             <div id="report" class="markdown-body max-w-none"></div>
         </div>
         <div class="flex flex-col sm:flex-row gap-5 mt-12">
-            <button onclick="copyResult()" class="flex-1 py-4 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl text-sm font-bold text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-slate-600 transition-all flex justify-center items-center gap-2">📋 คัดลอกรายงาน</button>
+            <button onclick="exportPDF()" id="pdfBtn" class="flex-1 py-4 bg-rose-500 hover:bg-rose-600 rounded-2xl text-sm font-bold text-white shadow-lg flex justify-center items-center gap-2 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg> บันทึกเป็นเอกสาร PDF
+            </button>
             <button onclick="exportImage()" id="exportBtn" class="flex-1 py-4 bg-emerald-500 hover:bg-emerald-600 rounded-2xl text-sm font-bold text-white shadow-lg flex justify-center items-center gap-2 transition-all">📸 บันทึกเป็นรูปภาพ</button>
         </div>
     </div>
@@ -161,7 +172,66 @@
     </div>
 
     <script>
-        // Dark Mode Logic
+        // ----------------------------------------
+        // ระบบพิมพ์ด้วยเสียง (Voice-to-Text)
+        // ----------------------------------------
+        let recognition;
+        let isRecording = false;
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.lang = 'th-TH'; // ตั้งค่าเป็นภาษาไทยเป็นหลัก
+
+            recognition.onresult = function(event) {
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                
+                const inputBox = document.getElementById('userInput');
+                if(finalTranscript) {
+                    inputBox.value = (inputBox.value + ' ' + finalTranscript).trim();
+                }
+            };
+
+            recognition.onend = function() { stopRecording(); };
+            recognition.onerror = function(event) { stopRecording(); showError("เกิดข้อผิดพลาดในการรับเสียง: " + event.error); };
+        } else {
+            document.getElementById('micBtn').style.display = 'none'; // ซ่อนไมค์ถ้าเบราว์เซอร์ไม่รองรับ
+        }
+
+        function toggleRecording() {
+            if (!recognition) return;
+            if (isRecording) { stopRecording(); } 
+            else {
+                recognition.start();
+                isRecording = true;
+                const micBtn = document.getElementById('micBtn');
+                micBtn.classList.add('recording');
+                document.getElementById('micText').innerText = 'กำลังฟัง... (กดเพื่อหยุด)';
+            }
+        }
+
+        function stopRecording() {
+            if(recognition && isRecording) recognition.stop();
+            isRecording = false;
+            const micBtn = document.getElementById('micBtn');
+            micBtn.classList.remove('recording');
+            document.getElementById('micText').innerText = 'กดเพื่อพูด';
+        }
+
+        // ----------------------------------------
+        // Core Logic (Dark Mode, UI, API)
+        // ----------------------------------------
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
             const isDark = document.documentElement.classList.contains('dark');
@@ -203,7 +273,7 @@
         async function scan() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
-            if(!text) return showError("🚨 กรุณาพิมพ์ข้อความที่คุณต้องการจะสื่อสารก่อนนะครับ");
+            if(!text) return showError("🚨 กรุณาพิมพ์หรือพูดข้อความที่คุณต้องการจะสื่อสารก่อนนะครับ");
 
             const selectVal = document.getElementById('situationSelect').value;
             const customVal = document.getElementById('customSituation').value.trim();
@@ -217,7 +287,7 @@
             const resultBox = document.getElementById('result');
 
             btn.disabled = true;
-            btn.innerHTML = '⏳ AI กำลังประมวลผล...';
+            btn.innerHTML = '⏳ AI กำลังวิเคราะห์เจตนา...';
             resultBox.classList.add('hidden');
             skeleton.classList.remove('hidden');
 
@@ -248,11 +318,10 @@
         }
 
         function updateUI(score, tone, report) {
-            // Animate Score
             let currentScore = 0;
             const scoreEl = document.getElementById('scoreValue');
             const ring = document.getElementById('scoreRing');
-            ring.style.strokeDashoffset = 351.85; // reset
+            ring.style.strokeDashoffset = 351.85; 
             
             setTimeout(() => { 
                 ring.style.strokeDashoffset = 351.85 - (score / 100 * 351.85); 
@@ -262,7 +331,6 @@
                 }, 15);
             }, 100);
 
-            // Set Tone Badge
             const resultBox = document.getElementById('result');
             const badge = document.getElementById('toneBadge');
             const tones = {
@@ -277,7 +345,6 @@
             badge.innerHTML = selected.label;
             badge.className = "inline-flex items-center px-4 py-1.5 rounded-full text-xs font-extrabold uppercase mb-4 tracking-wider shadow-sm transition-all " + selected.badge;
             
-            // Parse Markdown (Table will now render correctly)
             document.getElementById('report').innerHTML = marked.parse(report);
         }
 
@@ -319,6 +386,36 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // ----------------------------------------
+        // ระบบส่งออกเป็น PDF (และรูปแบบภาพเดิม)
+        // ----------------------------------------
+        function exportPDF() {
+            const area = document.getElementById('capture-area');
+            const btn = document.getElementById('pdfBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ กำลังสร้างเอกสาร PDF...';
+            btn.disabled = true;
+
+            const wasDark = document.documentElement.classList.contains('dark');
+            if(wasDark) document.documentElement.classList.remove('dark');
+
+            setTimeout(() => {
+                const opt = {
+                    margin:       10,
+                    filename:     `Crisis-Report_${new Date().getTime()}.pdf`,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+
+                html2pdf().set(opt).from(area).save().then(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    if(wasDark) document.documentElement.classList.add('dark');
+                });
+            }, 300);
+        }
+
         function exportImage() {
             const area = document.getElementById('capture-area');
             const btn = document.getElementById('exportBtn');
@@ -326,7 +423,6 @@
             btn.innerHTML = '⏳ กำลังสร้างรูปภาพ...';
             btn.disabled = true;
 
-            // บังคับ Light Mode ชั่วคราวเพื่อให้ภาพเซฟออกมาชัดเจนและสวยสุด
             const wasDark = document.documentElement.classList.contains('dark');
             if(wasDark) document.documentElement.classList.remove('dark');
 
@@ -348,14 +444,9 @@
                     link.click();
                     btn.innerHTML = originalText;
                     btn.disabled = false;
-                    if(wasDark) document.documentElement.classList.add('dark'); // คืนค่าโหมดมืด
+                    if(wasDark) document.documentElement.classList.add('dark'); 
                 });
             }, 300);
-        }
-
-        function copyResult() { 
-            navigator.clipboard.writeText(document.getElementById('report').innerText)
-            .then(() => alert("คัดลอกรายงานเรียบร้อยแล้ว ✅")); 
         }
     </script>
 </body>
