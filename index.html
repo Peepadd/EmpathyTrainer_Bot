@@ -94,4 +94,295 @@
             <div id="report" class="markdown-body text-slate-700"></div>
         </div>
         <div class="flex flex-col sm:flex-row gap-4 mt-10">
-            <button onclick="copyResult()" class="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm font-bold text-slate-600 border border-slate-200
+            <button onclick="copyResult()" class="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm font-bold text-slate-600 border border-slate-200">📋 คัดลอกข้อมูล</button>
+            <button onclick="exportImage()" id="exportBtn" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm font-bold text-white shadow-lg flex justify-center items-center gap-2">📸 บันทึกเป็นรูปภาพ</button>
+        </div>
+    </div>
+
+    <div id="historySection" class="w-full max-w-3xl hidden mb-20 px-2">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono">📜 HISTORY LOG</h3>
+            <button onclick="clearHistory()" class="text-[10px] text-red-400 font-bold uppercase hover:underline">Clear All</button>
+        </div>
+        <div id="historyList" class="space-y-3"></div>
+    </div>
+
+    <script>
+        window.onload = displayHistory;
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let currentAudioBase64 = null;
+        let currentMimeType = null;
+        let recordingTimeout;
+
+        function showError(msg) {
+            const modal = document.getElementById('errorModal');
+            const container = document.getElementById('modalContainer');
+            document.getElementById('modalMsg').innerText = msg;
+            modal.classList.remove('hidden');
+            setTimeout(() => container.classList.add('modal-active'), 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('errorModal');
+            const container = document.getElementById('modalContainer');
+            container.classList.remove('modal-active');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function startCountdown(seconds) {
+            const btn = document.getElementById('btn');
+            let remaining = Math.ceil(seconds);
+            btn.disabled = true;
+            btn.classList.replace('bg-blue-600', 'bg-slate-400');
+            const timer = setInterval(() => {
+                btn.innerText = `⏳ รออีก ${remaining} วิ...`;
+                remaining--;
+                if (remaining < 0) {
+                    clearInterval(timer);
+                    btn.disabled = false;
+                    btn.innerText = "วิเคราะห์ประสิทธิภาพการสื่อสาร";
+                    btn.classList.replace('bg-slate-400', 'bg-blue-600');
+                }
+            }, 1000);
+        }
+
+        async function toggleRecording() {
+            const btn = document.getElementById('recordBtn');
+            const icon = document.getElementById('micIcon');
+            const text = document.getElementById('recordText');
+            const progressBar = document.getElementById('recordProgress');
+
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = event => {
+                        if (event.data.size > 0) audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(audioChunks);
+                        const reader = new FileReader();
+                        reader.readAsDataURL(blob);
+                        reader.onloadend = () => {
+                            const dataUrl = reader.result;
+                            const match = dataUrl.match(/^data:([^;]*);base64,(.+)$/);
+                            if (match) {
+                                let detectedMime = match[1];
+                                if (!detectedMime || detectedMime === 'application/octet-stream' || !detectedMime.startsWith('audio/')) {
+                                    detectedMime = 'audio/mp4'; 
+                                }
+                                currentMimeType = detectedMime;
+                                currentAudioBase64 = match[2];
+                                document.getElementById('userInput').value = "🎙️ [อัดเสียงสำเร็จ พร้อมวิเคราะห์แล้ว]";
+                                document.getElementById('userInput').disabled = true;
+                                document.getElementById('userInput').classList.add('bg-blue-50', 'text-blue-600', 'font-bold');
+                            }
+                        };
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    btn.classList.add('recording');
+                    icon.innerText = "🔴";
+                    text.innerText = "กำลังอัด...";
+                    currentAudioBase64 = null; 
+                    document.getElementById('userInput').value = "";
+                    
+                    // บังคับหยุดอัดอัตโนมัติที่ 10 วินาที
+                    progressBar.style.width = '100%';
+                    recordingTimeout = setTimeout(() => {
+                        if(isRecording) {
+                            toggleRecording();
+                            showError("ตัดจบที่ 10 วินาที เพื่อไม่ให้ไฟล์หนักเกินไปสำหรับเซิร์ฟเวอร์ฟรีครับ ⏱️");
+                        }
+                    }, 10000); 
+
+                } catch (err) {
+                    showError("ไม่สามารถเข้าถึงไมค์ได้ (ตรวจสอบการอนุญาตในเบราว์เซอร์)");
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                clearTimeout(recordingTimeout); 
+                btn.classList.remove('recording');
+                progressBar.style.width = '0%'; 
+                icon.innerText = "✅";
+                text.innerText = "อัดเสร็จแล้ว";
+                
+                setTimeout(() => {
+                    icon.innerText = "🎙️";
+                    text.innerText = "อัดใหม่";
+                }, 2000);
+            }
+        }
+
+        async function scan() {
+            const inputEl = document.getElementById('userInput');
+            const text = inputEl.value.trim();
+            
+            if(!text && !currentAudioBase64) return showError("กรุณาพิมพ์ข้อความ หรือกดปุ่มไมค์เพื่ออัดเสียงครับ");
+            if(isRecording) return showError("กรุณากดหยุดอัดเสียงก่อนวิเคราะห์ครับ");
+
+            const btn = document.getElementById('btn');
+            const loader = document.getElementById('loader');
+            const bar = document.getElementById('bar');
+
+            btn.disabled = true;
+            btn.innerText = "AI กำลังฟังและวิเคราะห์...";
+            loader.classList.remove('hidden');
+            bar.style.width = '30%';
+
+            const payload = { 
+                text: currentAudioBase64 ? null : text,
+                audio: currentAudioBase64,
+                mimeType: currentMimeType
+            };
+
+            try {
+                const res = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                
+                // 🛡️ ป้องกันการอ่าน JSON พลาด
+                const responseText = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    console.error("Vercel Crashed:", responseText);
+                    throw new Error("ระบบหลังบ้านขัดข้อง กรุณาลองใหม่อีกครั้งครับ (อาจเกิดจากข้อจำกัดแพ็กเกจฟรี)");
+                }
+
+                if (!res.ok) {
+                    if (res.status === 429) {
+                        const waitSec = (data.error && data.error.match(/retry in (\d+)/)) ? data.error.match(/retry in (\d+)/)[1] : 30;
+                        showError(`🤖 โควตาเต็มชั่วคราว\nรอประมาณ ${Math.ceil(waitSec)} วินาทีนะครับ`);
+                        startCountdown(waitSec);
+                        throw new Error("Quota Full");
+                    }
+                    throw new Error(data.error || "Connection Error");
+                }
+
+                bar.style.width = '100%';
+                const score = (data.text.match(/SCORE:\s*(\d+)/) || [0, 0])[1];
+                const tone = (data.text.match(/TONE:\s*(\w+)/) || [0, "Neutral"])[1];
+                const cleanText = data.text.replace(/SCORE:\s*\d+/, "").replace(/TONE:\s*\w+/, "");
+
+                updateUI(parseInt(score), tone, cleanText);
+                const historyText = currentAudioBase64 ? "🎙️ [วิเคราะห์จากไฟล์เสียง]" : text;
+                saveToHistory(historyText, parseInt(score), tone, cleanText);
+                document.getElementById('result').classList.remove('hidden');
+                setTimeout(() => document.getElementById('result').scrollIntoView({ behavior: 'smooth' }), 300);
+
+            } catch (err) {
+                if(err.message !== "Quota Full") showError(err.message);
+                bar.style.width = '0%';
+            } finally {
+                currentAudioBase64 = null;
+                inputEl.disabled = false;
+                inputEl.classList.remove('bg-blue-50', 'text-blue-600', 'font-bold');
+                if (inputEl.value.includes("[อัดเสียงสำเร็จ")) inputEl.value = ""; 
+
+                if (!btn.innerText.includes("รออีก")) {
+                    loader.classList.add('hidden'); 
+                    btn.disabled = false; 
+                    btn.innerText = "วิเคราะห์ประสิทธิภาพการสื่อสาร";
+                } else {
+                    loader.classList.add('hidden');
+                }
+            }
+        }
+
+        // --- UI & Utility Functions ---
+        function updateUI(score, tone, report) {
+            const ring = document.getElementById('scoreRing');
+            const circumference = 351.85;
+            ring.style.strokeDashoffset = circumference - (score / 100 * circumference);
+            document.getElementById('scoreValue').innerText = score + "%";
+
+            const resultBox = document.getElementById('result');
+            const badge = document.getElementById('toneBadge');
+            const tones = {
+                'Aggressive': { class: 'tone-aggressive', label: '🔴 ก้าวร้าว/กดดัน', badge: 'bg-red-100 text-red-600' },
+                'Professional': { class: 'tone-professional', label: '🟢 มืออาชีพ/สุภาพ', badge: 'bg-emerald-100 text-emerald-600' },
+                'Passive': { class: 'tone-passive', label: '⚪ นิ่งเฉย/เพิกเฉย', badge: 'bg-slate-100 text-slate-600' },
+                'Neutral': { class: 'tone-neutral', label: '🔵 ปกติ/ทั่วไป', badge: 'bg-blue-100 text-blue-600' }
+            };
+            const selected = tones[tone] || tones['Neutral'];
+            resultBox.className = "w-full max-w-3xl p-6 md:p-10 glass-card rounded-[2rem] mb-12 " + selected.class;
+            badge.innerText = selected.label;
+            badge.className = "inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase mb-2 " + selected.badge;
+            document.getElementById('report').innerHTML = marked.parse(report);
+        }
+
+        function saveToHistory(input, score, tone, report) {
+            let history = JSON.parse(localStorage.getItem('crisisHistory') || '[]');
+            history.unshift({ input, score, tone, report, date: new Date().toLocaleString('th-TH') });
+            localStorage.setItem('crisisHistory', JSON.stringify(history.slice(0, 5)));
+            displayHistory();
+        }
+
+        function displayHistory() {
+            const history = JSON.parse(localStorage.getItem('crisisHistory') || '[]');
+            const list = document.getElementById('historyList');
+            if(history.length > 0) {
+                document.getElementById('historySection').classList.remove('hidden');
+                list.innerHTML = history.map((item, index) => `
+                    <div class="glass-card p-4 rounded-xl cursor-pointer hover:bg-slate-50 border-l-4" onclick="loadHistory(${index})">
+                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-400">
+                            <span>${item.date}</span><span>${item.score}%</span>
+                        </div>
+                        <div class="text-sm text-slate-600 truncate mt-1 italic">"${item.input}"</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function loadHistory(index) {
+            const item = JSON.parse(localStorage.getItem('crisisHistory'))[index];
+            document.getElementById('userInput').value = item.input;
+            updateUI(item.score, item.tone, item.report);
+            document.getElementById('result').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function clearHistory() { 
+            if(confirm("ต้องการล้างประวัติการวิเคราะห์ทั้งหมดหรือไม่?")) { 
+                localStorage.removeItem('crisisHistory'); 
+                location.reload(); 
+            } 
+        }
+
+        function exportImage() {
+            const area = document.getElementById('result');
+            const btn = document.getElementById('exportBtn');
+            btn.innerText = "⏳ กำลังสร้างรูป...";
+            html2canvas(area, { backgroundColor: "#ffffff", scale: 3, useCORS: true, onclone: (doc) => {
+                const el = doc.getElementById('result');
+                el.style.padding = "40px"; el.style.borderRadius = "0";
+                el.querySelectorAll('button').forEach(b => b.style.display = 'none');
+            }}).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Crisis-Analysis.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+                btn.innerText = "📸 บันทึกเป็นรูปภาพ";
+            });
+        }
+
+        function copyResult() { 
+            navigator.clipboard.writeText(document.getElementById('report').innerText).then(() => {
+                alert("คัดลอกลงคลิปบอร์ดแล้ว! ✅");
+            }); 
+        }
+    </script>
+</body>
+</html>
