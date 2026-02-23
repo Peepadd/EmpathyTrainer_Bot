@@ -31,7 +31,6 @@
         textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
         .dark textarea::-webkit-scrollbar-thumb { background: #475569; }
 
-        /* การตั้งค่าสำหรับป้องกันข้อความขาดครึ่ง (ช่วยเสริม) */
         .avoid-break { page-break-inside: avoid; break-inside: avoid; }
         
         @keyframes pulse-ring {
@@ -240,7 +239,6 @@
             setTimeout(() => document.getElementById('errorModal').classList.add('hidden'), 300);
         }
 
-        // Helper แปลงข้อความที่ครอบด้วย **ข้อความ** เป็นตัวหนา
         function formatText(text) {
             if (!text) return "";
             return text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-800 dark:text-white">$1</strong>');
@@ -420,16 +418,8 @@
             }
         }
 
-        function loadHistory(index) {
-            const item = JSON.parse(localStorage.getItem('crisisHistoryData'))[index];
-            document.getElementById('userInput').value = item.input;
-            updateUI(item.data);
-            document.getElementById('result').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
         // ----------------------------------------
-        // การส่งออก PDF (ทำเป็นหน้าเดียวแบบ Dynamic Height)
+        // การส่งออก PDF (ทำเป็นหน้าเดียวแบบ Dynamic Height สมบูรณ์แบบ)
         // ----------------------------------------
         function exportPDF() {
             const area = document.getElementById('capture-area');
@@ -442,12 +432,12 @@
             if(wasDark) document.documentElement.classList.remove('dark');
 
             setTimeout(() => {
-                // คำนวณความกว้างและความสูงจริงของเนื้อหาเพื่อล็อกขนาดหน้ากระดาษเป็นหน้าเดียว 100%
-                const clientWidth = area.clientWidth;
-                const clientHeight = area.clientHeight;
+                // ดึงความกว้างและความสูงที่แท้จริงของเนื้อหาเพื่อป้องกันการตัดขึ้นหน้าใหม่
+                const elementWidth = area.offsetWidth;
+                const elementHeight = area.scrollHeight;
 
                 const opt = {
-                    margin:       [20, 0, 20, 0], // เว้นขอบบนล่างเล็กน้อยกันความอึดอัด
+                    margin:       [15, 15, 15, 15], 
                     filename:     `Crisis-Report_${new Date().getTime()}.pdf`,
                     image:        { type: 'jpeg', quality: 1.0 },
                     html2canvas:  { 
@@ -456,8 +446,12 @@
                         backgroundColor: '#ffffff',
                         scrollY: 0
                     },
-                    // *** จุดสำคัญ *** ปรับให้หน้ากระดาษยืดตามเนื้อหา (ยาวเป็นหน้าเดียวไม่มีตัดตารางขาด)
-                    jsPDF:        { unit: 'px', format: [clientWidth, clientHeight + 40], orientation: 'portrait' }
+                    // *** แก้ไขจุดนี้ *** กำหนด Format ให้สูงกว่าเนื้อหาเล็กน้อย เพื่อบังคับให้เป็นหน้าเดียวชัวร์ๆ
+                    jsPDF:        { 
+                        unit: 'px', 
+                        format: [elementWidth + 30, elementHeight + 30], 
+                        orientation: 'portrait' 
+                    }
                 };
 
                 html2pdf().set(opt).from(area).save().then(() => {

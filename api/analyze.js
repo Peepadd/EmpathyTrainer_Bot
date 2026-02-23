@@ -63,7 +63,7 @@ export default async function handler(req, res) {
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
-                    response_mime_type: "application/json" // ล็อกให้ AI ส่งกลับมาเป็น JSON ชัวร์ๆ
+                    response_mime_type: "application/json"
                 }
             })
         });
@@ -80,7 +80,6 @@ export default async function handler(req, res) {
         try {
             resultJson = JSON.parse(rawText);
         } catch (parseError) {
-            // ระบบช่วยซ่อม JSON อัตโนมัติ
             const match = rawText.match(/\{[\s\S]*\}/);
             if (match) {
                 resultJson = JSON.parse(match[0]);
@@ -94,7 +93,6 @@ export default async function handler(req, res) {
             }
         }
 
-        // กันเหนียว กรณี AI ไม่ยอมเจนบางช่องมาให้
         resultJson.score = resultJson.score || 0;
         resultJson.tone = resultJson.tone || "Neutral";
         resultJson.summary = resultJson.summary || "ไม่มีบทสรุปเพิ่มเติม";
@@ -106,8 +104,9 @@ export default async function handler(req, res) {
 
     } catch (error) {
         const errMsg = error.message.toLowerCase();
-        if (errMsg.includes("high demand") || errMsg.includes("overloaded") || errMsg.includes("quota")) {
-            return res.status(429).json({ error: "เซิร์ฟเวอร์ AI ทำงานหนักชั่วคราว retry in 15" });
+        if (errMsg.includes("high demand") || errMsg.includes("overloaded") || errMsg.includes("quota") || errMsg.includes("429")) {
+            // แก้ไขข้อความ Error ให้เป็นมิตรกับผู้ใช้ ไม่แสดง retry in 15
+            return res.status(429).json({ error: "เซิร์ฟเวอร์ AI มีผู้ใช้งานจำนวนมากชั่วคราว กรุณารอสักครู่แล้วกดลองใหม่อีกครั้งครับ" });
         }
         return res.status(500).json({ error: `เกิดข้อผิดพลาด: ${error.message}` });
     }
