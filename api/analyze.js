@@ -17,7 +17,7 @@ export default async function handler(req, res) {
         
         const genAI = new GoogleGenerativeAI(apiKey);
         // ใช้ 1.5 Flash เพราะตอบโจทย์สายฟรีที่สุดและเร็วมาก
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         const prompt = `คุณคือระบบ AI วิเคราะห์การสื่อสารในภาวะวิกฤต
         สถานการณ์: เพื่อนหายตอนใกล้ส่งงานกลุ่ม พรุ่งนี้พรีเซนต์
