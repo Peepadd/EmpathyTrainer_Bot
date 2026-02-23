@@ -1,12 +1,29 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export default async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+// 🚀 ปลดล็อกให้ Vercel รับไฟล์ได้ใหญ่ขึ้น และทำงานเสถียรขึ้น
+export const config = {
+    api: {
+        bodyParser: {
+            sizeLimit: '10mb',
+        },
+    },
+};
 
-    const { text, audio, mimeType } = req.body;
-    if (!text && !audio) return res.status(400).json({ error: 'No input provided' });
+export default async function handler(req, res) {
+    // 1. ตรวจสอบ Method
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method Not Allowed' });
+    }
 
     try {
+        const body = req.body || {};
+        const { text, audio, mimeType } = body;
+        
+        if (!text && !audio) {
+            return res.status(400).json({ error: 'ไม่พบข้อความหรือไฟล์เสียงที่ส่งมา' });
+        }
+
+        // 2. เรียกใช้งาน Gemini API
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -26,31 +43,43 @@ export default async function handler(req, res) {
         ### 📊 ผลการวิเคราะห์...`;
 
         const parts = [{ text: prompt }];
-        
-        // 🟢 FIX: ทำความสะอาด MimeType ป้องกัน Error ของ Safari/iPad
-        // ตัดข้อความตั้งแต่เครื่องหมาย ';' เป็นต้นไปทิ้ง และถ้าไม่มีให้ใช้ audio/mp4 แทน
-        let cleanMimeType = (mimeType || 'audio/mp4').split(';')[0].trim();
 
         if (audio) {
+            // ทำความสะอาด MIME Type ให้ชัวร์ 100%
+            let cleanMimeType = "audio/webm"; // ค่าเริ่มต้นสำหรับเสียงที่อัดผ่าน Chrome/PC
+            if (mimeType && mimeType.includes('/')) {
+                cleanMimeType = mimeType.split(';')[0].trim().toLowerCase();
+            }
+
             parts.push({
                 inlineData: {
                     mimeType: cleanMimeType,
                     data: audio
                 }
             });
-            parts.push({ text: "กรุณาวิเคราะห์ไฟล์เสียงและน้ำเสียงนี้" });
+            parts.push({ text: "นี่คือไฟล์เสียงที่ส่งมา กรุณาวิเคราะห์น้ำเสียงอย่างละเอียด" });
         } else {
             parts.push({ text: `ข้อความที่ต้องการวิเคราะห์: "${text}"` });
         }
 
+        // 3. ส่งข้อมูลให้ AI ประมวลผล
         const result = await model.generateContent(parts);
         const responseText = result.response.text();
 
-        res.status(200).json({ text: responseText });
+        return res.status(200).json({ text: responseText });
+
     } catch (error) {
-        console.error(error);
-        const status = error.message.includes('429') ? 429 : 500;
-        // ส่งข้อความ Error กลับไปตรงๆ เพื่อให้เราอ่านง่ายขึ้นเวลาแก้บั๊ก
-        res.status(status).json({ error: error.message });
+        // 🛡️ 4. ระบบป้องกันการ Crash ขั้นสุดยอด (แก้บั๊ก Vercel พัง)
+        console.error("🚨 Backend Error:", error);
+        
+        // แปลง Error เป็นข้อความที่ปลอดภัย (ป้องกัน TypeError)
+        const errMsg = error?.message || String(error) || "Unknown Error occurred in backend";
+        
+        // เช็คโควตาแบบปลอดภัย
+        const status = (errMsg.includes('429') || errMsg.includes('quota')) ? 429 : 500;
+        
+        return res.status(status).json({ 
+            error: errMsg.includes('inlineData') ? 'รูปแบบไฟล์เสียงไม่รองรับ กรุณาลองอัดใหม่อีกครั้ง' : errMsg 
+        });
     }
 }
