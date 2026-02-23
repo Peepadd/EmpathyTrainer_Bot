@@ -26,7 +26,6 @@
         .markdown-body th { background: #2563eb; color: white; padding: 12px; text-align: left; }
         .markdown-body td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
 
-        /* อนิเมชันปุ่มอัดเสียง */
         @keyframes pulse-red {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
             70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
@@ -148,7 +147,7 @@
             }, 1000);
         }
 
-        // 🎙️ ระบบอัดเสียง (อัปเดตแก้บั๊ก iPad/Safari)
+        // 🎙️ Bulletproof Audio Recording Logic (แก้ปัญหาสระ/ช่องว่างของ iPad 100%)
         async function toggleRecording() {
             const btn = document.getElementById('recordBtn');
             const icon = document.getElementById('micIcon');
@@ -165,20 +164,31 @@
                     };
 
                     mediaRecorder.onstop = () => {
-                        // 🟢 FIX: Safari บางครั้งไม่คืนค่า mimeType เราเลยตั้ง default เป็น audio/mp4 ให้
-                        const safeMimeType = mediaRecorder.mimeType || 'audio/mp4';
-                        const audioBlob = new Blob(audioChunks, { type: safeMimeType });
+                        // 1. บังคับทำความสะอาด MIME Type ให้เป๊ะตาม Google Regex
+                        let rawMime = mediaRecorder.mimeType || 'audio/mp4';
+                        currentMimeType = rawMime.split(';')[0].trim().toLowerCase();
                         
-                        // ตัด ; codecs= ออกตั้งแต่ฝั่งหน้าเว็บเลย
-                        currentMimeType = safeMimeType.split(';')[0];
+                        // ถ้าเจอช่องว่างหรืออักษรประหลาด ให้เปลี่ยนเป็นมาตรฐานทันที
+                        if (!/^[-\w.]+\/[-\w.]+$/.test(currentMimeType)) {
+                            currentMimeType = 'audio/mp4';
+                        }
+
+                        const audioBlob = new Blob(audioChunks, { type: currentMimeType });
                         
                         const reader = new FileReader();
                         reader.readAsDataURL(audioBlob);
                         reader.onloadend = () => {
-                            currentAudioBase64 = reader.result.split(',')[1]; 
-                            document.getElementById('userInput').value = "🎙️ [อัดเสียงสำเร็จ พร้อมวิเคราะห์แล้ว]";
-                            document.getElementById('userInput').disabled = true;
-                            document.getElementById('userInput').classList.add('bg-blue-50', 'text-blue-600', 'font-bold');
+                            const resultStr = reader.result;
+                            if (resultStr && resultStr.includes(',')) {
+                                // 2. บังคับทำความสะอาด Base64 (ลบทุกอย่างที่ไม่ใช่อักษร Base64)
+                                currentAudioBase64 = resultStr.split(',')[1].replace(/[^a-zA-Z0-9+/=]/g, '');
+                                
+                                document.getElementById('userInput').value = "🎙️ [อัดเสียงสำเร็จ พร้อมวิเคราะห์แล้ว]";
+                                document.getElementById('userInput').disabled = true;
+                                document.getElementById('userInput').classList.add('bg-blue-50', 'text-blue-600', 'font-bold');
+                            } else {
+                                showError("เกิดข้อผิดพลาดในการประมวลผลไฟล์เสียงครับ");
+                            }
                         };
                     };
 
@@ -191,7 +201,7 @@
                     document.getElementById('userInput').value = ""; 
 
                 } catch (err) {
-                    showError("ไม่สามารถเข้าถึงไมโครโฟนได้ กรุณาอนุญาตให้ Safari ใช้งานไมค์ในตั้งค่าก่อนครับ");
+                    showError("ไม่สามารถเข้าถึงไมโครโฟนได้ กรุณาอนุญาตให้เบราว์เซอร์ใช้งานไมค์ในตั้งค่าก่อนครับ");
                 }
             } else {
                 mediaRecorder.stop();
@@ -211,7 +221,6 @@
             const inputEl = document.getElementById('userInput');
             const text = inputEl.value.trim();
             
-            // เช็คว่ามีข้อความพิมพ์ หรือ ไฟล์เสียง หรือไม่
             if(!text && !currentAudioBase64) return showError("กรุณาพิมพ์ข้อความ หรือกดปุ่มไมค์เพื่ออัดเสียงครับ");
             if(isRecording) return showError("กรุณากดหยุดอัดเสียงก่อนวิเคราะห์ครับ");
 
@@ -224,7 +233,6 @@
             loader.classList.remove('hidden');
             bar.style.width = '30%';
 
-            // เตรียม Payload ส่งให้หลังบ้าน
             const payload = { 
                 text: currentAudioBase64 ? null : text,
                 audio: currentAudioBase64,
@@ -257,7 +265,6 @@
 
                 updateUI(parseInt(score), tone, cleanText);
                 
-                // เซฟประวัติ (ถ้าเป็นเสียงให้โชว์ว่าวิเคราะห์จากเสียง)
                 const historyText = currentAudioBase64 ? "🎙️ [วิเคราะห์จากไฟล์เสียง]" : text;
                 saveToHistory(historyText, parseInt(score), tone, cleanText);
                 
@@ -268,7 +275,6 @@
                 if(err.message !== "Quota Full") showError("เกิดข้อผิดพลาด: " + err.message);
                 bar.style.width = '0%';
             } finally {
-                // เคลียร์สถานะเพื่อให้พิมพ์หรืออัดใหม่ได้
                 currentAudioBase64 = null;
                 inputEl.disabled = false;
                 inputEl.classList.remove('bg-blue-50', 'text-blue-600', 'font-bold');
@@ -284,7 +290,6 @@
             }
         }
 
-        // --- ส่วน UI และฟังก์ชันอื่นๆ ---
         function updateUI(score, tone, report) {
             const ring = document.getElementById('scoreRing');
             const circumference = 351.85;
