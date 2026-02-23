@@ -31,10 +31,21 @@ export default async function handler(req, res) {
 {
   "score": ตัวเลข,
   "tone": "เลือก 1 อารมณ์ (Aggressive, Professional, Passive, Neutral)",
-  "report": "ข้อความวิเคราะห์แบบ Markdown (ต้องมีหัวข้อ ### 📊 และตารางเปรียบเทียบคำพูด 3 คอลัมน์ที่สมบูรณ์แบบ)"
-}`;
+  "report": "ข้อความวิเคราะห์แบบ Markdown"
+}
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+⚠️ กฎการเขียน report (สำคัญมาก):
+- ต้องมีหัวข้อ ### 📊 รายงานผลการวิเคราะห์เชิงลึก
+- **บังคับต้องสร้างตารางเปรียบเทียบด้วย Markdown ที่สมบูรณ์ 100%**
+(ห้ามลืมบรรทัดขีดเส้นใต้ตาราง |---|---|---| เด็ดขาด มิฉะนั้นตารางหน้าเว็บจะพัง)
+
+ตัวอย่างโครงสร้างที่ถูกต้อง:
+| ประเด็น | คำพูดเดิม | คำพูดที่แนะนำ (Best Practice) |
+|---|---|---|
+| (เนื้อหา) | (เนื้อหา) | **(เนื้อหาตัวหนา)** |
+| (เนื้อหา) | (เนื้อหา) | **(เนื้อหาตัวหนา)** |`;
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
         const response = await fetch(url, {
             method: 'POST',
@@ -60,10 +71,8 @@ export default async function handler(req, res) {
         // ---------------------------------------------------------
         let resultJson;
         try {
-            // ลองแปลงตรงๆ ก่อน
             resultJson = JSON.parse(rawText);
         } catch (parseError) {
-            // ถ้าพัง ให้ลองใช้ Regex ดึงเฉพาะก้อนที่เป็น JSON {...} ออกมา
             console.log("JSON Parse Failed, attempting self-healing...");
             try {
                 const match = rawText.match(/\{[\s\S]*\}/);
@@ -73,7 +82,6 @@ export default async function handler(req, res) {
                     throw new Error("No valid JSON structure found in AI response.");
                 }
             } catch (regexError) {
-                // ถ้ายังพังอีก ให้ส่งค่าโครงสร้างสำรอง (Fallback) กลับไปเพื่อไม่ให้หน้าเว็บล่ม
                 console.error("Self-healing failed:", regexError);
                 return res.status(200).json({
                     score: 50,
@@ -83,7 +91,6 @@ export default async function handler(req, res) {
             }
         }
 
-        // ตรวจสอบขั้นสุดท้ายว่าคีย์หลักอยู่ครบไหม
         if (resultJson.score === undefined || !resultJson.tone || !resultJson.report) {
             resultJson.score = resultJson.score || 0;
             resultJson.tone = resultJson.tone || "Neutral";
@@ -93,6 +100,10 @@ export default async function handler(req, res) {
         return res.status(200).json(resultJson);
 
     } catch (error) {
-        return res.status(500).json({ error: `AI Error: ${error.message}` });
+        const errMsg = error.message.toLowerCase();
+        if (errMsg.includes("high demand") || errMsg.includes("overloaded") || errMsg.includes("quota")) {
+            return res.status(429).json({ error: "เซิร์ฟเวอร์ AI ทำงานหนักชั่วคราว retry in 15" });
+        }
+        return res.status(500).json({ error: `เกิดข้อผิดพลาด: ${error.message}` });
     }
 }
