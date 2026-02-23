@@ -1,163 +1,181 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Crisis Pulse Analyser PRO+</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap');
-        body { font-family: 'Prompt', sans-serif; background-color: #f0f9ff; color: #1e293b; -webkit-font-smoothing: antialiased; }
-        .glass-card { background: #ffffff; border: 1px solid #dbeafe; box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.1), 0 8px 10px -6px rgba(59, 130, 246, 0.05); transition: all 0.5s ease; }
+        body { font-family: 'Prompt', sans-serif; -webkit-font-smoothing: antialiased; transition: background-color 0.3s ease, color 0.3s ease; }
         
-        /* Modal Animation */
+        /* Light/Dark Mode Glass Card */
+        .glass-card { background: #ffffff; border: 1px solid #dbeafe; box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.1); transition: all 0.5s ease; }
+        .dark .glass-card { background: #1e293b; border: 1px solid #334155; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); }
+        
+        /* Modal & Animations */
         .modal-enter { opacity: 0; transform: scale(0.9); }
         .modal-active { opacity: 1; transform: scale(1); transition: all 0.3s ease-out; }
-
-        /* Progress Bar Animation */
-        #bar { will-change: width; transition: width 0.4s ease; -webkit-transition: width 0.4s ease; }
         #scoreRing { transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1); stroke-linecap: round; }
 
-        /* Tone Themes */
+        /* Tone Themes (Dynamic Border) */
         .tone-aggressive { border-top-color: #ef4444 !important; border-top-width: 12px !important; }
         .tone-professional { border-top-color: #10b981 !important; border-top-width: 12px !important; }
         .tone-passive { border-top-color: #64748b !important; border-top-width: 12px !important; }
         .tone-neutral { border-top-color: #3b82f6 !important; border-top-width: 12px !important; }
         
-        /* Custom Scrollbar */
+        /* Scrollbar */
         textarea::-webkit-scrollbar { width: 8px; }
-        textarea::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+        textarea::-webkit-scrollbar-track { background: transparent; }
         textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
-        textarea::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark textarea::-webkit-scrollbar-thumb { background: #475569; }
 
-        /* --- Markdown Styles Enhancement --- */
+        /* --- Beautiful Markdown Styles --- */
         .markdown-body { font-family: 'Prompt', sans-serif; color: #334155; line-height: 1.75; }
-        .markdown-body h1, .markdown-body h2, .markdown-body h3 { color: #1e3a8a; font-weight: 700; margin-top: 1.5em; margin-bottom: 0.75em; letter-spacing: -0.025em; }
-        .markdown-body h3 { font-size: 1.25rem; border-bottom: 2px solid #bfdbfe; padding-bottom: 0.5rem; color: #1d4ed8; }
-        .markdown-body p { margin-bottom: 1.25em; }
+        .dark .markdown-body { color: #cbd5e1; }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 { color: #1e3a8a; font-weight: 700; margin-top: 1.5em; margin-bottom: 0.75em; }
+        .dark .markdown-body h1, .dark .markdown-body h2, .dark .markdown-body h3 { color: #60a5fa; }
+        .markdown-body h3 { font-size: 1.25rem; border-bottom: 2px solid #bfdbfe; padding-bottom: 0.5rem; }
+        .dark .markdown-body h3 { border-bottom-color: #3b82f6; }
         .markdown-body strong { color: #0f172a; font-weight: 700; }
-        .markdown-body ul, .markdown-body ol { padding-left: 1.5em; margin-bottom: 1.25em; }
-        .markdown-body li { margin-bottom: 0.5em; position: relative; }
+        .dark .markdown-body strong { color: #f8fafc; }
+        .markdown-body ul { padding-left: 1.5em; margin-bottom: 1.25em; }
+        .markdown-body li { margin-bottom: 0.5em; }
         .markdown-body ul li::before { content: "•"; color: #3b82f6; font-weight: bold; display: inline-block; width: 1em; margin-left: -1em; }
 
-        /* Stunning Table Styles */
-        .markdown-body table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 2em 0; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; }
-        .markdown-body th { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; font-weight: 700; padding: 18px; text-align: left; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.9rem; }
-        .markdown-body td { padding: 18px; border-bottom: 1px solid #e2e8f0; vertical-align: top; background-color: #fff; }
+        /* Table Styles (Crucial for UI) */
+        .markdown-body table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 2em 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; }
+        .dark .markdown-body table { border-color: #334155; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5); }
+        .markdown-body th { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 14px; text-align: left; font-size: 0.95rem; font-weight: 600; }
+        .markdown-body td { padding: 14px; border-bottom: 1px solid #e2e8f0; background-color: #fff; vertical-align: top; }
+        .dark .markdown-body td { border-bottom-color: #334155; background-color: #1e293b; color: #e2e8f0; }
         .markdown-body tr:last-child td { border-bottom: none; }
         .markdown-body tr:nth-child(even) td { background-color: #f8fafc; }
-        .markdown-body tr:hover td { background-color: #eff6ff; transition: background-color 0.2s ease; }
+        .dark .markdown-body tr:nth-child(even) td { background-color: #0f172a; }
     </style>
 </head>
-<body class="flex flex-col items-center py-10 px-4 md:px-8 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+<body class="flex flex-col items-center py-10 px-4 md:px-8 bg-slate-50 dark:bg-slate-900 min-h-screen">
+
+    <button onclick="toggleDarkMode()" class="absolute top-4 right-4 md:top-8 md:right-8 p-3 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 hover:scale-105 transition-transform z-10">
+        <span id="themeIcon" class="text-xl">🌙</span>
+    </button>
 
     <div id="errorModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-sm p-4">
-        <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-8 text-center modal-enter transition-all" id="modalContainer">
-            <div class="w-20 h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[2.5rem] shadow-2xl p-8 text-center modal-enter transition-all" id="modalContainer">
+            <div class="w-20 h-20 bg-red-100 dark:bg-red-900/50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
             </div>
-            <h3 class="text-xl font-bold text-slate-800 mb-2">แจ้งเตือนระบบ</h3>
-            <p id="modalMsg" class="text-slate-500 text-sm leading-relaxed mb-8 whitespace-pre-line">ข้อความแจ้งเตือน...</p>
-            <button onclick="closeModal()" class="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-4 rounded-2xl font-bold shadow-lg shadow-red-200 transition-all active:scale-95">รับทราบ</button>
+            <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-2">แจ้งเตือนระบบ</h3>
+            <p id="modalMsg" class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-8 whitespace-pre-line">ข้อความ...</p>
+            <button onclick="closeModal()" class="w-full bg-red-500 hover:bg-red-600 text-white py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-95">รับทราบ</button>
         </div>
     </div>
 
     <div class="w-full max-w-3xl text-center mb-10">
-        <h1 class="text-5xl font-extrabold text-blue-900 mb-3 tracking-tight drop-shadow-sm">Crisis Pulse Analyser <span class="text-sm bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1.5 rounded-full uppercase align-middle shadow-sm">PRO+</span></h1>
-        <p class="text-blue-600/80 font-medium text-base">ระบบประเมินทักษะการสื่อสารในภาวะวิกฤตด้วย AI ระดับสูง</p>
+        <h1 class="text-4xl md:text-5xl font-extrabold text-blue-900 dark:text-blue-400 mb-3 tracking-tight">Crisis Pulse Analyser <span class="text-sm bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1.5 rounded-full uppercase align-middle shadow-sm">PRO+</span></h1>
+        <p class="text-blue-600/80 dark:text-blue-300 font-medium text-base">ระบบประเมินทักษะการสื่อสารในภาวะวิกฤตด้วย AI</p>
     </div>
 
     <div class="w-full max-w-3xl glass-card p-6 md:p-10 rounded-[2.5rem] mb-10 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500"></div>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 bg-slate-50/80 p-6 rounded-3xl border border-slate-100">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 bg-slate-50/80 dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-700">
             <div>
-                <label class="block text-sm font-bold text-blue-900 mb-3">🎭 เลือกสถานการณ์ (Situation)</label>
-                <select id="situationSelect" class="w-full p-4 bg-white border-2 border-slate-100 rounded-2xl focus:border-blue-400 focus:ring-4 focus:ring-blue-100 outline-none text-sm text-slate-700 shadow-sm transition-all font-medium appearance-none cursor-pointer" onchange="toggleCustomSituation()" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-13%205.4A17.6%2017.6%200%200%200%200%2087.2c0%205%201.8%209.3%205.4%2013l131.3%20131.3c3.6%203.6%208%205.4%2013%205.4s9.3-1.8%2013-5.4l131.3-131.3c3.6-3.6%205.4-8%205.4-13%200-5-1.8-9.3-5.4-13z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em;">
+                <label class="block text-sm font-bold text-blue-900 dark:text-blue-300 mb-3">🎭 เลือกสถานการณ์ (Situation)</label>
+                <select id="situationSelect" class="w-full p-4 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-600 rounded-2xl focus:border-blue-400 focus:ring-4 outline-none text-sm text-slate-700 dark:text-slate-200 transition-all cursor-pointer" onchange="toggleCustomSituation()">
                     <option value="เพื่อนในกลุ่มหายตัวไป ไม่อ่านไลน์ พรุ่งนี้มีพรีเซนต์">เพื่อนหาย ไม่อ่านไลน์ พรุ่งนี้มีพรีเซนต์</option>
                     <option value="ลูกค้าวีไอพีโกรธจัด โวยวายเรื่องสินค้ามีปัญหาหน้างาน">ลูกค้า VIP โวยวายสินค้ามีปัญหาหน้างาน</option>
                     <option value="เจ้านายสั่งงานด่วนนอกเวลางาน และคุณทำไม่ทันแน่ๆ">เจ้านายสั่งงานด่วนนอกเวลา ทำไม่ทัน</option>
                     <option value="ระบบเซิร์ฟเวอร์หลักล่มกระทบผู้ใช้จำนวนมาก ต้องแจ้งทีม">เซิร์ฟเวอร์ล่ม ต้องแจ้งเตือนทีม</option>
                     <option value="custom">✨ กำหนดสถานการณ์เอง...</option>
                 </select>
-                <input type="text" id="customSituation" class="hidden w-full mt-4 p-4 bg-white border-2 border-blue-200 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none text-sm shadow-sm transition-all font-medium placeholder:text-blue-300" placeholder="พิมพ์สถานการณ์ของคุณที่นี่...">
+                <input type="text" id="customSituation" class="hidden w-full mt-4 p-4 bg-white dark:bg-slate-900 border-2 border-blue-200 dark:border-blue-700 rounded-2xl focus:border-blue-500 outline-none text-sm text-slate-800 dark:text-white" placeholder="พิมพ์สถานการณ์ของคุณที่นี่...">
             </div>
             <div>
-                <label class="block text-sm font-bold text-blue-900 mb-3">🚫 คำต้องห้าม (คั่นด้วยลูกน้ำ)</label>
-                <input type="text" id="forbiddenWordsInput" class="w-full p-4 bg-white border-2 border-slate-100 rounded-2xl focus:border-red-400 focus:ring-4 focus:ring-red-100 outline-none text-sm text-slate-700 shadow-sm transition-all font-medium placeholder:text-slate-300" placeholder="เช่น: ขี้เกียจ, ภาระ, ไม่รู้" value="ขี้เกียจ, ภาระ">
-                <p class="text-[11px] text-red-500 mt-2 ml-1 font-medium flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg> หากพบคำเหล่านี้ ระบบจะประเมินว่าล้มเหลวทันที</p>
+                <label class="block text-sm font-bold text-blue-900 dark:text-blue-300 mb-3">🚫 คำต้องห้าม (คั่นด้วยลูกน้ำ)</label>
+                <input type="text" id="forbiddenWordsInput" class="w-full p-4 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-600 rounded-2xl focus:border-red-400 outline-none text-sm text-slate-700 dark:text-slate-200" placeholder="เช่น: ขี้เกียจ, ภาระ" value="ขี้เกียจ, ภาระ">
+                <p class="text-[11px] text-red-500 mt-2 ml-1 font-medium">หากพบคำเหล่านี้ หรือบริบทคล้ายกัน จะประเมินว่าล้มเหลว</p>
             </div>
         </div>
 
-        <label class="block text-sm font-bold text-blue-900 mb-3 ml-1">💬 สิ่งที่คุณจะพูดหรือพิมพ์ตอบกลับ:</label>
-        <textarea id="userInput" class="w-full p-5 bg-white border-2 border-slate-100 rounded-3xl focus:border-blue-400 focus:ring-4 focus:ring-blue-100 outline-none mb-8 text-lg min-h-[140px] shadow-sm resize-y transition-all font-medium placeholder:text-slate-400" placeholder="พิมพ์ประโยคของคุณที่นี่..."></textarea>
+        <label class="block text-sm font-bold text-blue-900 dark:text-blue-300 mb-3 ml-1">💬 สิ่งที่คุณจะพูดหรือพิมพ์ตอบกลับ:</label>
+        <textarea id="userInput" class="w-full p-5 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-600 rounded-3xl focus:border-blue-400 outline-none mb-8 text-lg min-h-[140px] text-slate-800 dark:text-white resize-y" placeholder="พิมพ์ประโยคของคุณที่นี่..."></textarea>
         
-        <button onclick="scan()" id="btn" class="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 hover:from-blue-700 hover:to-indigo-900 text-white py-5 rounded-3xl font-bold text-lg shadow-xl shadow-blue-200/50 transition-all active:scale-[0.99] relative overflow-hidden group">
-            <span class="relative z-10 flex items-center justify-center">🚀 เริ่มวิเคราะห์ประสิทธิภาพการสื่อสาร</span>
-            <div class="absolute inset-0 h-full w-0 bg-white/20 transition-all duration-300 group-hover:w-full"></div>
+        <button onclick="scan()" id="btn" class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white py-5 rounded-3xl font-bold text-lg shadow-xl transition-all active:scale-[0.99] group">
+            <span class="relative z-10">🚀 เริ่มวิเคราะห์ประสิทธิภาพการสื่อสาร</span>
         </button>
-        
-        <div id="loader" class="hidden mt-8 w-full h-3 bg-slate-100 rounded-full overflow-hidden shadow-inner relative">
-            <div id="bar" class="h-full bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-600 w-0 relative rounded-full">
-                <div class="absolute inset-0 bg-white/30 animate-pulse"></div>
+    </div>
+
+    <div id="skeletonLoader" class="hidden w-full max-w-3xl p-8 md:p-12 glass-card rounded-[3rem] mb-12 animate-pulse border-t-[12px] border-slate-200 dark:border-slate-700">
+        <div class="flex flex-col md:flex-row items-center gap-8 mb-10 pb-10 border-b border-slate-200 dark:border-slate-700">
+            <div class="w-40 h-40 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+            <div class="flex-1 w-full space-y-4">
+                <div class="h-6 bg-slate-200 dark:bg-slate-700 rounded-full w-1/4"></div>
+                <div class="h-10 bg-slate-200 dark:bg-slate-700 rounded-full w-2/3"></div>
+                <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-full w-1/2"></div>
             </div>
+        </div>
+        <div class="space-y-4 w-full">
+            <div class="h-5 bg-slate-200 dark:bg-slate-700 rounded-full w-1/3 mb-6"></div>
+            <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-full w-full"></div>
+            <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-full w-5/6"></div>
+            <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-full w-4/6"></div>
+            <div class="h-40 bg-slate-200 dark:bg-slate-700 rounded-2xl w-full mt-8"></div>
         </div>
     </div>
 
-    <div id="result" class="hidden w-full max-w-3xl p-8 md:p-12 glass-card rounded-[3rem] mb-16 border-t-[12px] tone-neutral shadow-2xl shadow-blue-900/5">
-        <div id="capture-area" class="bg-white rounded-[2rem] p-2">
-            <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-10 pb-10 border-b-2 border-slate-100">
-                <div class="relative flex items-center justify-center p-2 bg-white rounded-full shadow-lg">
-                    <svg class="w-40 h-40 md:w-44 md:h-44 drop-shadow-sm" viewBox="0 0 128 128" style="transform: rotate(-90deg);">
-                        <circle cx="64" cy="64" r="56" stroke="#e2e8f0" stroke-width="10" fill="transparent" />
-                        <circle id="scoreRing" cx="64" cy="64" r="56" stroke="url(#blueGradient)" stroke-width="10" fill="transparent" stroke-dasharray="351.85" stroke-dashoffset="351.85" stroke-linecap="round" />
-                        <defs>
-                            <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
-                                <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
-                            </linearGradient>
-                        </defs>
+    <div id="result" class="hidden w-full max-w-3xl p-8 md:p-12 glass-card rounded-[3rem] mb-16 border-t-[12px] tone-neutral shadow-2xl">
+        <div id="capture-area" class="bg-white dark:bg-slate-800 rounded-[2rem] p-2 transition-colors">
+            <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-10 pb-10 border-b border-slate-100 dark:border-slate-700">
+                <div class="relative flex items-center justify-center p-2 bg-white dark:bg-slate-700 rounded-full shadow-lg">
+                    <svg class="w-40 h-40 drop-shadow-sm" viewBox="0 0 128 128" style="transform: rotate(-90deg);">
+                        <circle cx="64" cy="64" r="56" stroke="currentColor" class="text-slate-100 dark:text-slate-600" stroke-width="10" fill="transparent" />
+                        <circle id="scoreRing" cx="64" cy="64" r="56" stroke="#3b82f6" stroke-width="10" fill="transparent" stroke-dasharray="351.85" stroke-dashoffset="351.85" stroke-linecap="round" />
                     </svg>
                     <div class="absolute flex flex-col items-center justify-center">
-                        <span class="text-5xl font-extrabold text-blue-900" id="scoreValue">0%</span>
-                        <span class="text-xs font-bold text-blue-400 uppercase tracking-wider mt-1">Total Score</span>
+                        <span class="text-5xl font-extrabold text-blue-900 dark:text-white" id="scoreValue">0%</span>
                     </div>
                 </div>
                 <div class="text-center md:text-left flex-1">
-                    <div id="toneBadge" class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-extrabold uppercase mb-4 bg-slate-100 text-slate-500 tracking-wider shadow-sm">
-                        <svg class="animate-spin -ml-1 mr-2 h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Detecting...
-                    </div>
-                    <h2 class="text-3xl font-extrabold text-slate-800 mb-2">ผลการประเมินความเป็นมืออาชีพ</h2>
-                    <p id="scoreLabel" class="text-slate-500 font-medium text-base">วิเคราะห์โดยละเอียดด้วยระบบ AI อัจฉริยะ</p>
+                    <div id="toneBadge" class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-extrabold uppercase mb-4 tracking-wider shadow-sm">Detecting...</div>
+                    <h2 class="text-3xl font-extrabold text-slate-800 dark:text-white mb-2">ผลการประเมิน</h2>
+                    <p class="text-slate-500 dark:text-slate-400 font-medium">วิเคราะห์โดยระบบ AI อัจฉริยะ</p>
                 </div>
             </div>
-            <div id="report" class="markdown-body prose prose-slate max-w-none"></div>
+            <div id="report" class="markdown-body max-w-none"></div>
         </div>
         <div class="flex flex-col sm:flex-row gap-5 mt-12">
-            <button onclick="copyResult()" class="flex-1 py-4 bg-white hover:bg-slate-50 rounded-2xl text-sm font-bold text-slate-700 border-2 border-slate-200 shadow-sm transition-all flex justify-center items-center gap-2 group">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg> คัดลอกรายงาน
-            </button>
-            <button onclick="exportImage()" id="exportBtn" class="flex-1 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-2xl text-sm font-bold text-white shadow-lg shadow-emerald-200/50 flex justify-center items-center gap-3 transition-all active:scale-[0.98]">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> บันทึกเป็นรูปภาพสวยๆ
-            </button>
+            <button onclick="copyResult()" class="flex-1 py-4 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl text-sm font-bold text-slate-700 dark:text-slate-200 border-2 border-slate-200 dark:border-slate-600 transition-all flex justify-center items-center gap-2">📋 คัดลอกรายงาน</button>
+            <button onclick="exportImage()" id="exportBtn" class="flex-1 py-4 bg-emerald-500 hover:bg-emerald-600 rounded-2xl text-sm font-bold text-white shadow-lg flex justify-center items-center gap-2 transition-all">📸 บันทึกเป็นรูปภาพ</button>
         </div>
     </div>
 
     <div id="historySection" class="w-full max-w-3xl hidden mb-24 px-4">
-        <div class="flex items-center mb-6">
-            <div class="h-px bg-slate-200 flex-1"></div>
-            <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-[0.2em] mx-4">📜 ประวัติการวิเคราะห์ล่าสุด</h3>
-            <div class="h-px bg-slate-200 flex-1"></div>
-        </div>
+        <h3 class="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-6 text-center">📜 ประวัติการวิเคราะห์ล่าสุด</h3>
         <div id="historyList" class="space-y-4"></div>
     </div>
 
     <script>
-        window.onload = displayHistory;
+        // Dark Mode Logic
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('themeIcon').innerText = isDark ? '☀️' : '🌙';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        window.onload = () => {
+            if(localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('themeIcon').innerText = '☀️';
+            }
+            displayHistory();
+        };
 
         function toggleCustomSituation() {
             const select = document.getElementById('situationSelect');
@@ -165,9 +183,7 @@
             if (select.value === 'custom') {
                 customInput.classList.remove('hidden');
                 setTimeout(() => customInput.focus(), 100);
-            } else {
-                customInput.classList.add('hidden');
-            }
+            } else { customInput.classList.add('hidden'); }
         }
 
         function showError(msg) {
@@ -179,34 +195,9 @@
         }
 
         function closeModal() {
-            const modal = document.getElementById('errorModal');
             const container = document.getElementById('modalContainer');
             container.classList.remove('modal-active');
-            setTimeout(() => modal.classList.add('hidden'), 300);
-        }
-
-        function startCountdown(seconds) {
-            const btn = document.getElementById('btn');
-            let remaining = Math.ceil(seconds);
-            btn.disabled = true;
-            // เปลี่ยนสีปุ่มเป็นสีเทา
-            btn.classList.remove('from-blue-600', 'via-blue-700', 'to-indigo-800', 'hover:from-blue-700', 'hover:to-indigo-900');
-            btn.classList.add('bg-slate-400', 'cursor-not-allowed');
-            btn.innerHTML = `<span class="flex items-center justify-center"><svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> กรุณารออีก ${remaining} วินาที...</span>`;
-
-            const timer = setInterval(() => {
-                remaining--;
-                if (remaining >= 0) {
-                     btn.innerHTML = `<span class="flex items-center justify-center"><svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> กรุณารออีก ${remaining} วินาที...</span>`;
-                } else {
-                    clearInterval(timer);
-                    btn.disabled = false;
-                    // คืนค่าสีปุ่มเดิม
-                    btn.classList.remove('bg-slate-400', 'cursor-not-allowed');
-                    btn.classList.add('from-blue-600', 'via-blue-700', 'to-indigo-800', 'hover:from-blue-700', 'hover:to-indigo-900');
-                    btn.innerHTML = '<span class="relative z-10 flex items-center justify-center">🚀 เริ่มวิเคราะห์ประสิทธิภาพการสื่อสาร</span><div class="absolute inset-0 h-full w-0 bg-white/20 transition-all duration-300 group-hover:w-full"></div>';
-                }
-            }, 1000);
+            setTimeout(() => document.getElementById('errorModal').classList.add('hidden'), 300);
         }
 
         async function scan() {
@@ -217,29 +208,18 @@
             const selectVal = document.getElementById('situationSelect').value;
             const customVal = document.getElementById('customSituation').value.trim();
             const situation = selectVal === 'custom' ? customVal : selectVal;
-            
-            if (selectVal === 'custom' && !situation) {
-                return showError("✍️ กรุณาระบุสถานการณ์ของคุณในช่องที่กำหนดด้วยครับ");
-            }
+            if (selectVal === 'custom' && !situation) return showError("✍️ กรุณาระบุสถานการณ์ของคุณด้วยครับ");
 
-            const forbiddenRaw = document.getElementById('forbiddenWordsInput').value;
-            const forbiddenWords = forbiddenRaw.split(',').map(w => w.trim()).filter(w => w !== "");
+            const forbiddenWords = document.getElementById('forbiddenWordsInput').value.split(',').map(w => w.trim()).filter(w => w !== "");
 
             const btn = document.getElementById('btn');
-            const loader = document.getElementById('loader');
-            const bar = document.getElementById('bar');
+            const skeleton = document.getElementById('skeletonLoader');
             const resultBox = document.getElementById('result');
 
             btn.disabled = true;
-            btn.innerHTML = '<span class="flex items-center justify-center"><svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> AI กำลังวิเคราะห์ข้อมูลอย่างละเอียด...</span>';
-            loader.classList.remove('hidden');
-            bar.style.width = '20%';
+            btn.innerHTML = '⏳ AI กำลังประมวลผล...';
             resultBox.classList.add('hidden');
-
-            // รีเซ็ตวงกลมคะแนน
-            const ring = document.getElementById('scoreRing');
-            ring.style.strokeDashoffset = 351.85;
-            document.getElementById('scoreValue').innerText = "0%";
+            skeleton.classList.remove('hidden');
 
             try {
                 const res = await fetch('/api/analyze', {
@@ -248,83 +228,56 @@
                     body: JSON.stringify({ text, situation, forbiddenWords })
                 });
                 
-                bar.style.width = '60%';
                 const data = await res.json();
+                if (!res.ok) throw new Error(data.error || "Connection Error");
 
-                if (!res.ok) {
-                    if (res.status === 429) {
-                        const waitSec = (data.error.match(/retry in (\d+)/) || [0, 30])[1];
-                        showError(`🤖 แย่แล้ว! โควตา AI เต็มชั่วคราว\nระบบจะพร้อมใช้งานอีกครั้งในประมาณ ${waitSec} วินาทีครับ`);
-                        startCountdown(waitSec);
-                        throw new Error("Quota Full");
-                    }
-                    throw new Error(data.error || "Connection Error");
-                }
-
-                bar.style.width = '100%';
+                skeleton.classList.add('hidden');
+                updateUI(data.score, data.tone, data.report);
+                saveToHistory(text, data.score, data.tone, data.report);
                 
-                const score = (data.text.match(/SCORE:\s*(\d+)/) || [0, 0])[1];
-                const tone = (data.text.match(/TONE:\s*(\w+)/) || [0, "Neutral"])[1];
-                const cleanText = data.text.replace(/SCORE:\s*\d+/, "").replace(/TONE:\s*\w+/, "");
-
-                // หน่วงเวลาเล็กน้อยเพื่อให้เห็น Progress Bar เต็ม
-                setTimeout(() => {
-                    updateUI(parseInt(score), tone, cleanText);
-                    saveToHistory(text, parseInt(score), tone, cleanText);
-                    resultBox.classList.remove('hidden');
-                    // เลื่อนหน้าจอลงมาที่ผลลัพธ์
-                    setTimeout(() => {
-                        resultBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }, 100);
-                }, 600);
+                resultBox.classList.remove('hidden');
+                setTimeout(() => resultBox.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
 
             } catch (err) {
-                if(err.message !== "Quota Full") showError(err.message);
-                bar.style.width = '0%';
+                showError(err.message);
+                skeleton.classList.add('hidden');
             } finally {
-                 if (!btn.innerHTML.includes("รออีก")) {
-                    setTimeout(() => { loader.classList.add('hidden'); }, 600);
-                    btn.disabled = false; 
-                    btn.innerHTML = '<span class="relative z-10 flex items-center justify-center">🚀 เริ่มวิเคราะห์ประสิทธิภาพการสื่อสาร</span><div class="absolute inset-0 h-full w-0 bg-white/20 transition-all duration-300 group-hover:w-full"></div>';
-                } else {
-                    loader.classList.add('hidden');
-                }
+                btn.disabled = false; 
+                btn.innerHTML = '🚀 เริ่มวิเคราะห์ประสิทธิภาพการสื่อสาร';
             }
         }
 
         function updateUI(score, tone, report) {
-            const ring = document.getElementById('scoreRing');
-            const circumference = 351.85;
-            const offset = circumference - (score / 100 * circumference);
-            
-            // Animate Score Ring
-            setTimeout(() => { ring.style.strokeDashoffset = offset; }, 100);
-            
-            // Animate Score Value Text
+            // Animate Score
             let currentScore = 0;
-            const scoreElement = document.getElementById('scoreValue');
-            const interval = setInterval(() => {
-                if (currentScore >= score) {
-                    clearInterval(interval);
-                    scoreElement.innerText = score + "%";
-                } else {
-                    currentScore++;
-                    scoreElement.innerText = currentScore + "%";
-                }
-            }, 15);
+            const scoreEl = document.getElementById('scoreValue');
+            const ring = document.getElementById('scoreRing');
+            ring.style.strokeDashoffset = 351.85; // reset
+            
+            setTimeout(() => { 
+                ring.style.strokeDashoffset = 351.85 - (score / 100 * 351.85); 
+                const interval = setInterval(() => {
+                    if (currentScore >= score) clearInterval(interval);
+                    else { currentScore++; scoreEl.innerText = currentScore + "%"; }
+                }, 15);
+            }, 100);
 
+            // Set Tone Badge
             const resultBox = document.getElementById('result');
             const badge = document.getElementById('toneBadge');
             const tones = {
-                'Aggressive': { class: 'tone-aggressive', label: '🔴 ก้าวร้าว / เสี่ยงปะทะ', badge: 'bg-red-100 text-red-600 ring-2 ring-red-200' },
-                'Professional': { class: 'tone-professional', label: '🟢 มืออาชีพ / ยอดเยี่ยม', badge: 'bg-emerald-100 text-emerald-600 ring-2 ring-emerald-200' },
-                'Passive': { class: 'tone-passive', label: '⚪ นิ่งเฉย / ขาดความมั่นใจ', badge: 'bg-slate-200 text-slate-600 ring-2 ring-slate-300' },
-                'Neutral': { class: 'tone-neutral', label: '🔵 ปกติ / ทั่วไป', badge: 'bg-blue-100 text-blue-600 ring-2 ring-blue-200' }
+                'Aggressive': { class: 'tone-aggressive', label: '🔴 ก้าวร้าว / เสี่ยงปะทะ', badge: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' },
+                'Professional': { class: 'tone-professional', label: '🟢 มืออาชีพ / ยอดเยี่ยม', badge: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' },
+                'Passive': { class: 'tone-passive', label: '⚪ นิ่งเฉย / ขาดความมั่นใจ', badge: 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300' },
+                'Neutral': { class: 'tone-neutral', label: '🔵 ปกติ / ทั่วไป', badge: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' }
             };
             const selected = tones[tone] || tones['Neutral'];
-            resultBox.className = "w-full max-w-3xl p-8 md:p-12 glass-card rounded-[3rem] mb-16 border-t-[12px] shadow-2xl shadow-blue-900/5 transition-all " + selected.class;
+            
+            resultBox.className = "w-full max-w-3xl p-8 md:p-12 glass-card rounded-[3rem] mb-16 border-t-[12px] shadow-2xl transition-all " + selected.class;
             badge.innerHTML = selected.label;
             badge.className = "inline-flex items-center px-4 py-1.5 rounded-full text-xs font-extrabold uppercase mb-4 tracking-wider shadow-sm transition-all " + selected.badge;
+            
+            // Parse Markdown (Table will now render correctly)
             document.getElementById('report').innerHTML = marked.parse(report);
         }
 
@@ -341,21 +294,18 @@
             if(history.length > 0) {
                 document.getElementById('historySection').classList.remove('hidden');
                 list.innerHTML = history.map((item, index) => {
-                    let toneColor = 'border-slate-300';
-                    if(item.tone === 'Professional') toneColor = 'border-emerald-400';
-                    else if(item.tone === 'Aggressive') toneColor = 'border-red-400';
-                    else if(item.tone === 'Neutral') toneColor = 'border-blue-400';
+                    let color = 'border-slate-300 dark:border-slate-600';
+                    if(item.tone === 'Professional') color = 'border-emerald-400';
+                    else if(item.tone === 'Aggressive') color = 'border-red-400';
+                    else if(item.tone === 'Neutral') color = 'border-blue-400';
 
                     return `
-                    <div class="glass-card p-5 rounded-2xl cursor-pointer hover:bg-blue-50/50 border-l-[6px] ${toneColor} transition-all shadow-sm hover:shadow-md group" onclick="loadHistory(${index})">
-                        <div class="flex justify-between items-center mb-3">
-                            <span class="text-[11px] font-bold text-slate-400 flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                ${item.date}
-                            </span>
-                            <span class="text-lg font-extrabold text-blue-700 bg-blue-100 px-3 py-1 rounded-lg group-hover:bg-blue-200 transition-colors">${item.score}%</span>
+                    <div class="glass-card p-5 rounded-2xl cursor-pointer border-l-[6px] ${color} shadow-sm hover:shadow-md transition-all" onclick="loadHistory(${index})">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-[11px] font-bold text-slate-400 dark:text-slate-500">${item.date}</span>
+                            <span class="text-sm font-extrabold text-blue-700 dark:text-blue-400">${item.score}%</span>
                         </div>
-                        <div class="text-sm text-slate-600 line-clamp-2 italic pl-4 border-l-2 border-slate-200">"${item.input}"</div>
+                        <div class="text-sm text-slate-600 dark:text-slate-300 line-clamp-2 italic">"${item.input}"</div>
                     </div>
                 `}).join('');
             }
@@ -366,57 +316,46 @@
             document.getElementById('userInput').value = item.input;
             updateUI(item.score, item.tone, item.report);
             document.getElementById('result').classList.remove('hidden');
-            // เลื่อนไปที่ผลลัพธ์ทันที
-            document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function exportImage() {
             const area = document.getElementById('capture-area');
             const btn = document.getElementById('exportBtn');
-            const originalBtnText = btn.innerHTML;
-            btn.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> กำลังสร้างรูปภาพสวยๆ...';
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ กำลังสร้างรูปภาพ...';
             btn.disabled = true;
 
-            // ใช้ timeout เพื่อให้ UI อัปเดตข้อความปุ่มก่อนเริ่มกระบวนการแคปภาพ
+            // บังคับ Light Mode ชั่วคราวเพื่อให้ภาพเซฟออกมาชัดเจนและสวยสุด
+            const wasDark = document.documentElement.classList.contains('dark');
+            if(wasDark) document.documentElement.classList.remove('dark');
+
             setTimeout(() => {
                 html2canvas(area, {
                     backgroundColor: "#ffffff",
-                    scale: 2.5, // เพิ่ม scale ให้ภาพคมชัดขึ้น
+                    scale: 2,
                     useCORS: true,
-                    logging: false,
                     onclone: (doc) => {
                         const el = doc.getElementById('capture-area');
-                        // ปรับแต่ง CSS สำหรับการแคปภาพโดยเฉพาะ
-                        el.style.padding = "50px";
-                        el.style.borderRadius = "0";
+                        el.style.padding = "40px";
+                        el.style.borderRadius = "0px";
                         el.style.boxShadow = "none";
-                        // ซ่อนปุ่มต่างๆ ในส่วน capture-area ถ้ามีหลุดเข้าไป
-                        el.querySelectorAll('button').forEach(b => b.style.display = 'none');
-                        // ขยายความกว้าง markdown body ให้เต็มที่
-                        const mdBody = el.querySelector('.markdown-body');
-                        if(mdBody) mdBody.style.maxWidth = '100%';
                     }
                 }).then(canvas => {
                     const link = document.createElement('a');
-                    link.download = `Crisis-Analysis-Report_${new Date().getTime()}.png`;
-                    link.href = canvas.toDataURL("image/png", 1.0); // ใช้คุณภาพสูงสุด
+                    link.download = `Crisis-Report_${new Date().getTime()}.png`;
+                    link.href = canvas.toDataURL("image/png");
                     link.click();
-                    // คืนค่าปุ่มเดิม
-                    btn.innerHTML = originalBtnText;
+                    btn.innerHTML = originalText;
                     btn.disabled = false;
-                }).catch(err => {
-                    showError("ไม่สามารถบันทึกรูปภาพได้ในขณะนี้");
-                    btn.innerHTML = originalBtnText;
-                    btn.disabled = false;
+                    if(wasDark) document.documentElement.classList.add('dark'); // คืนค่าโหมดมืด
                 });
-            }, 100);
+            }, 300);
         }
 
-        function copyResult() {
-             const reportText = document.getElementById('report').innerText;
-             navigator.clipboard.writeText(reportText)
-                .then(() => alert("คัดลอกเนื้อหารายงานเรียบร้อยแล้ว ✅"))
-                .catch(() => showError("ไม่สามารถคัดลอกข้อความได้"));
+        function copyResult() { 
+            navigator.clipboard.writeText(document.getElementById('report').innerText)
+            .then(() => alert("คัดลอกรายงานเรียบร้อยแล้ว ✅")); 
         }
     </script>
 </body>
