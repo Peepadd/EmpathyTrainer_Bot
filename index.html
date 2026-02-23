@@ -10,7 +10,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap');
         body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-font-smoothing: antialiased; }
-        .glass-card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.5s ease; }
+        .glass-card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025); transition: all 0.5s ease; }
         
         /* Modal Animation */
         .modal-enter { opacity: 0; transform: scale(0.9); }
@@ -25,9 +25,15 @@
         .tone-professional { border-top-color: #10b981 !important; border-top-width: 12px !important; }
         .tone-passive { border-top-color: #64748b !important; border-top-width: 12px !important; }
         .tone-neutral { border-top-color: #3b82f6 !important; border-top-width: 12px !important; }
+        
+        /* Custom Scrollbar for Textarea */
+        textarea::-webkit-scrollbar { width: 8px; }
+        textarea::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+        textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        textarea::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="flex flex-col items-center py-8 px-4 md:px-8">
+<body class="flex flex-col items-center py-10 px-4 md:px-8">
 
     <div id="errorModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-sm p-4">
         <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-8 text-center modal-enter transition-all" id="modalContainer">
@@ -42,16 +48,43 @@
         </div>
     </div>
 
-    <div class="w-full max-w-3xl text-center mb-6">
-        <h1 class="text-3xl font-bold text-blue-600 mb-1">Crisis Pulse Analyser <span class="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full uppercase">PRO</span></h1>
-        <p class="text-slate-400 uppercase tracking-tighter text-[10px]">Professional Crisis Communication System</p>
+    <div class="w-full max-w-3xl text-center mb-8">
+        <h1 class="text-4xl font-extrabold text-blue-700 mb-2 tracking-tight">Crisis Pulse Analyser <span class="text-xs bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2.5 py-1 rounded-full uppercase align-middle">PRO+</span></h1>
+        <p class="text-slate-500 font-medium text-sm">ระบบประเมินทักษะการสื่อสารในภาวะวิกฤตระดับมืออาชีพ</p>
     </div>
 
     <div class="w-full max-w-3xl glass-card p-6 md:p-8 rounded-[2rem] mb-8">
-        <textarea id="userInput" class="w-full p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none mb-4 text-base md:text-lg min-h-[110px]" placeholder="พิมพ์ประโยคที่ต้องการวิเคราะห์..."></textarea>
-        <button onclick="scan()" id="btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]">วิเคราะห์ประสิทธิภาพการสื่อสาร</button>
-        <div id="loader" class="hidden mt-6 w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-            <div id="bar" class="h-full bg-blue-500 w-0"></div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 bg-slate-50 p-5 rounded-2xl border border-slate-100">
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">🎭 เลือกสถานการณ์ (Situation)</label>
+                <select id="situationSelect" class="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none text-sm text-slate-700 shadow-sm" onchange="toggleCustomSituation()">
+                    <option value="เพื่อนในกลุ่มหายตัวไป ไม่อ่านไลน์ พรุ่งนี้มีพรีเซนต์">เพื่อนหาย ไม่อ่านไลน์ พรุ่งนี้มีพรีเซนต์</option>
+                    <option value="ลูกค้าวีไอพีโกรธจัด โวยวายเรื่องสินค้ามีปัญหาหน้างาน">ลูกค้า VIP โวยวายสินค้ามีปัญหาหน้างาน</option>
+                    <option value="เจ้านายสั่งงานด่วนนอกเวลางาน และคุณทำไม่ทันแน่ๆ">เจ้านายสั่งงานด่วนนอกเวลา ทำไม่ทัน</option>
+                    <option value="ระบบเซิร์ฟเวอร์หลักล่มกระทบผู้ใช้จำนวนมาก ต้องแจ้งทีม">เซิร์ฟเวอร์ล่ม ต้องแจ้งเตือนทีม</option>
+                    <option value="custom">✍️ กำหนดสถานการณ์เอง...</option>
+                </select>
+                <input type="text" id="customSituation" class="hidden w-full mt-3 p-3 bg-white border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none text-sm shadow-sm" placeholder="พิมพ์สถานการณ์ของคุณที่นี่...">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">🚫 คำต้องห้าม (คั่นด้วยลูกน้ำ)</label>
+                <input type="text" id="forbiddenWordsInput" class="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none text-sm text-slate-700 shadow-sm" placeholder="เช่น: ขี้เกียจ, ภาระ, ไม่รู้" value="ขี้เกียจ, ภาระ">
+                <p class="text-[10px] text-slate-400 mt-1.5 ml-1">หากพบคำเหล่านี้ ระบบจะประเมินผลว่าล้มเหลวทันที</p>
+            </div>
+        </div>
+
+        <label class="block text-sm font-semibold text-slate-700 mb-2 ml-1">💬 สิ่งที่คุณจะพูดหรือพิมพ์ตอบกลับ:</label>
+        <textarea id="userInput" class="w-full p-4 md:p-5 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-400 outline-none mb-6 text-base md:text-lg min-h-[120px] shadow-inner resize-y" placeholder="พิมพ์ประโยคของคุณที่นี่..."></textarea>
+        
+        <button onclick="scan()" id="btn" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 transition-all active:scale-[0.98]">
+            เริ่มวิเคราะห์ประสิทธิภาพการสื่อสาร
+        </button>
+        
+        <div id="loader" class="hidden mt-6 w-full h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+            <div id="bar" class="h-full bg-gradient-to-r from-blue-400 to-indigo-500 w-0 relative">
+                <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+            </div>
         </div>
     </div>
 
@@ -59,23 +92,23 @@
         <div id="capture-area">
             <div class="flex flex-col md:flex-row items-center gap-6 md:gap-10 mb-8 pb-8 border-b border-slate-100">
                 <div class="relative flex items-center justify-center">
-                    <svg class="w-32 h-32 md:w-36 md:h-36" viewBox="0 0 128 128" style="transform: rotate(-90deg);">
+                    <svg class="w-32 h-32 md:w-36 md:h-36 drop-shadow-sm" viewBox="0 0 128 128" style="transform: rotate(-90deg);">
                         <circle cx="64" cy="64" r="56" stroke="#f1f5f9" stroke-width="12" fill="transparent" />
                         <circle id="scoreRing" cx="64" cy="64" r="56" stroke="#2563eb" stroke-width="12" fill="transparent" stroke-dasharray="351.85" stroke-dashoffset="351.85" />
                     </svg>
-                    <div class="absolute text-3xl font-bold text-slate-800" id="scoreValue">0%</div>
+                    <div class="absolute text-3xl font-extrabold text-slate-800" id="scoreValue">0%</div>
                 </div>
                 <div class="text-center md:text-left">
-                    <div id="toneBadge" class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase mb-2 bg-slate-100 text-slate-500">DETECTING...</div>
-                    <h2 class="text-xl font-bold text-slate-800 mb-1">ระดับความเป็นมืออาชีพ</h2>
-                    <p id="scoreLabel" class="text-slate-500 text-sm">ผลการวิเคราะห์ AI</p>
+                    <div id="toneBadge" class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase mb-2 bg-slate-100 text-slate-500 tracking-wider">DETECTING...</div>
+                    <h2 class="text-2xl font-bold text-slate-800 mb-1">ระดับความเป็นมืออาชีพ</h2>
+                    <p id="scoreLabel" class="text-slate-500 text-sm">ผลการวิเคราะห์โดย AI</p>
                 </div>
             </div>
-            <div id="report" class="markdown-body text-slate-700"></div>
+            <div id="report" class="markdown-body text-slate-700 prose prose-slate prose-p:leading-relaxed max-w-none"></div>
         </div>
         <div class="flex flex-col sm:flex-row gap-4 mt-10">
-            <button onclick="copyResult()" class="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm font-bold text-slate-600 border border-slate-200">📋 คัดลอกรายงาน</button>
-            <button onclick="exportImage()" id="exportBtn" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm font-bold text-white shadow-lg flex justify-center items-center gap-2">📸 บันทึกเป็นรูปภาพ</button>
+            <button onclick="copyResult()" class="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm font-bold text-slate-600 border border-slate-200 transition-colors">📋 คัดลอกรายงาน</button>
+            <button onclick="exportImage()" id="exportBtn" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm font-bold text-white shadow-lg flex justify-center items-center gap-2 transition-all">📸 บันทึกเป็นรูปภาพ</button>
         </div>
     </div>
 
@@ -86,6 +119,17 @@
 
     <script>
         window.onload = displayHistory;
+
+        function toggleCustomSituation() {
+            const select = document.getElementById('situationSelect');
+            const customInput = document.getElementById('customSituation');
+            if (select.value === 'custom') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+            }
+        }
 
         function showError(msg) {
             const modal = document.getElementById('errorModal');
@@ -102,13 +146,12 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
-        // 🕒 ฟังก์ชัน Countdown บนปุ่ม
         function startCountdown(seconds) {
             const btn = document.getElementById('btn');
             let remaining = Math.ceil(seconds);
-            
             btn.disabled = true;
-            btn.classList.replace('bg-blue-600', 'bg-slate-400');
+            btn.classList.replace('from-blue-600', 'from-slate-400');
+            btn.classList.replace('to-indigo-600', 'to-slate-500');
 
             const timer = setInterval(() => {
                 btn.innerText = `⏳ กรุณารออีก ${remaining} วินาที...`;
@@ -116,8 +159,9 @@
                 if (remaining < 0) {
                     clearInterval(timer);
                     btn.disabled = false;
-                    btn.innerText = "วิเคราะห์ประสิทธิภาพการสื่อสาร";
-                    btn.classList.replace('bg-slate-400', 'bg-blue-600');
+                    btn.innerText = "เริ่มวิเคราะห์ประสิทธิภาพการสื่อสาร";
+                    btn.classList.replace('from-slate-400', 'from-blue-600');
+                    btn.classList.replace('to-slate-500', 'to-indigo-600');
                 }
             }, 1000);
         }
@@ -127,30 +171,47 @@
             const text = input.value.trim();
             if(!text) return showError("ดูเหมือนคุณจะลืมพิมพ์ข้อความนะ!");
 
+            // ดึงค่า Situation
+            const selectVal = document.getElementById('situationSelect').value;
+            const customVal = document.getElementById('customSituation').value.trim();
+            const situation = selectVal === 'custom' ? customVal : selectVal;
+            
+            if (selectVal === 'custom' && !situation) {
+                return showError("กรุณาระบุสถานการณ์ของคุณในช่องที่กำหนดครับ");
+            }
+
+            // ดึงค่า คำต้องห้าม
+            const forbiddenRaw = document.getElementById('forbiddenWordsInput').value;
+            const forbiddenWords = forbiddenRaw.split(',').map(w => w.trim()).filter(w => w !== "");
+
             const btn = document.getElementById('btn');
             const loader = document.getElementById('loader');
             const bar = document.getElementById('bar');
 
             btn.disabled = true;
-            btn.innerText = "กำลังประมวลผล...";
+            btn.innerText = "กำลังใช้ AI วิเคราะห์...";
             loader.classList.remove('hidden');
             bar.style.width = '30%';
 
             try {
+                // อัปเดตการส่งข้อมูลไปที่ API
                 const res = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({text: text})
+                    body: JSON.stringify({
+                        text: text,
+                        situation: situation,
+                        forbiddenWords: forbiddenWords
+                    })
                 });
                 
                 const data = await res.json();
 
                 if (!res.ok) {
                     if (res.status === 429) {
-                        // 🔍 Smart Parsing: ดึงเลขวินาทีจาก error
                         const waitSec = (data.error.match(/retry in (\d+)/) || [0, 30])[1];
                         showError(`🤖 ขออภัยครับ! โควตาเต็มชั่วคราว\nกรุณารอสักประมาณ ${waitSec} วินาทีนะครับ`);
-                        startCountdown(waitSec); // เริ่มนับถอยหลังที่ปุ่ม
+                        startCountdown(waitSec);
                         throw new Error("Quota Full");
                     }
                     throw new Error(data.error || "Connection Error");
@@ -158,6 +219,7 @@
 
                 bar.style.width = '100%';
                 
+                // ตัดและดึงค่า SCORE กับ TONE เหมือนเดิม
                 const score = (data.text.match(/SCORE:\s*(\d+)/) || [0, 0])[1];
                 const tone = (data.text.match(/TONE:\s*(\w+)/) || [0, "Neutral"])[1];
                 const cleanText = data.text.replace(/SCORE:\s*\d+/, "").replace(/TONE:\s*\w+/, "");
@@ -171,17 +233,17 @@
                 if(err.message !== "Quota Full") showError(err.message);
                 bar.style.width = '0%';
             } finally {
-                // ถ้าไม่ใช่กรณีติด Quota ให้รีเซ็ตปุ่มปกติ
-                if (btn.innerText !== "วิเคราะห์ประสิทธิภาพการสื่อสาร" && !btn.innerText.includes("รออีก")) {
+                if (!btn.innerText.includes("รออีก")) {
                     loader.classList.add('hidden'); 
                     btn.disabled = false; 
-                    btn.innerText = "วิเคราะห์ประสิทธิภาพการสื่อสาร";
+                    btn.innerText = "เริ่มวิเคราะห์ประสิทธิภาพการสื่อสาร";
                 } else {
                     loader.classList.add('hidden');
                 }
             }
         }
 
+        // --- ฟังก์ชันอัปเดต UI, ประวัติ, คัดลอก, และเซฟรูป คงเดิมทั้งหมด ---
         function updateUI(score, tone, report) {
             const ring = document.getElementById('scoreRing');
             const circumference = 351.85;
@@ -191,10 +253,10 @@
             const resultBox = document.getElementById('result');
             const badge = document.getElementById('toneBadge');
             const tones = {
-                'Aggressive': { class: 'tone-aggressive', label: '🔴 ก้าวร้าว', badge: 'bg-red-100 text-red-600' },
-                'Professional': { class: 'tone-professional', label: '🟢 มืออาชีพ', badge: 'bg-emerald-100 text-emerald-600' },
-                'Passive': { class: 'tone-passive', label: '⚪ นิ่งเฉย', badge: 'bg-slate-100 text-slate-600' },
-                'Neutral': { class: 'tone-neutral', label: '🔵 ปกติ', badge: 'bg-blue-100 text-blue-600' }
+                'Aggressive': { class: 'tone-aggressive', label: '🔴 ก้าวร้าว', badge: 'bg-red-100 text-red-700' },
+                'Professional': { class: 'tone-professional', label: '🟢 มืออาชีพ', badge: 'bg-emerald-100 text-emerald-700' },
+                'Passive': { class: 'tone-passive', label: '⚪ นิ่งเฉย', badge: 'bg-slate-100 text-slate-700' },
+                'Neutral': { class: 'tone-neutral', label: '🔵 ปกติ', badge: 'bg-blue-100 text-blue-700' }
             };
             const selected = tones[tone] || tones['Neutral'];
             resultBox.className = "w-full max-w-3xl p-6 md:p-10 glass-card rounded-[2rem] mb-12 border-t-[10px] " + selected.class;
@@ -216,9 +278,9 @@
             if(history.length > 0) {
                 document.getElementById('historySection').classList.remove('hidden');
                 list.innerHTML = history.map((item, index) => `
-                    <div class="glass-card p-4 rounded-xl cursor-pointer hover:bg-slate-50 border-l-4" onclick="loadHistory(${index})">
+                    <div class="glass-card p-4 rounded-xl cursor-pointer hover:bg-slate-50 border-l-4 border-slate-300 transition-colors" onclick="loadHistory(${index})">
                         <div class="flex justify-between items-center text-[10px] font-bold text-slate-400">
-                            <span>${item.date}</span><span>${item.score}%</span>
+                            <span>${item.date}</span><span class="text-slate-600">${item.score}%</span>
                         </div>
                         <div class="text-sm text-slate-600 truncate mt-1 italic">"${item.input}"</div>
                     </div>
@@ -251,7 +313,7 @@
             });
         }
 
-        function copyResult() { navigator.clipboard.writeText(document.getElementById('report').innerText).then(() => alert("คัดลอกแล้ว ✅")); }
+        function copyResult() { navigator.clipboard.writeText(document.getElementById('report').innerText).then(() => alert("คัดลอกรายงานเรียบร้อยแล้ว ✅")); }
     </script>
 </body>
 </html>
