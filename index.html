@@ -110,6 +110,7 @@
     <script>
         window.onload = displayHistory;
 
+        let mediaStream = null; // 🔴 เพิ่มตัวแปรเก็บ Stream ไมโครโฟน
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
@@ -149,6 +150,7 @@
             }, 1000);
         }
 
+        // 🎙️ แก้ปัญหาไมค์ค้าง 100%
         async function toggleRecording() {
             const btn = document.getElementById('recordBtn');
             const icon = document.getElementById('micIcon');
@@ -157,8 +159,9 @@
 
             if (!isRecording) {
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
+                    // เปิดไมค์
+                    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(mediaStream);
                     audioChunks = [];
 
                     mediaRecorder.ondataavailable = event => {
@@ -194,12 +197,10 @@
                     currentAudioBase64 = null; 
                     document.getElementById('userInput').value = "";
                     
-                    // บังคับหยุดอัดอัตโนมัติที่ 10 วินาที
                     progressBar.style.width = '100%';
                     recordingTimeout = setTimeout(() => {
                         if(isRecording) {
                             toggleRecording();
-                            showError("ตัดจบที่ 10 วินาที เพื่อไม่ให้ไฟล์หนักเกินไปสำหรับเซิร์ฟเวอร์ฟรีครับ ⏱️");
                         }
                     }, 10000); 
 
@@ -207,8 +208,15 @@
                     showError("ไม่สามารถเข้าถึงไมค์ได้ (ตรวจสอบการอนุญาตในเบราว์เซอร์)");
                 }
             } else {
+                // หยุดอัด
                 mediaRecorder.stop();
                 isRecording = false;
+                
+                // 🔴 บรรทัดนี้สำคัญมาก! สั่งปิดฮาร์ดแวร์ไมโครโฟน เพื่อดับไฟสถานะ
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                }
+
                 clearTimeout(recordingTimeout); 
                 btn.classList.remove('recording');
                 progressBar.style.width = '0%'; 
@@ -251,14 +259,13 @@
                     body: JSON.stringify(payload)
                 });
                 
-                // 🛡️ ป้องกันการอ่าน JSON พลาด
                 const responseText = await res.text();
                 let data;
                 try {
                     data = JSON.parse(responseText);
                 } catch (e) {
                     console.error("Vercel Crashed:", responseText);
-                    throw new Error("ระบบหลังบ้านขัดข้อง กรุณาลองใหม่อีกครั้งครับ (อาจเกิดจากข้อจำกัดแพ็กเกจฟรี)");
+                    throw new Error("ระบบเซิร์ฟเวอร์ฟรี (Vercel) หมดเวลาประมวลผล (เกิน 10 วินาที) ครับ 😭\n\nการฟังเสียงใช้พลังงาน AI สูงมาก แนะนำให้ใช้วิธี 'พิมพ์ข้อความ' แทนชั่วคราวนะครับ");
                 }
 
                 if (!res.ok) {
@@ -301,7 +308,6 @@
             }
         }
 
-        // --- UI & Utility Functions ---
         function updateUI(score, tone, report) {
             const ring = document.getElementById('scoreRing');
             const circumference = 351.85;
