@@ -29,7 +29,7 @@ export default async function handler(req, res) {
 3. ส่งข้อมูลกลับมาเป็น JSON FORMAT ตามโครงสร้างด้านล่างนี้เท่านั้น ห้ามพิมพ์อย่างอื่นนอกกรอบ JSON
 
 {
-  "score": (ตัวเลขคะแนน 0-100),
+  "score": (ตัวเลขจำนวนเต็ม, บังคับเป็น 0 ทันทีถ้าพบเจตนาต้องห้าม),
   "tone": "เลือกคำเดียว: Aggressive, Professional, Passive, Neutral",
   "summary": "สรุปผลการวิเคราะห์สั้นๆ (ใช้ ** เพื่อทำตัวหนาได้)",
   "pros": [
