@@ -1,26 +1,29 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// 🚀 ปลดล็อกให้ Vercel รับไฟล์ได้ใหญ่ขึ้น และทำงานเสถียรขึ้น
+// 🌟 กุญแจสำคัญ: เปลี่ยนมารันบน Edge (ได้เวลา 25 วินาที แทน 10 วินาที)
 export const config = {
-    api: {
-        bodyParser: {
-            sizeLimit: '10mb',
-        },
-    },
+    runtime: 'edge',
 };
 
-export default async function handler(req, res) {
+export default async function handler(req) {
     // 1. ตรวจสอบ Method
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method Not Allowed' });
+        return new Response(JSON.stringify({ error: 'Method Not Allowed' }), { 
+            status: 405, 
+            headers: { 'Content-Type': 'application/json' } 
+        });
     }
 
     try {
-        const body = req.body || {};
+        // อ่านข้อมูลที่ส่งมาจากหน้าเว็บ
+        const body = await req.json();
         const { text, audio, mimeType } = body;
         
         if (!text && !audio) {
-            return res.status(400).json({ error: 'ไม่พบข้อความหรือไฟล์เสียงที่ส่งมา' });
+            return new Response(JSON.stringify({ error: 'ไม่พบข้อความหรือไฟล์เสียง' }), { 
+                status: 400, 
+                headers: { 'Content-Type': 'application/json' } 
+            });
         }
 
         // 2. เรียกใช้งาน Gemini API
@@ -35,7 +38,7 @@ export default async function handler(req, res) {
         2. ระบุอารมณ์เด่นเพียง 1 อย่าง (ระบุ TONE: [Aggressive/Professional/Passive/Neutral])
         3. สรุปวิเคราะห์และตารางเปรียบเทียบสั้นๆ
         
-        * หากได้รับไฟล์เสียง: ให้ถอดความ (Transcript) สิ่งที่ผู้ใช้พูดออกมา และวิเคราะห์ระดับความเป็นมืออาชีพจาก "น้ำเสียง (Tone of voice)" ที่ได้ยินประกอบด้วย
+        * หากได้รับไฟล์เสียง: ให้ถอดความ (Transcript) สิ่งที่ผู้ใช้พูดออกมา และวิเคราะห์ระดับความเป็นมืออาชีพจาก "น้ำเสียง (Tone of voice)" ประกอบด้วย
 
         ตัวอย่างการขึ้นต้น:
         SCORE: 85
@@ -45,8 +48,7 @@ export default async function handler(req, res) {
         const parts = [{ text: prompt }];
 
         if (audio) {
-            // ทำความสะอาด MIME Type ให้ชัวร์ 100%
-            let cleanMimeType = "audio/webm"; // ค่าเริ่มต้นสำหรับเสียงที่อัดผ่าน Chrome/PC
+            let cleanMimeType = "audio/webm"; 
             if (mimeType && mimeType.includes('/')) {
                 cleanMimeType = mimeType.split(';')[0].trim().toLowerCase();
             }
@@ -57,29 +59,29 @@ export default async function handler(req, res) {
                     data: audio
                 }
             });
-            parts.push({ text: "นี่คือไฟล์เสียงที่ส่งมา กรุณาวิเคราะห์น้ำเสียงอย่างละเอียด" });
+            parts.push({ text: "กรุณาวิเคราะห์ไฟล์เสียงและน้ำเสียงนี้อย่างละเอียด" });
         } else {
             parts.push({ text: `ข้อความที่ต้องการวิเคราะห์: "${text}"` });
         }
 
-        // 3. ส่งข้อมูลให้ AI ประมวลผล
+        // 3. ส่งข้อมูลให้ AI ประมวลผล (ตอนนี้มีเวลา 25 วินาทีแล้ว!)
         const result = await model.generateContent(parts);
         const responseText = result.response.text();
 
-        return res.status(200).json({ text: responseText });
+        // 4. ส่งผลลัพธ์กลับไปให้หน้าเว็บ
+        return new Response(JSON.stringify({ text: responseText }), { 
+            status: 200, 
+            headers: { 'Content-Type': 'application/json' } 
+        });
 
     } catch (error) {
-        // 🛡️ 4. ระบบป้องกันการ Crash ขั้นสุดยอด (แก้บั๊ก Vercel พัง)
-        console.error("🚨 Backend Error:", error);
-        
-        // แปลง Error เป็นข้อความที่ปลอดภัย (ป้องกัน TypeError)
-        const errMsg = error?.message || String(error) || "Unknown Error occurred in backend";
-        
-        // เช็คโควตาแบบปลอดภัย
+        console.error("🚨 Edge Backend Error:", error);
+        const errMsg = error.message || String(error) || "Unknown Error";
         const status = (errMsg.includes('429') || errMsg.includes('quota')) ? 429 : 500;
         
-        return res.status(status).json({ 
-            error: errMsg.includes('inlineData') ? 'รูปแบบไฟล์เสียงไม่รองรับ กรุณาลองอัดใหม่อีกครั้ง' : errMsg 
+        return new Response(JSON.stringify({ error: errMsg }), { 
+            status: status, 
+            headers: { 'Content-Type': 'application/json' } 
         });
     }
 }
