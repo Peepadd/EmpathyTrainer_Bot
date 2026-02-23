@@ -17,39 +17,59 @@ export default async function handler(req, res) {
 
     const currentSituation = situation || "สถานการณ์ทั่วไป";
 
+    // 1. ตรวจสอบคำต้องห้ามแบบตรงๆ ก่อน ถ้าเจอให้คะแนน 0 ทันที ไม่ต้องเรียก AI
+    const foundForbiddenWord = FORBIDDEN.find(word => userInput.includes(word));
+    if (foundForbiddenWord) {
+        return res.status(200).json({
+            score: 0,
+            tone: "Aggressive",
+            summary: `**ตรวจพบคำต้องห้าม:** การใช้คำว่า "${foundForbiddenWord}" จะสร้างผลกระทบเชิงลบอย่างรุนแรงต่อความรู้สึกของผู้ฟัง และทำให้สถานการณ์วิกฤตแย่ลง`,
+            pros: [],
+            cons: [
+                `หลีกเลี่ยงการสื่อสารที่สื่อถึง "${foundForbiddenWord}" เด็ดขาด`,
+                "ขาดความเห็นอกเห็นใจ (Empathy) และสร้างแรงกดดันโดยไม่จำเป็น"
+            ],
+            comparison_table: [
+                {
+                    aspect: "การจัดการอารมณ์และเจตนา",
+                    original: userInput,
+                    better: "ควรเน้นการแสดงความเข้าใจ มุ่งหาทางออกร่วมกัน และให้ความสำคัญกับความปลอดภัย/ความรู้สึกของอีกฝ่ายเป็นหลัก"
+                }
+            ]
+        });
+    }
+
+    // 2. ถ้าไม่เจอคำตรงๆ ให้ AI วิเคราะห์เชิงลึกตามหลักจิตวิทยา
     try {
-        const prompt = `คุณคือ AI ผู้เชี่ยวชาญด้านการสื่อสารในภาวะวิกฤต (Crisis Communication)
+        const prompt = `คุณคือ AI ที่ปรึกษาอาวุโสด้าน Crisis Communication และนักจิตวิทยาองค์กร
 สถานการณ์: "${currentSituation}"
 คำพูดผู้ใช้งาน: "${userInput}"
-ลิสต์เจตนาต้องห้าม: [${FORBIDDEN.join(', ')}]
+คำที่ต้องระวังเป็นพิเศษ: [${FORBIDDEN.join(', ')}]
 
-งานของคุณ:
-1. วิเคราะห์คำพูด หากพบเจตนาต้องห้าม ให้หักคะแนนเป็น 0
-2. หากปลอดภัย ประเมินความเป็นมืออาชีพ (0-100)
-3. ส่งข้อมูลกลับมาเป็น JSON FORMAT ตามโครงสร้างด้านล่างนี้เท่านั้น ห้ามพิมพ์อย่างอื่นนอกกรอบ JSON
+งานของคุณคือวิเคราะห์ข้อความนี้ตามหลักจิตวิทยาการสื่อสาร:
+1. ประเมินความเห็นอกเห็นใจ (Empathy) และ ความสามารถในการแก้ปัญหา (Solution-Oriented)
+2. **การให้คะแนน (0-100)**: ประเมินอย่างยุติธรรม ไม่กดคะแนนจนต่ำเกินไป หากผู้ใช้มีความตั้งใจที่ดีแต่ใช้คำพูดไม่สละสลวย ให้หักคะแนนเพียงเล็กน้อย
+3. หากพบเจตนาที่สื่อความหมายอ้อมๆ ไปในทางคำที่ต้องระวัง ให้หักคะแนนตามสัดส่วนความรุนแรง (ไม่จำเป็นต้องให้ 0 ทันที)
+4. ประเมิน Tone (เลือก 1 อย่าง): Aggressive, Professional, Passive, Neutral
 
+ส่งข้อมูลกลับมาเป็น JSON FORMAT ตามโครงสร้างด้านล่างนี้เท่านั้น ห้ามพิมพ์อารัมภบท:
 {
   "score": (ตัวเลขคะแนน 0-100),
   "tone": "เลือกคำเดียว: Aggressive, Professional, Passive, Neutral",
-  "summary": "สรุปผลการวิเคราะห์สั้นๆ (ใช้ ** เพื่อทำตัวหนาได้)",
+  "summary": "สรุปผลกระทบเชิงจิตวิทยาต่อผู้ฟัง (ใช้ ** เพื่อทำตัวหนาได้)",
   "pros": [
-    "ข้อดีข้อที่ 1 (ถ้ามี)",
-    "ข้อดีข้อที่ 2"
+    "ข้อดีที่ 1 (เช่น การแสดงความเป็นห่วง)",
+    "ข้อดีที่ 2"
   ],
   "cons": [
-    "ข้อเสียข้อที่ 1 หรือจุดที่ควรปรับปรุง",
-    "ข้อเสียข้อที่ 2"
+    "ข้อเสีย หรือจุดที่อาจทำให้ผู้ฟังรู้สึกไม่ดี",
+    "จุดที่ควรปรับปรุง"
   ],
   "comparison_table": [
     {
-      "aspect": "ประเด็นที่วิเคราะห์ (เช่น การแสดงความรับผิดชอบ)",
+      "aspect": "มิติที่วิเคราะห์ (เช่น ความเห็นอกเห็นใจ หรือ ความชัดเจน)",
       "original": "คำพูดเดิมของผู้ใช้",
-      "better": "คำพูดที่แนะนำ ควรพูดอย่างไรให้ดีขึ้น"
-    },
-    {
-      "aspect": "ประเด็นที่ 2",
-      "original": "...",
-      "better": "..."
+      "better": "คำพูดที่แนะนำ ควรพูดอย่างไรให้ดีขึ้นและรักษาน้ำใจ"
     }
   ]
 }
@@ -63,7 +83,8 @@ export default async function handler(req, res) {
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
-                    response_mime_type: "application/json" // ล็อกให้ AI ส่งกลับมาเป็น JSON ชัวร์ๆ
+                    temperature: 0.5, // ปรับให้ AI มีความยืดหยุ่นในการประเมิน ไม่ตึงเกินไป
+                    response_mime_type: "application/json"
                 }
             })
         });
@@ -80,7 +101,6 @@ export default async function handler(req, res) {
         try {
             resultJson = JSON.parse(rawText);
         } catch (parseError) {
-            // ระบบช่วยซ่อม JSON อัตโนมัติ
             const match = rawText.match(/\{[\s\S]*\}/);
             if (match) {
                 resultJson = JSON.parse(match[0]);
@@ -94,7 +114,6 @@ export default async function handler(req, res) {
             }
         }
 
-        // กันเหนียว กรณี AI ไม่ยอมเจนบางช่องมาให้
         resultJson.score = resultJson.score || 0;
         resultJson.tone = resultJson.tone || "Neutral";
         resultJson.summary = resultJson.summary || "ไม่มีบทสรุปเพิ่มเติม";

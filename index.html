@@ -31,7 +31,6 @@
         textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
         .dark textarea::-webkit-scrollbar-thumb { background: #475569; }
 
-        /* การตั้งค่าสำหรับป้องกันข้อความขาดครึ่ง (ช่วยเสริม) */
         .avoid-break { page-break-inside: avoid; break-inside: avoid; }
         
         @keyframes pulse-ring {
@@ -82,7 +81,7 @@
             <div>
                 <label class="block text-sm font-bold text-blue-900 dark:text-blue-300 mb-3">🚫 คำต้องห้าม (คั่นด้วยลูกน้ำ)</label>
                 <input type="text" id="forbiddenWordsInput" class="w-full p-4 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-600 rounded-2xl focus:border-red-400 outline-none text-sm text-slate-700 dark:text-slate-200" placeholder="เช่น: ขี้เกียจ, ภาระ" value="ขี้เกียจ, ภาระ">
-                <p class="text-[11px] text-red-500 mt-2 ml-1 font-medium">หากพบเจตนาแบบนี้ จะประเมินว่าล้มเหลวทันที</p>
+                <p class="text-[11px] text-red-500 mt-2 ml-1 font-medium">หากเจอคำเหล่านี้ตรงๆ ระบบจะให้ 0 ทันทีโดยไม่ผ่าน AI</p>
             </div>
         </div>
 
@@ -154,9 +153,6 @@
     </div>
 
     <script>
-        // ----------------------------------------
-        // Voice Logic
-        // ----------------------------------------
         let recognition;
         let isRecording = false;
 
@@ -240,7 +236,6 @@
             setTimeout(() => document.getElementById('errorModal').classList.add('hidden'), 300);
         }
 
-        // Helper แปลงข้อความที่ครอบด้วย **ข้อความ** เป็นตัวหนา
         function formatText(text) {
             if (!text) return "";
             return text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-800 dark:text-white">$1</strong>');
@@ -420,17 +415,7 @@
             }
         }
 
-        function loadHistory(index) {
-            const item = JSON.parse(localStorage.getItem('crisisHistoryData'))[index];
-            document.getElementById('userInput').value = item.input;
-            updateUI(item.data);
-            document.getElementById('result').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        // ----------------------------------------
-        // การส่งออก PDF (ทำเป็นหน้าเดียวแบบ Dynamic Height)
-        // ----------------------------------------
+        // ปรับปรุงการบันทึก PDF ใหม่ แก้ปัญหาฟอนต์เบี้ยวและหน้ากระดาษว่าง
         function exportPDF() {
             const area = document.getElementById('capture-area');
             const btn = document.getElementById('pdfBtn');
@@ -442,22 +427,17 @@
             if(wasDark) document.documentElement.classList.remove('dark');
 
             setTimeout(() => {
-                // คำนวณความกว้างและความสูงจริงของเนื้อหาเพื่อล็อกขนาดหน้ากระดาษเป็นหน้าเดียว 100%
-                const clientWidth = area.clientWidth;
-                const clientHeight = area.clientHeight;
-
                 const opt = {
-                    margin:       [20, 0, 20, 0], // เว้นขอบบนล่างเล็กน้อยกันความอึดอัด
-                    filename:     `Crisis-Report_${new Date().getTime()}.pdf`,
-                    image:        { type: 'jpeg', quality: 1.0 },
-                    html2canvas:  { 
+                    margin: [15, 15, 15, 15], // เว้นขอบ A4
+                    filename: `Crisis-Report_${new Date().getTime()}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { 
                         scale: 2, 
                         useCORS: true,
-                        backgroundColor: '#ffffff',
+                        letterRendering: true, // ช่วยเรื่องสระและวรรณยุกต์ภาษาไทย
                         scrollY: 0
                     },
-                    // *** จุดสำคัญ *** ปรับให้หน้ากระดาษยืดตามเนื้อหา (ยาวเป็นหน้าเดียวไม่มีตัดตารางขาด)
-                    jsPDF:        { unit: 'px', format: [clientWidth, clientHeight + 40], orientation: 'portrait' }
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } // ล็อกขนาด A4 ป้องกันหน้าว่าง
                 };
 
                 html2pdf().set(opt).from(area).save().then(() => {
