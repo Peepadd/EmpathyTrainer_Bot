@@ -12,16 +12,19 @@
         body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-font-smoothing: antialiased; }
         .glass-card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.5s ease; }
         
+        /* Modal & Animations */
         .modal-enter { opacity: 0; transform: scale(0.9); }
         .modal-active { opacity: 1; transform: scale(1); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
         #bar { will-change: width; transition: width 0.4s ease; }
         #scoreRing { transition: stroke-dashoffset 1s ease-in-out; stroke-linecap: round; }
 
+        /* Tone Themes */
         .tone-aggressive { border-top: 12px solid #ef4444 !important; }
         .tone-professional { border-top: 12px solid #10b981 !important; }
         .tone-passive { border-top: 12px solid #64748b !important; }
         .tone-neutral { border-top: 12px solid #3b82f6 !important; }
         
+        /* Markdown Table Fix */
         .markdown-body table { width: 100%; border-collapse: collapse; display: block; overflow-x: auto; border-radius: 12px; }
         .markdown-body th { background: #2563eb; color: white; padding: 12px; text-align: left; }
         .markdown-body td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
@@ -39,7 +42,7 @@
 
     <div id="errorModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-sm p-4">
         <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-8 text-center modal-enter transition-all" id="modalContainer">
-            <div class="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6" id="modalIcon">
+            <div class="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
@@ -113,6 +116,7 @@
         let currentAudioBase64 = null;
         let currentMimeType = null;
 
+        // 🟢 ฟังก์ชันควบคุม Modal
         function showError(msg) {
             const modal = document.getElementById('errorModal');
             const container = document.getElementById('modalContainer');
@@ -128,6 +132,7 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
+        // 🟢 ฟังก์ชันนับถอยหลังเมื่อติดโควตา
         function startCountdown(seconds) {
             const btn = document.getElementById('btn');
             let remaining = Math.ceil(seconds);
@@ -145,7 +150,7 @@
             }, 1000);
         }
 
-        // 🎙️ ระบบอัดเสียง (Audio Recording Logic)
+        // 🎙️ ฟังก์ชันอัดเสียง (รวมโค้ดแก้บั๊ก Safari / iPad)
         async function toggleRecording() {
             const btn = document.getElementById('recordBtn');
             const icon = document.getElementById('micIcon');
@@ -162,16 +167,18 @@
                     };
 
                     mediaRecorder.onstop = () => {
-                        const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
-                        currentMimeType = audioBlob.type;
+                        // 🛠️ Safari Fix: ทำความสะอาด MimeType
+                        const safeMimeType = mediaRecorder.mimeType || 'audio/mp4';
+                        const audioBlob = new Blob(audioChunks, { type: safeMimeType });
                         
-                        // แปลงเป็น Base64
+                        // ตัดข้อความส่วนเกินที่ทำให้ Gemini Error ออก (เช่น ; codecs=...)
+                        currentMimeType = safeMimeType.split(';')[0];
+                        
                         const reader = new FileReader();
                         reader.readAsDataURL(audioBlob);
                         reader.onloadend = () => {
-                            // ตัดหัว Data URL ออกเพื่อส่งให้ AI
                             currentAudioBase64 = reader.result.split(',')[1]; 
-                            document.getElementById('userInput').value = "🎙️ [แนบไฟล์เสียงพร้อมวิเคราะห์แล้ว]";
+                            document.getElementById('userInput').value = "🎙️ [อัดเสียงสำเร็จ พร้อมวิเคราะห์แล้ว]";
                             document.getElementById('userInput').disabled = true;
                             document.getElementById('userInput').classList.add('bg-blue-50', 'text-blue-600', 'font-bold');
                         };
@@ -182,11 +189,11 @@
                     btn.classList.add('recording');
                     icon.innerText = "🔴";
                     text.innerText = "กำลังอัด...";
-                    currentAudioBase64 = null; // รีเซ็ตเสียงเก่า
-                    document.getElementById('userInput').value = ""; // ล้างข้อความเก่า
+                    currentAudioBase64 = null; 
+                    document.getElementById('userInput').value = ""; 
 
                 } catch (err) {
-                    showError("ไม่สามารถเข้าถึงไมโครโฟนได้ กรุณาอนุญาตให้ใช้งานไมค์ในตั้งค่าเบราว์เซอร์ครับ");
+                    showError("ไม่สามารถเข้าถึงไมโครโฟนได้ กรุณาอนุญาตให้ Safari/เบราว์เซอร์ ใช้งานไมค์ในตั้งค่าก่อนครับ");
                 }
             } else {
                 mediaRecorder.stop();
@@ -195,7 +202,6 @@
                 icon.innerText = "✅";
                 text.innerText = "อัดเสร็จแล้ว";
                 
-                // คืนปุ่มกลับเป็นรูปไมค์ปกติใน 2 วินาที
                 setTimeout(() => {
                     icon.innerText = "🎙️";
                     text.innerText = "อัดใหม่";
@@ -203,11 +209,11 @@
             }
         }
 
+        // 🧠 ฟังก์ชันส่งข้อมูลให้ AI
         async function scan() {
             const inputEl = document.getElementById('userInput');
             const text = inputEl.value.trim();
             
-            // เช็คว่ามีข้อความพิมพ์ หรือ ไฟล์เสียง หรือไม่
             if(!text && !currentAudioBase64) return showError("กรุณาพิมพ์ข้อความ หรือกดปุ่มไมค์เพื่ออัดเสียงครับ");
             if(isRecording) return showError("กรุณากดหยุดอัดเสียงก่อนวิเคราะห์ครับ");
 
@@ -216,11 +222,10 @@
             const bar = document.getElementById('bar');
 
             btn.disabled = true;
-            btn.innerText = "AI กำลังฟังและวิเคราะห์...";
+            btn.innerText = "AI กำลังวิเคราะห์ข้อมูล...";
             loader.classList.remove('hidden');
             bar.style.width = '30%';
 
-            // เตรียม Payload ส่งให้หลังบ้าน
             const payload = { 
                 text: currentAudioBase64 ? null : text,
                 audio: currentAudioBase64,
@@ -243,7 +248,7 @@
                         startCountdown(waitSec);
                         throw new Error("Quota Full");
                     }
-                    throw new Error(data.error || "Connection Error");
+                    throw new Error(data.error || "เกิดข้อผิดพลาดในการเชื่อมต่อ");
                 }
 
                 bar.style.width = '100%';
@@ -253,7 +258,6 @@
 
                 updateUI(parseInt(score), tone, cleanText);
                 
-                // เซฟประวัติ (ถ้าเป็นเสียงให้โชว์ว่าวิเคราะห์จากเสียง)
                 const historyText = currentAudioBase64 ? "🎙️ [วิเคราะห์จากไฟล์เสียง]" : text;
                 saveToHistory(historyText, parseInt(score), tone, cleanText);
                 
@@ -264,11 +268,10 @@
                 if(err.message !== "Quota Full") showError("เกิดข้อผิดพลาด: " + err.message);
                 bar.style.width = '0%';
             } finally {
-                // เคลียร์สถานะเพื่อให้พิมพ์หรืออัดใหม่ได้
                 currentAudioBase64 = null;
                 inputEl.disabled = false;
                 inputEl.classList.remove('bg-blue-50', 'text-blue-600', 'font-bold');
-                if (!inputEl.value.includes("[แนบไฟล์")) inputEl.value = ""; // ล้างกล่องข้อความถ้าอัดเสียงไป
+                if (!inputEl.value.includes("[อัดเสียงสำเร็จ")) inputEl.value = ""; 
 
                 if (!btn.innerText.includes("รออีก")) {
                     loader.classList.add('hidden'); 
@@ -280,7 +283,7 @@
             }
         }
 
-        // --- ส่วน UI และฟังก์ชันอื่นๆ คงเดิม ---
+        // 🎨 ฟังก์ชันจัดการ UI และประวัติ
         function updateUI(score, tone, report) {
             const ring = document.getElementById('scoreRing');
             const circumference = 351.85;
