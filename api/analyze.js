@@ -1,12 +1,8 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// 🌟 กุญแจสำคัญ: เปลี่ยนมารันบน Edge (ได้เวลา 25 วินาที แทน 10 วินาที)
 export const config = {
-    runtime: 'edge',
+    runtime: 'edge', // รันบน Edge เพื่อเอาเวลา 25 วินาที
 };
 
 export default async function handler(req) {
-    // 1. ตรวจสอบ Method
     if (req.method !== 'POST') {
         return new Response(JSON.stringify({ error: 'Method Not Allowed' }), { 
             status: 405, 
@@ -15,7 +11,6 @@ export default async function handler(req) {
     }
 
     try {
-        // อ่านข้อมูลที่ส่งมาจากหน้าเว็บ
         const body = await req.json();
         const { text, audio, mimeType } = body;
         
@@ -25,10 +20,6 @@ export default async function handler(req) {
                 headers: { 'Content-Type': 'application/json' } 
             });
         }
-
-        // 2. เรียกใช้งาน Gemini API
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `คุณคือระบบ AI วิเคราะห์การสื่อสารในภาวะวิกฤต
         สถานการณ์: เพื่อนหายตอนใกล้ส่งงานกลุ่ม พรุ่งนี้พรีเซนต์
@@ -45,7 +36,8 @@ export default async function handler(req) {
         TONE: Professional
         ### 📊 ผลการวิเคราะห์...`;
 
-        const parts = [{ text: prompt }];
+        // จัดเตรียมรูปแบบข้อมูลเพื่อส่งไปหา Google โดยตรง (ไม่ผ่าน SDK)
+        let parts = [{ "text": prompt }];
 
         if (audio) {
             let cleanMimeType = "audio/webm"; 
@@ -54,33 +46,55 @@ export default async function handler(req) {
             }
 
             parts.push({
-                inlineData: {
-                    mimeType: cleanMimeType,
-                    data: audio
+                "inline_data": {
+                    "mime_type": cleanMimeType,
+                    "data": audio
                 }
             });
-            parts.push({ text: "กรุณาวิเคราะห์ไฟล์เสียงและน้ำเสียงนี้อย่างละเอียด" });
+            parts.push({ "text": "กรุณาวิเคราะห์ไฟล์เสียงและน้ำเสียงนี้อย่างละเอียด" });
         } else {
-            parts.push({ text: `ข้อความที่ต้องการวิเคราะห์: "${text}"` });
+            parts.push({ "text": `ข้อความที่ต้องการวิเคราะห์: "${text}"` });
         }
 
-        // 3. ส่งข้อมูลให้ AI ประมวลผล (ตอนนี้มีเวลา 25 วินาทีแล้ว!)
-        const result = await model.generateContent(parts);
-        const responseText = result.response.text();
+        const apiKey = process.env.GEMINI_API_KEY;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-        // 4. ส่งผลลัพธ์กลับไปให้หน้าเว็บ
+        // 🚀 ใช้ fetch พื้นฐานคุยกับ Google API โดยตรง (Edge รองรับ 100%)
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: [{ parts: parts }]
+            })
+        });
+
+        const data = await response.json();
+
+        // จัดการกรณี Google ส่ง Error กลับมา
+        if (!response.ok) {
+            console.error("Gemini API Error:", data);
+            const errMsg = data.error?.message || "เกิดข้อผิดพลาดจากฝั่ง Google API";
+            const status = (errMsg.includes('429') || response.status === 429) ? 429 : 500;
+            return new Response(JSON.stringify({ error: errMsg }), { 
+                status: status,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        // ดึงข้อความตอบกลับจากโครงสร้าง JSON ของ Google
+        const responseText = data.candidates[0].content.parts[0].text;
+
         return new Response(JSON.stringify({ text: responseText }), { 
             status: 200, 
             headers: { 'Content-Type': 'application/json' } 
         });
 
     } catch (error) {
-        console.error("🚨 Edge Backend Error:", error);
-        const errMsg = error.message || String(error) || "Unknown Error";
-        const status = (errMsg.includes('429') || errMsg.includes('quota')) ? 429 : 500;
-        
-        return new Response(JSON.stringify({ error: errMsg }), { 
-            status: status, 
+        console.error("🚨 Edge Fetch Error:", error);
+        return new Response(JSON.stringify({ error: error.message || "ระบบขัดข้อง กรุณาลองใหม่" }), { 
+            status: 500, 
             headers: { 'Content-Type': 'application/json' } 
         });
     }
