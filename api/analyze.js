@@ -3,13 +3,11 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
-    // รับข้อมูลแบบใหม่ (รองรับทั้งข้อความพิมพ์และไฟล์เสียง)
     const { text, audio, mimeType } = req.body;
     if (!text && !audio) return res.status(400).json({ error: 'No input provided' });
 
     try {
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        // ใช้ 1.5 Flash ที่รองรับทั้งเสียงและภาพ แถมโควตาเยอะ
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `คุณคือระบบ AI วิเคราะห์การสื่อสารในภาวะวิกฤต
@@ -29,17 +27,19 @@ export default async function handler(req, res) {
 
         const parts = [{ text: prompt }];
         
-        // ถ้ามีการอัดเสียงส่งมา ให้แนบไฟล์เสียงไปให้ Gemini ฟัง
+        // 🟢 FIX: ทำความสะอาด MimeType ป้องกัน Error ของ Safari/iPad
+        // ตัดข้อความตั้งแต่เครื่องหมาย ';' เป็นต้นไปทิ้ง และถ้าไม่มีให้ใช้ audio/mp4 แทน
+        let cleanMimeType = (mimeType || 'audio/mp4').split(';')[0].trim();
+
         if (audio) {
             parts.push({
                 inlineData: {
-                    mimeType: mimeType || "audio/webm",
+                    mimeType: cleanMimeType,
                     data: audio
                 }
             });
-            parts.push({ text: "กรุณาวิเคราะห์ไฟล์เสียงนี้" });
+            parts.push({ text: "กรุณาวิเคราะห์ไฟล์เสียงและน้ำเสียงนี้" });
         } else {
-            // ถ้าพิมพ์ปกติ
             parts.push({ text: `ข้อความที่ต้องการวิเคราะห์: "${text}"` });
         }
 
@@ -50,6 +50,7 @@ export default async function handler(req, res) {
     } catch (error) {
         console.error(error);
         const status = error.message.includes('429') ? 429 : 500;
+        // ส่งข้อความ Error กลับไปตรงๆ เพื่อให้เราอ่านง่ายขึ้นเวลาแก้บั๊ก
         res.status(status).json({ error: error.message });
     }
 }
