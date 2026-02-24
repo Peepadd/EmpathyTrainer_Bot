@@ -39,6 +39,14 @@
             100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
         .recording { animation: pulse-ring 2s infinite; background-color: #ef4444 !important; color: white !important; }
+
+        /* [FIX] Character counter colors */
+        .char-warn { color: #f59e0b; }
+        .char-danger { color: #ef4444; font-weight: 700; }
+
+        /* [FIX] Forbidden word tag pills */
+        .forbidden-tag { display: inline-flex; align-items: center; background: #fee2e2; color: #b91c1c; border-radius: 999px; padding: 2px 10px; font-size: 11px; font-weight: 700; margin: 2px; border: 1px solid #fca5a5; }
+        .dark .forbidden-tag { background: #450a0a; color: #fca5a5; border-color: #7f1d1d; }
     </style>
 </head>
 <body class="flex flex-col items-center py-10 px-4 md:px-8 bg-slate-50 dark:bg-slate-900 min-h-screen">
@@ -47,6 +55,7 @@
         <span id="themeIcon" class="text-xl">🌙</span>
     </button>
 
+    <!-- Modal -->
     <div id="errorModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/60 backdrop-blur-sm p-4">
         <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[2.5rem] shadow-2xl p-8 text-center modal-enter transition-all" id="modalContainer">
             <div class="w-20 h-20 bg-red-100 dark:bg-red-900/50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
@@ -76,12 +85,15 @@
                     <option value="ระบบเซิร์ฟเวอร์หลักล่มกระทบผู้ใช้จำนวนมาก ต้องแจ้งทีม">เซิร์ฟเวอร์ล่ม ต้องแจ้งเตือนทีม</option>
                     <option value="custom">✨ กำหนดสถานการณ์เอง...</option>
                 </select>
-                <input type="text" id="customSituation" class="hidden w-full mt-4 p-4 bg-white dark:bg-slate-900 border-2 border-blue-200 dark:border-blue-700 rounded-2xl focus:border-blue-500 outline-none text-sm text-slate-800 dark:text-white" placeholder="พิมพ์สถานการณ์ของคุณที่นี่...">
+                <!-- [FIX] maxlength on custom situation -->
+                <input type="text" id="customSituation" class="hidden w-full mt-4 p-4 bg-white dark:bg-slate-900 border-2 border-blue-200 dark:border-blue-700 rounded-2xl focus:border-blue-500 outline-none text-sm text-slate-800 dark:text-white" placeholder="พิมพ์สถานการณ์ของคุณที่นี่..." maxlength="200">
             </div>
             <div>
                 <label class="block text-sm font-bold text-blue-900 dark:text-blue-300 mb-3">🚫 คำต้องห้าม (คั่นด้วยลูกน้ำ)</label>
-                <input type="text" id="forbiddenWordsInput" class="w-full p-4 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-600 rounded-2xl focus:border-red-400 outline-none text-sm text-slate-700 dark:text-slate-200" placeholder="เช่น: ขี้เกียจ, ภาระ" value="ขี้เกียจ, ภาระ">
-                <p class="text-[11px] text-red-500 mt-2 ml-1 font-medium">หากพบเจตนาแบบนี้ จะประเมินว่าล้มเหลวทันที</p>
+                <input type="text" id="forbiddenWordsInput" class="w-full p-4 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-600 rounded-2xl focus:border-red-400 outline-none text-sm text-slate-700 dark:text-slate-200" placeholder="เช่น: ขี้เกียจ, ภาระ" value="ขี้เกียจ, ภาระ" oninput="renderForbiddenTags()">
+                <!-- [FIX] Tag preview for forbidden words -->
+                <div id="forbiddenTagsPreview" class="mt-2 flex flex-wrap min-h-[24px]"></div>
+                <p class="text-[11px] text-red-500 mt-1 ml-1 font-medium">หากพบเจตนาแบบนี้ จะประเมินว่าล้มเหลวทันที</p>
             </div>
         </div>
 
@@ -92,13 +104,24 @@
                 <span id="micText">กดเพื่อพูด</span>
             </button>
         </div>
-        <textarea id="userInput" class="w-full p-5 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-600 rounded-3xl focus:border-blue-400 outline-none mb-8 text-lg min-h-[140px] text-slate-800 dark:text-white resize-y shadow-inner" placeholder="พิมพ์หรือกดปุ่มไมค์เพื่อพูดประโยคของคุณ..."></textarea>
+
+        <!-- [FIX] maxlength + oninput for char counter -->
+        <textarea id="userInput" maxlength="500" oninput="updateCharCount()" class="w-full p-5 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-600 rounded-3xl focus:border-blue-400 outline-none mb-2 text-lg min-h-[140px] text-slate-800 dark:text-white resize-y shadow-inner" placeholder="พิมพ์หรือกดปุ่มไมค์เพื่อพูดประโยคของคุณ..."></textarea>
+        <!-- [FIX] Char counter row + forbidden warning -->
+        <div class="flex justify-between items-center mb-6 px-1">
+            <div id="forbiddenWarning" class="hidden text-xs font-bold text-red-500">
+                ⚠️ พบคำต้องห้ามในข้อความ — คะแนนจะเป็น 0 ทันที
+            </div>
+            <div class="flex-1"></div>
+            <span id="charCount" class="text-xs text-slate-400 font-medium">0 / 500</span>
+        </div>
         
         <button onclick="scan()" id="btn" class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white py-5 rounded-3xl font-bold text-lg shadow-xl transition-all active:scale-[0.99] group">
             <span class="relative z-10">🚀 เริ่มวิเคราะห์ประสิทธิภาพการสื่อสาร</span>
         </button>
     </div>
 
+    <!-- Skeleton -->
     <div id="skeletonLoader" class="hidden w-full max-w-3xl p-8 md:p-12 glass-card rounded-[3rem] mb-12 animate-pulse border-t-[12px] border-slate-200 dark:border-slate-700">
         <div class="flex flex-col md:flex-row items-center gap-8 mb-10 pb-10 border-b border-slate-200 dark:border-slate-700">
             <div class="w-40 h-40 rounded-full bg-slate-200 dark:bg-slate-700"></div>
@@ -117,6 +140,7 @@
         </div>
     </div>
 
+    <!-- Result -->
     <div id="result" class="hidden w-full max-w-3xl p-8 md:p-12 glass-card rounded-[3rem] mb-16 border-t-[12px] tone-neutral shadow-2xl">
         <div id="capture-area" class="bg-white dark:bg-slate-800 rounded-[2rem] p-4 transition-colors">
             <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-10 pb-10 border-b border-slate-100 dark:border-slate-700 avoid-break">
@@ -135,27 +159,29 @@
                     <p class="text-slate-500 dark:text-slate-400 font-medium">วิเคราะห์โดยระบบ AI อัจฉริยะ</p>
                 </div>
             </div>
-            
             <div id="reportContent" class="text-slate-700 dark:text-slate-300 leading-relaxed text-[15px]"></div>
-            
         </div>
         <div class="flex flex-col sm:flex-row gap-5 mt-12">
             <button onclick="exportPDF()" id="pdfBtn" class="flex-1 py-4 bg-rose-500 hover:bg-rose-600 rounded-2xl text-sm font-bold text-white shadow-lg flex justify-center items-center gap-2 transition-all">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg> บันทึกเป็นเอกสาร PDF
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                บันทึกเป็นเอกสาร PDF
             </button>
             <button onclick="exportImage()" id="exportBtn" class="flex-1 py-4 bg-emerald-500 hover:bg-emerald-600 rounded-2xl text-sm font-bold text-white shadow-lg flex justify-center items-center gap-2 transition-all">📸 บันทึกเป็นรูปภาพ</button>
         </div>
     </div>
 
+    <!-- History -->
     <div id="historySection" class="w-full max-w-3xl hidden mb-24 px-4">
         <h3 class="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-6 text-center">📜 ประวัติการวิเคราะห์ล่าสุด</h3>
         <div id="historyList" class="space-y-4"></div>
     </div>
 
     <script>
-        // ----------------------------------------
-        // Voice Logic
-        // ----------------------------------------
+        // ─── [FIX] Rate Limiting: 10s cooldown per request (client-side) ───
+        const RATE_LIMIT_MS = 10000;
+        let lastSubmitTime = 0;
+
+        // ─── Voice Recognition ───
         let recognition;
         let isRecording = false;
 
@@ -172,9 +198,12 @@
                     if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
                 }
                 const inputBox = document.getElementById('userInput');
-                if(finalTranscript) inputBox.value = (inputBox.value + ' ' + finalTranscript).trim();
+                if (finalTranscript) {
+                    // [FIX] Enforce maxlength after voice input too
+                    inputBox.value = (inputBox.value + ' ' + finalTranscript).trim().slice(0, 500);
+                    updateCharCount();
+                }
             };
-
             recognition.onend = function() { stopRecording(); };
             recognition.onerror = function(event) { stopRecording(); showError("เกิดข้อผิดพลาดในการรับเสียง: " + event.error); };
         } else {
@@ -183,24 +212,23 @@
 
         function toggleRecording() {
             if (!recognition) return;
-            if (isRecording) { stopRecording(); } 
+            if (isRecording) { stopRecording(); }
             else {
                 recognition.start();
                 isRecording = true;
-                const micBtn = document.getElementById('micBtn');
-                micBtn.classList.add('recording');
+                document.getElementById('micBtn').classList.add('recording');
                 document.getElementById('micText').innerText = 'กำลังฟัง... (กดเพื่อหยุด)';
             }
         }
 
         function stopRecording() {
-            if(recognition && isRecording) recognition.stop();
+            if (recognition && isRecording) recognition.stop();
             isRecording = false;
-            const micBtn = document.getElementById('micBtn');
-            micBtn.classList.remove('recording');
+            document.getElementById('micBtn').classList.remove('recording');
             document.getElementById('micText').innerText = 'กดเพื่อพูด';
         }
 
+        // ─── Dark Mode ───
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
             const isDark = document.documentElement.classList.contains('dark');
@@ -209,20 +237,25 @@
         }
 
         window.onload = () => {
-            if(localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            if (localStorage.getItem('theme') === 'dark' ||
+                (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
                 document.getElementById('themeIcon').innerText = '☀️';
             }
+            renderForbiddenTags();
             displayHistory();
         };
 
+        // ─── UI Helpers ───
         function toggleCustomSituation() {
             const select = document.getElementById('situationSelect');
             const customInput = document.getElementById('customSituation');
             if (select.value === 'custom') {
                 customInput.classList.remove('hidden');
                 setTimeout(() => customInput.focus(), 100);
-            } else { customInput.classList.add('hidden'); }
+            } else {
+                customInput.classList.add('hidden');
+            }
         }
 
         function showError(msg) {
@@ -244,18 +277,54 @@
             return text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-800 dark:text-white">$1</strong>');
         }
 
+        // [FIX] Character counter
+        function updateCharCount() {
+            const val = document.getElementById('userInput').value;
+            const len = val.length;
+            const el = document.getElementById('charCount');
+            el.innerText = `${len} / 500`;
+            el.className = 'text-xs font-medium ' + (len >= 500 ? 'char-danger' : len > 450 ? 'char-warn' : 'text-slate-400');
+            checkForbiddenInInput();
+        }
+
+        // [FIX] Forbidden word helpers
+        function getForbiddenWords() {
+            return document.getElementById('forbiddenWordsInput').value
+                .split(',').map(w => w.trim()).filter(w => w !== '');
+        }
+
+        function renderForbiddenTags() {
+            const words = getForbiddenWords();
+            document.getElementById('forbiddenTagsPreview').innerHTML =
+                words.map(w => `<span class="forbidden-tag">🚫 ${w}</span>`).join('');
+            checkForbiddenInInput();
+        }
+
+        // [FIX] Client-side forbidden pre-check with live warning
+        function checkForbiddenInInput() {
+            const text = document.getElementById('userInput').value.toLowerCase();
+            const found = getForbiddenWords().some(w => w && text.includes(w.toLowerCase()));
+            document.getElementById('forbiddenWarning').classList.toggle('hidden', !found);
+        }
+
+        // ─── Main Scan ───
         async function scan() {
-            const input = document.getElementById('userInput');
-            const text = input.value.trim();
-            if(!text) return showError("🚨 กรุณาพิมพ์หรือพูดข้อความที่คุณต้องการจะสื่อสารก่อนนะครับ");
+            // [FIX] Client-side rate limit check
+            const now = Date.now();
+            if (now - lastSubmitTime < RATE_LIMIT_MS) {
+                const wait = Math.ceil((RATE_LIMIT_MS - (now - lastSubmitTime)) / 1000);
+                return showError(`⏱️ กรุณารอ ${wait} วินาทีก่อนวิเคราะห์ครั้งถัดไปครับ`);
+            }
+
+            const text = document.getElementById('userInput').value.trim();
+            if (!text) return showError("🚨 กรุณาพิมพ์หรือพูดข้อความที่คุณต้องการจะสื่อสารก่อนนะครับ");
 
             const selectVal = document.getElementById('situationSelect').value;
             const customVal = document.getElementById('customSituation').value.trim();
             const situation = selectVal === 'custom' ? customVal : selectVal;
             if (selectVal === 'custom' && !situation) return showError("✍️ กรุณาระบุสถานการณ์ของคุณด้วยครับ");
 
-            const forbiddenWords = document.getElementById('forbiddenWordsInput').value.split(',').map(w => w.trim()).filter(w => w !== "");
-
+            const forbiddenWords = getForbiddenWords();
             const btn = document.getElementById('btn');
             const skeleton = document.getElementById('skeletonLoader');
             const resultBox = document.getElementById('result');
@@ -264,22 +333,21 @@
             btn.innerHTML = '⏳ AI กำลังวิเคราะห์ข้อมูลเชิงลึก...';
             resultBox.classList.add('hidden');
             skeleton.classList.remove('hidden');
+            lastSubmitTime = Date.now();
 
             try {
                 const res = await fetch('/api/analyze', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text, situation, forbiddenWords })
                 });
-                
+
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || "Connection Error");
 
                 skeleton.classList.add('hidden');
                 updateUI(data);
-                
                 saveToHistory(text, data);
-                
                 resultBox.classList.remove('hidden');
                 setTimeout(() => resultBox.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
 
@@ -287,26 +355,30 @@
                 showError(err.message);
                 skeleton.classList.add('hidden');
             } finally {
-                btn.disabled = false; 
+                btn.disabled = false;
                 btn.innerHTML = '🚀 เริ่มวิเคราะห์ประสิทธิภาพการสื่อสาร';
             }
         }
 
+        // ─── Update UI ───
         function updateUI(data) {
             const score = data.score || 0;
             const tone = data.tone || 'Neutral';
 
-            let currentScore = 0;
             const scoreEl = document.getElementById('scoreValue');
             const ring = document.getElementById('scoreRing');
-            ring.style.strokeDashoffset = 351.85; 
-            
-            setTimeout(() => { 
-                ring.style.strokeDashoffset = 351.85 - (score / 100 * 351.85); 
+            ring.style.strokeDashoffset = 351.85;
+
+            // [FIX] Dynamic step = animation always ~1 second regardless of score value
+            setTimeout(() => {
+                ring.style.strokeDashoffset = 351.85 - (score / 100 * 351.85);
+                let currentScore = 0;
+                const step = Math.max(1, Math.ceil(score / 60));
                 const interval = setInterval(() => {
+                    currentScore = Math.min(currentScore + step, score);
+                    scoreEl.innerText = currentScore + "%";
                     if (currentScore >= score) clearInterval(interval);
-                    else { currentScore++; scoreEl.innerText = currentScore + "%"; }
-                }, 15);
+                }, 16);
             }, 100);
 
             const resultBox = document.getElementById('result');
@@ -318,109 +390,104 @@
                 'Neutral': { class: 'tone-neutral', label: '🔵 ปกติ / ทั่วไป', badge: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' }
             };
             const selected = tones[tone] || tones['Neutral'];
-            
+
             resultBox.className = "w-full max-w-3xl p-8 md:p-12 glass-card rounded-[3rem] mb-16 border-t-[12px] shadow-2xl transition-all " + selected.class;
             badge.innerHTML = selected.label;
             badge.className = "inline-flex items-center px-4 py-1.5 rounded-full text-xs font-extrabold uppercase mb-4 tracking-wider shadow-sm transition-all " + selected.badge;
-            
-            let html = ``;
-            
-            if(data.summary) {
+
+            let html = '';
+            if (data.summary) {
                 html += `<div class="mb-8 avoid-break">
-                    <h3 class="text-xl font-bold text-blue-800 dark:text-blue-400 mb-3 flex items-center">📝 บทสรุปการประเมิน</h3>
+                    <h3 class="text-xl font-bold text-blue-800 dark:text-blue-400 mb-3">📝 บทสรุปการประเมิน</h3>
                     <p class="text-slate-700 dark:text-slate-300 leading-relaxed">${formatText(data.summary)}</p>
                 </div>`;
             }
 
             html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 avoid-break">`;
-            
-            if(data.pros && data.pros.length > 0) {
+            if (data.pros && data.pros.length > 0) {
                 html += `<div class="bg-emerald-50 dark:bg-emerald-900/10 p-5 rounded-2xl border border-emerald-100 dark:border-emerald-800/30">
-                    <h4 class="font-bold text-emerald-700 dark:text-emerald-400 mb-3 flex items-center">✅ จุดเด่นที่ทำได้ดี</h4>
+                    <h4 class="font-bold text-emerald-700 dark:text-emerald-400 mb-3">✅ จุดเด่นที่ทำได้ดี</h4>
                     <ul class="space-y-2">`;
-                data.pros.forEach(item => {
-                    html += `<li class="flex items-start text-sm"><span class="mr-2 text-emerald-500">•</span><span>${formatText(item)}</span></li>`;
-                });
+                data.pros.forEach(i => { html += `<li class="flex items-start text-sm"><span class="mr-2 text-emerald-500">•</span><span>${formatText(i)}</span></li>`; });
                 html += `</ul></div>`;
             }
-
-            if(data.cons && data.cons.length > 0) {
+            if (data.cons && data.cons.length > 0) {
                 html += `<div class="bg-red-50 dark:bg-red-900/10 p-5 rounded-2xl border border-red-100 dark:border-red-800/30">
-                    <h4 class="font-bold text-red-700 dark:text-red-400 mb-3 flex items-center">⚠️ จุดที่ควรปรับปรุง</h4>
+                    <h4 class="font-bold text-red-700 dark:text-red-400 mb-3">⚠️ จุดที่ควรปรับปรุง</h4>
                     <ul class="space-y-2">`;
-                data.cons.forEach(item => {
-                    html += `<li class="flex items-start text-sm"><span class="mr-2 text-red-500">•</span><span>${formatText(item)}</span></li>`;
-                });
+                data.cons.forEach(i => { html += `<li class="flex items-start text-sm"><span class="mr-2 text-red-500">•</span><span>${formatText(i)}</span></li>`; });
                 html += `</ul></div>`;
             }
             html += `</div>`;
 
-            if(data.comparison_table && data.comparison_table.length > 0) {
-                html += `
-                <div class="mt-8 mb-4 avoid-break">
-                    <h3 class="text-xl font-bold text-blue-800 dark:text-blue-400 mb-4 flex items-center">💡 แนวทางการปรับปรุง (Best Practice)</h3>
+            if (data.comparison_table && data.comparison_table.length > 0) {
+                html += `<div class="mt-8 mb-4 avoid-break">
+                    <h3 class="text-xl font-bold text-blue-800 dark:text-blue-400 mb-4">💡 แนวทางการปรับปรุง (Best Practice)</h3>
                     <div class="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
                         <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm">
-                                    <th class="p-4 font-semibold w-1/4">ประเด็น</th>
-                                    <th class="p-4 font-semibold w-1/3">คำพูดเดิม</th>
-                                    <th class="p-4 font-semibold">คำพูดที่แนะนำ</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                `;
-                
-                data.comparison_table.forEach((row, index) => {
-                    const bgClass = index % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-50 dark:bg-slate-800/50';
-                    html += `
-                                <tr class="${bgClass} avoid-break">
-                                    <td class="p-4 text-sm font-semibold text-slate-700 dark:text-slate-300 align-top">${formatText(row.aspect)}</td>
-                                    <td class="p-4 text-sm text-slate-600 dark:text-slate-400 align-top">${formatText(row.original)}</td>
-                                    <td class="p-4 text-sm text-emerald-700 dark:text-emerald-400 font-medium align-top bg-emerald-50/30 dark:bg-emerald-900/10">${formatText(row.better)}</td>
-                                </tr>
-                    `;
+                            <thead><tr class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm">
+                                <th class="p-4 font-semibold w-1/4">ประเด็น</th>
+                                <th class="p-4 font-semibold w-1/3">คำพูดเดิม</th>
+                                <th class="p-4 font-semibold">คำพูดที่แนะนำ</th>
+                            </tr></thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-700">`;
+                data.comparison_table.forEach((row, idx) => {
+                    const bg = idx % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-50 dark:bg-slate-800/50';
+                    html += `<tr class="${bg} avoid-break">
+                        <td class="p-4 text-sm font-semibold text-slate-700 dark:text-slate-300 align-top">${formatText(row.aspect)}</td>
+                        <td class="p-4 text-sm text-slate-600 dark:text-slate-400 align-top">${formatText(row.original)}</td>
+                        <td class="p-4 text-sm text-emerald-700 dark:text-emerald-400 font-medium align-top bg-emerald-50/30 dark:bg-emerald-900/10">${formatText(row.better)}</td>
+                    </tr>`;
                 });
-                
                 html += `</tbody></table></div></div>`;
             }
-
             document.getElementById('reportContent').innerHTML = html;
         }
 
+        // ─── History (FIX: loadHistory now implemented) ───
         function saveToHistory(input, data) {
             let history = JSON.parse(localStorage.getItem('crisisHistoryData') || '[]');
-            history.unshift({ input: input, data: data, date: new Date().toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) });
+            history.unshift({ input, data, date: new Date().toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) });
             localStorage.setItem('crisisHistoryData', JSON.stringify(history.slice(0, 5)));
             displayHistory();
+        }
+
+        // [FIX] This function was missing — now implemented fully
+        function loadHistory(index) {
+            const history = JSON.parse(localStorage.getItem('crisisHistoryData') || '[]');
+            const item = history[index];
+            if (!item) return;
+            document.getElementById('userInput').value = item.input;
+            updateCharCount();
+            updateUI(item.data);
+            const resultBox = document.getElementById('result');
+            resultBox.classList.remove('hidden');
+            setTimeout(() => resultBox.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
         }
 
         function displayHistory() {
             const history = JSON.parse(localStorage.getItem('crisisHistoryData') || '[]');
             const list = document.getElementById('historyList');
-            if(history.length > 0) {
+            if (history.length > 0) {
                 document.getElementById('historySection').classList.remove('hidden');
                 list.innerHTML = history.map((item, index) => {
                     let color = 'border-slate-300 dark:border-slate-600';
-                    if(item.data.tone === 'Professional') color = 'border-emerald-400';
-                    else if(item.data.tone === 'Aggressive') color = 'border-red-400';
-                    else if(item.data.tone === 'Neutral') color = 'border-blue-400';
-
-                    return `
-                    <div class="glass-card p-5 rounded-2xl cursor-pointer border-l-[6px] ${color} shadow-sm hover:shadow-md transition-all" onclick="loadHistory(${index})">
+                    if (item.data.tone === 'Professional') color = 'border-emerald-400';
+                    else if (item.data.tone === 'Aggressive') color = 'border-red-400';
+                    else if (item.data.tone === 'Neutral') color = 'border-blue-400';
+                    return `<div class="glass-card p-5 rounded-2xl cursor-pointer border-l-[6px] ${color} shadow-sm hover:shadow-md transition-all" onclick="loadHistory(${index})">
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-[11px] font-bold text-slate-400 dark:text-slate-500">${item.date}</span>
                             <span class="text-sm font-extrabold text-blue-700 dark:text-blue-400">${item.data.score}%</span>
                         </div>
                         <div class="text-sm text-slate-600 dark:text-slate-300 line-clamp-2 italic">"${item.input}"</div>
-                    </div>
-                `}).join('');
+                        <div class="text-[10px] text-slate-400 mt-2">👆 กดเพื่อโหลดผลการวิเคราะห์นี้</div>
+                    </div>`;
+                }).join('');
             }
         }
 
-        // ----------------------------------------
-        // การส่งออก PDF (ทำเป็นหน้าเดียวแบบ Dynamic Height สมบูรณ์แบบ)
-        // ----------------------------------------
+        // ─── Export PDF (FIX: guaranteed dark mode restore even on error) ───
         function exportPDF() {
             const area = document.getElementById('capture-area');
             const btn = document.getElementById('pdfBtn');
@@ -429,43 +496,30 @@
             btn.disabled = true;
 
             const wasDark = document.documentElement.classList.contains('dark');
-            if(wasDark) document.documentElement.classList.remove('dark');
+            if (wasDark) document.documentElement.classList.remove('dark');
+
+            // [FIX] Shared cleanup always runs on success AND error
+            const cleanup = () => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                if (wasDark) document.documentElement.classList.add('dark');
+            };
 
             setTimeout(() => {
-                // ดึงความกว้างและความสูงที่แท้จริงของเนื้อหาเพื่อป้องกันการตัดขึ้นหน้าใหม่
-                const elementWidth = area.offsetWidth;
-                const elementHeight = area.scrollHeight;
-
                 const opt = {
-                    margin:       [15, 15, 15, 15], 
-                    filename:     `Crisis-Report_${new Date().getTime()}.pdf`,
-                    image:        { type: 'jpeg', quality: 1.0 },
-                    html2canvas:  { 
-                        scale: 2, 
-                        useCORS: true,
-                        backgroundColor: '#ffffff',
-                        scrollY: 0
-                    },
-                    // *** แก้ไขจุดนี้ *** กำหนด Format ให้สูงกว่าเนื้อหาเล็กน้อย เพื่อบังคับให้เป็นหน้าเดียวชัวร์ๆ
-                    jsPDF:        { 
-                        unit: 'px', 
-                        format: [elementWidth + 30, elementHeight + 30], 
-                        orientation: 'portrait' 
-                    }
+                    margin: [15, 15, 15, 15],
+                    filename: `Crisis-Report_${new Date().getTime()}.pdf`,
+                    image: { type: 'jpeg', quality: 1.0 },
+                    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+                    jsPDF: { unit: 'px', format: [area.offsetWidth + 30, area.scrollHeight + 30], orientation: 'portrait' }
                 };
-
-                html2pdf().set(opt).from(area).save().then(() => {
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    if(wasDark) document.documentElement.classList.add('dark');
-                }).catch(err => {
-                    showError("เกิดข้อผิดพลาดในการบันทึก PDF");
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                });
-            }, 600); 
+                html2pdf().set(opt).from(area).save()
+                    .then(cleanup)
+                    .catch(() => { showError("เกิดข้อผิดพลาดในการบันทึก PDF"); cleanup(); });
+            }, 600);
         }
 
+        // ─── Export Image (FIX: guaranteed dark mode restore even on error) ───
         function exportImage() {
             const area = document.getElementById('capture-area');
             const btn = document.getElementById('exportBtn');
@@ -474,7 +528,14 @@
             btn.disabled = true;
 
             const wasDark = document.documentElement.classList.contains('dark');
-            if(wasDark) document.documentElement.classList.remove('dark');
+            if (wasDark) document.documentElement.classList.remove('dark');
+
+            // [FIX] Shared cleanup always runs on success AND error
+            const cleanup = () => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                if (wasDark) document.documentElement.classList.add('dark');
+            };
 
             setTimeout(() => {
                 html2canvas(area, {
@@ -493,10 +554,8 @@
                     link.download = `Crisis-Report_${new Date().getTime()}.png`;
                     link.href = canvas.toDataURL("image/png");
                     link.click();
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    if(wasDark) document.documentElement.classList.add('dark'); 
-                });
+                    cleanup();
+                }).catch(() => { showError("เกิดข้อผิดพลาดในการบันทึกรูปภาพ"); cleanup(); });
             }, 600);
         }
     </script>
