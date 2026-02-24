@@ -3,23 +3,50 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    const { text: userInput, situation, forbiddenWords } = req.body;
-    
+    // ─── [FIX] Server-side Rate Limiting via IP ───
+    // Stores: { [ip]: lastRequestTimestamp }
+    if (!global._rateLimitMap) global._rateLimitMap = {};
+    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+    const now = Date.now();
+    const SERVER_RATE_LIMIT_MS = 8000; // 8 วินาที ต่อ IP
+
+    if (global._rateLimitMap[ip] && now - global._rateLimitMap[ip] < SERVER_RATE_LIMIT_MS) {
+        const retryAfter = Math.ceil((SERVER_RATE_LIMIT_MS - (now - global._rateLimitMap[ip])) / 1000);
+        return res.status(429).json({ error: `⏱️ กรุณารอ ${retryAfter} วินาทีก่อนส่งคำขอใหม่ครับ` });
+    }
+    global._rateLimitMap[ip] = now;
+
+    // Clean up old entries every 100 requests to prevent memory leak
+    if (Object.keys(global._rateLimitMap).length > 100) {
+        const cutoff = now - SERVER_RATE_LIMIT_MS * 2;
+        for (const key in global._rateLimitMap) {
+            if (global._rateLimitMap[key] < cutoff) delete global._rateLimitMap[key];
+        }
+    }
+
+    // ─── [FIX] Input Sanitization to prevent Prompt Injection ───
+    const rawText = req.body?.text;
+    const rawSituation = req.body?.situation;
+    const rawForbidden = req.body?.forbiddenWords;
+
+    // Enforce length limits
+    const userInput = typeof rawText === 'string' ? rawText.slice(0, 500).replace(/[`"\\]/g, '') : '';
+    const situation = typeof rawSituation === 'string' ? rawSituation.slice(0, 200).replace(/[`"\\]/g, '') : 'สถานการณ์ทั่วไป';
+
+    // Sanitize forbidden words array
+    const FORBIDDEN = Array.isArray(rawForbidden)
+        ? rawForbidden.slice(0, 20).map(w => String(w).slice(0, 50).replace(/[`"\\]/g, '')).filter(w => w !== '')
+        : ['ขี้เกียจ', 'ภาระ'];
+
     let apiKey = process.env.GOOGLE_API_KEY || "";
-    apiKey = apiKey.replace(/['"]/g, '').trim(); 
+    apiKey = apiKey.replace(/['"]/g, '').trim();
 
     if (!apiKey) return res.status(500).json({ error: "ไม่พบ API Key ในระบบหลังบ้าน" });
     if (!userInput) return res.status(400).json({ error: "กรุณากรอกข้อความ" });
 
-    const FORBIDDEN = Array.isArray(forbiddenWords) && forbiddenWords.length > 0 
-        ? forbiddenWords 
-        : ['ขี้เกียจ', 'ภาระ'];
-
-    const currentSituation = situation || "สถานการณ์ทั่วไป";
-
     try {
         const prompt = `คุณคือ AI ผู้เชี่ยวชาญด้านการสื่อสารในภาวะวิกฤต (Crisis Communication)
-สถานการณ์: "${currentSituation}"
+สถานการณ์: "${situation}"
 คำพูดผู้ใช้งาน: "${userInput}"
 ลิสต์เจตนาต้องห้าม: [${FORBIDDEN.join(', ')}]
 
@@ -74,13 +101,13 @@ export default async function handler(req, res) {
             throw new Error(data.error?.message || "Google API Error");
         }
 
-        const rawText = data.candidates[0].content.parts[0].text;
-        
+        const rawResultText = data.candidates[0].content.parts[0].text;
+
         let resultJson;
         try {
-            resultJson = JSON.parse(rawText);
+            resultJson = JSON.parse(rawResultText);
         } catch (parseError) {
-            const match = rawText.match(/\{[\s\S]*\}/);
+            const match = rawResultText.match(/\{[\s\S]*\}/);
             if (match) {
                 resultJson = JSON.parse(match[0]);
             } else {
@@ -93,7 +120,8 @@ export default async function handler(req, res) {
             }
         }
 
-        resultJson.score = resultJson.score || 0;
+        // Normalize output
+        resultJson.score = typeof resultJson.score === 'number' ? Math.max(0, Math.min(100, Math.round(resultJson.score))) : 0;
         resultJson.tone = resultJson.tone || "Neutral";
         resultJson.summary = resultJson.summary || "ไม่มีบทสรุปเพิ่มเติม";
         resultJson.pros = Array.isArray(resultJson.pros) ? resultJson.pros : [];
@@ -105,7 +133,6 @@ export default async function handler(req, res) {
     } catch (error) {
         const errMsg = error.message.toLowerCase();
         if (errMsg.includes("high demand") || errMsg.includes("overloaded") || errMsg.includes("quota") || errMsg.includes("429")) {
-            // แก้ไขข้อความ Error ให้เป็นมิตรกับผู้ใช้ ไม่แสดง retry in 15
             return res.status(429).json({ error: "เซิร์ฟเวอร์ AI มีผู้ใช้งานจำนวนมากชั่วคราว กรุณารอสักครู่แล้วกดลองใหม่อีกครั้งครับ" });
         }
         return res.status(500).json({ error: `เกิดข้อผิดพลาด: ${error.message}` });
