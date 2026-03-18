@@ -407,12 +407,13 @@ select.input {
 /* ═══════════════════════════════════════════════════
    STAGGER REVEAL
 ═══════════════════════════════════════════════════ */
-.page > * { opacity: 0; animation: fadeUp .5s ease both; }
-.page > *:nth-child(1) { animation-delay: .05s; }
-.page > *:nth-child(2) { animation-delay: .12s; }
-.page > *:nth-child(3) { animation-delay: .19s; }
-.page > *:nth-child(4) { animation-delay: .26s; }
-.page > *:nth-child(5) { animation-delay: .33s; }
+/* Stagger reveal — using will-change to force GPU layer, animation-fill-mode:both for safety */
+.page-item { opacity: 0; animation: fadeUp .48s ease forwards; }
+.page-item-1 { animation-delay: .04s; }
+.page-item-2 { animation-delay: .10s; }
+.page-item-3 { animation-delay: .16s; }
+.page-item-4 { animation-delay: .22s; }
+.page-item-5 { animation-delay: .28s; }
 </style>
 </head>
 <body>
@@ -469,7 +470,7 @@ select.input {
 <div class="page">
 
   <!-- Header -->
-  <header class="site-header">
+  <header class="site-header page-item page-item-1">
     <div class="eyebrow">
       <span style="background:var(--accent);"></span>
       Crisis Communication Intelligence
@@ -480,7 +481,7 @@ select.input {
   </header>
 
   <!-- ── Input Card ──────────────────────────────────── -->
-  <div class="card card--elevated" style="padding:28px 28px 24px;margin-bottom:18px;">
+  <div class="card card--elevated page-item page-item-2" style="padding:28px 28px 24px;margin-bottom:18px;">
     <div class="card-stripe" style="background:linear-gradient(90deg,var(--accent),var(--accent2));"></div>
 
     <!-- Situation + Forbidden -->
@@ -529,7 +530,7 @@ select.input {
   </div>
 
   <!-- ── Skeleton ─────────────────────────────────────── -->
-  <div id="skeletonLoader" class="card" style="padding:28px;display:none;">
+  <div id="skeletonLoader" class="card page-item page-item-3" style="padding:28px;display:none;">
     <div style="display:flex;gap:20px;align-items:center;margin-bottom:24px;padding-bottom:22px;border-bottom:1px solid var(--border);">
       <div class="shimmer" style="width:110px;height:110px;border-radius:50%;flex-shrink:0;"></div>
       <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
@@ -547,7 +548,7 @@ select.input {
   </div>
 
   <!-- ── Result ──────────────────────────────────────── -->
-  <div id="result" style="display:none;">
+  <div id="result" class="page-item page-item-3" style="display:none;">
     <div id="exportSnapshot">
 
       <!-- Score Header -->
