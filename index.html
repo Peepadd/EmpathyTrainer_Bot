@@ -6,8 +6,7 @@
     <title>CommCraft</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
-    <!-- BUG FIX #8: html2canvas ใช้ไม่ได้กับ export → เปลี่ยนเป็น dom-to-image-more ที่ support CSS variables -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -790,9 +789,11 @@
         }
 
         // ─── Export Image ─────────────────────────────────────────────────────
-        // วิธี: สร้าง off-screen wrapper ขนาด 680px คงที่
-        // แล้ว clone #exportSnapshot เข้าไป พร้อม inject CSS variables
-        // เป็นค่า hard-coded light-mode ทั้งหมด เพื่อให้ภาพสวยเสมอ
+        // ใช้ html2canvas พร้อม onclone callback เพื่อ:
+        // 1) inject CSS variables เป็น hard-coded light-mode ก่อน render
+        // 2) fix color-mix() ที่ html2canvas ไม่รองรับ → แทนด้วยค่าตรง
+        // 3) force grid 2 columns เสมอ ไม่ขึ้นกับ viewport
+        // 4) set width 680px คงที่บน cloned element
         function exportImage() {
             const snapshot = document.getElementById('exportSnapshot');
             const btn = document.getElementById('exportBtn');
@@ -800,77 +801,97 @@
             btn.innerHTML = '⏳ กำลังสร้างรูปภาพ...';
             btn.disabled = true;
 
-            const EXPORT_W = 680;
-            const SCALE = 2;
+            const LIGHT = {
+                '--bg':           '#f8f5f0',
+                '--surface':      '#ffffff',
+                '--border':       '#e8e2d9',
+                '--text':         '#1a1510',
+                '--text-muted':   '#7a6f64',
+                '--accent':       '#d4500a',
+                '--accent-light': '#fff0e8',
+                '--accent2':      '#1a4f8a',
+                '--accent2-light':'#e8f0ff',
+                '--green':        '#1a6b3a',
+                '--green-light':  '#e8f5ee',
+                '--red':          '#c0211f',
+                '--red-light':    '#fdecea',
+            };
 
-            // Light-mode CSS variables ทั้งหมด hard-coded
-            const LIGHT_VARS = `
-                --bg:#f8f5f0; --surface:#ffffff; --border:#e8e2d9;
-                --text:#1a1510; --text-muted:#7a6f64;
-                --accent:#d4500a; --accent-light:#fff0e8;
-                --accent2:#1a4f8a; --accent2-light:#e8f0ff;
-                --green:#1a6b3a; --green-light:#e8f5ee;
-                --red:#c0211f; --red-light:#fdecea;
-            `;
+            // color-mix() fallbacks ที่ html2canvas ไม่รองรับ
+            // pre-computed เป็น solid hex แทน
+            const COLOR_MIX_MAP = {
+                'color-mix(in srgb, var(--accent) 12%, transparent)':  'rgba(212,80,10,0.12)',
+                'color-mix(in srgb, var(--accent) 30%, transparent)':  'rgba(212,80,10,0.30)',
+                'color-mix(in srgb, var(--accent) 35%, transparent)':  'rgba(212,80,10,0.35)',
+                'color-mix(in srgb, var(--accent) 85%, black)':        '#b34208',
+                'color-mix(in srgb, var(--accent2) 10%, var(--surface))': '#edf2f9',
+                'color-mix(in srgb, var(--accent2) 20%, transparent)': 'rgba(26,79,138,0.20)',
+                'color-mix(in srgb, var(--green) 20%, transparent)':   'rgba(26,107,58,0.20)',
+                'color-mix(in srgb, var(--red) 20%, transparent)':     'rgba(192,33,31,0.20)',
+                'color-mix(in srgb, var(--red) 15%, transparent)':     'rgba(192,33,31,0.15)',
+                'color-mix(in srgb, var(--red) 40%, transparent)':     'rgba(192,33,31,0.40)',
+                'color-mix(in srgb, var(--border) 30%, var(--surface))': '#f3efe8',
+                'color-mix(in srgb, var(--border) 60%, var(--surface))': '#ede8df',
+            };
 
-            // สร้าง off-screen container
-            const offscreen = document.createElement('div');
-            offscreen.style.cssText = `
-                position:fixed; top:-99999px; left:-99999px;
-                width:${EXPORT_W}px; overflow:visible; z-index:-1;
-                background:#f8f5f0; font-family:'Sarabun',sans-serif;
-            `;
-            document.body.appendChild(offscreen);
+            html2canvas(snapshot, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#f8f5f0',
+                width: 648,   // snapshot มี padding 28px × 2 = 56px → inner 648px
+                windowWidth: 680,
+                onclone: (doc, clonedEl) => {
+                    // 1) inject CSS vars ลงบน :root ของ cloned document
+                    const root = doc.documentElement;
+                    Object.entries(LIGHT).forEach(([k, v]) => root.style.setProperty(k, v));
+                    // ลบ dark class ออกถ้ามี
+                    root.classList.remove('dark');
 
-            // clone และ inject
-            const clone = snapshot.cloneNode(true);
-            clone.style.cssText = `
-                width:${EXPORT_W}px; background:#f8f5f0;
-                padding:28px; border-radius:0; box-sizing:border-box;
-                font-family:'Sarabun',sans-serif;
-            `;
-            // inject light vars ลงใน clone โดยตรง
-            clone.setAttribute('style', clone.getAttribute('style') + `;${LIGHT_VARS}`);
+                    // 2) walk ทุก element — resolve color-mix() และ CSS vars ที่ค้างอยู่
+                    clonedEl.querySelectorAll('*').forEach(el => {
+                        const s = el.style;
 
-            // แก้ grid ใน clone ให้เป็น 2 คอลัมน์เสมอ
-            offscreen.appendChild(clone);
+                        // เปลี่ยน CSS variable references ที่ยังไม่ถูก resolve
+                        ['color','background','backgroundColor','borderColor',
+                         'borderTopColor','borderLeftColor','borderBottomColor',
+                         'boxShadow','stroke'].forEach(prop => {
+                            const val = s[prop];
+                            if (!val) return;
+                            // replace color-mix
+                            let resolved = val;
+                            Object.entries(COLOR_MIX_MAP).forEach(([k, v]) => {
+                                resolved = resolved.replaceAll(k, v);
+                            });
+                            // replace var(--xxx)
+                            resolved = resolved.replace(/var\((--[\w-]+)\)/g, (_, name) => LIGHT[name] || '');
+                            if (resolved !== val) s[prop] = resolved;
+                        });
 
-            // ให้ browser layout clone ก่อน
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                // fix grid cols ใน clone หลัง append
-                clone.querySelectorAll('[style*="grid-template-columns:1fr 1fr"]').forEach(el => {
-                    el.style.gridTemplateColumns = '1fr 1fr';
-                    el.style.display = 'grid';
-                });
+                        // 3) fix grid 2 คอลัมน์
+                        if (s.gridTemplateColumns === '1fr 1fr' || el.style.cssText.includes('grid-template-columns:1fr 1fr')) {
+                            el.style.display = 'grid';
+                            el.style.gridTemplateColumns = '1fr 1fr';
+                        }
+                    });
 
-                const h = clone.scrollHeight;
-
-                domtoimage.toPng(offscreen, {
-                    width: EXPORT_W * SCALE,
-                    height: h * SCALE,
-                    style: {
-                        transform: `scale(${SCALE})`,
-                        transformOrigin: 'top left',
-                        width: EXPORT_W + 'px',
-                        height: h + 'px',
-                    }
-                })
-                .then(dataUrl => {
-                    const a = document.createElement('a');
-                    a.download = `CommCraft-Report-${Date.now()}.png`;
-                    a.href = dataUrl;
-                    a.click();
-                })
-                .catch(err => {
-                    console.error('Export error:', err);
-                    showError('เกิดข้อผิดพลาดในการบันทึกรูปภาพ กรุณาลองใหม่');
-                })
-                .finally(() => {
-                    document.body.removeChild(offscreen);
-                    btn.innerHTML = origHtml;
-                    btn.disabled = false;
-                });
-            }));
+                    // 4) set width 648px บน cloned element เอง
+                    clonedEl.style.width = '648px';
+                    clonedEl.style.maxWidth = '648px';
+                    clonedEl.style.background = '#f8f5f0';
+                }
+            }).then(canvas => {
+                const a = document.createElement('a');
+                a.download = `CommCraft-Report-${Date.now()}.png`;
+                a.href = canvas.toDataURL('image/png');
+                a.click();
+            }).catch(err => {
+                console.error('Export error:', err);
+                showError('เกิดข้อผิดพลาดในการบันทึกรูปภาพ กรุณาลองใหม่');
+            }).finally(() => {
+                btn.innerHTML = origHtml;
+                btn.disabled = false;
+            });
         }
     </script>
 </body>
