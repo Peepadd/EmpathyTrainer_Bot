@@ -843,28 +843,30 @@
             let body = '';
 
             // ── Score header card ──
+            // ใช้ SVG text แทน position:absolute div เพื่อให้ html2canvas render ถูกต้อง
             body += `
-            <div style="background:#fff;border:1px solid #e8e2d9;border-radius:16px;padding:28px;margin-bottom:14px;position:relative;overflow:hidden;">
-              <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#d4500a,#1a4f8a);border-radius:16px 16px 0 0;"></div>
-              <div style="display:flex;gap:24px;align-items:center;">
-                <div style="position:relative;flex-shrink:0;width:110px;height:110px;">
-                  <svg width="110" height="110" viewBox="0 0 128 128" style="transform:rotate(-90deg);">
+            <div style="background:#fff;border:1px solid #e8e2d9;border-radius:16px;padding:28px 28px 24px;margin-bottom:14px;">
+              <div style="height:3px;background:linear-gradient(90deg,#d4500a,#1a4f8a);border-radius:4px;margin:-28px -28px 24px -28px;"></div>
+              <table style="width:100%;border-collapse:collapse;"><tr>
+                <td style="width:120px;vertical-align:middle;padding:0 20px 0 0;">
+                  <svg width="110" height="110" viewBox="0 0 128 128">
                     <circle cx="64" cy="64" r="52" stroke-width="10" fill="transparent" stroke="#e8e2d9"/>
                     <circle cx="64" cy="64" r="52" stroke-width="10" fill="transparent"
-                      stroke="${T.bar}" stroke-dasharray="326.73" stroke-dashoffset="${offset}" stroke-linecap="round"/>
+                      stroke="${T.bar}" stroke-dasharray="326.73" stroke-dashoffset="${offset}"
+                      stroke-linecap="round" transform="rotate(-90 64 64)"/>
+                    <text x="64" y="60" text-anchor="middle" dominant-baseline="middle"
+                      font-family="Syne,sans-serif" font-size="28" font-weight="800" fill="#1a1510">${score}</text>
+                    <text x="64" y="82" text-anchor="middle" dominant-baseline="middle"
+                      font-family="Sarabun,sans-serif" font-size="11" font-weight="600" fill="#7a6f64">คะแนน</text>
                   </svg>
-                  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-                    <span style="font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;line-height:1;color:#1a1510;">${score}</span>
-                    <span style="font-size:10px;color:#7a6f64;font-weight:600;">คะแนน</span>
-                  </div>
-                </div>
-                <div style="flex:1;">
-                  <span style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;background:${T.bg};color:${T.color};border:1px solid ${T.color}33;margin-bottom:10px;">${T.label}</span>
+                </td>
+                <td style="vertical-align:middle;padding:0;">
+                  <span style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;background:${T.bg};color:${T.color};border:1px solid ${T.color}44;margin-bottom:10px;">${T.label}</span>
                   <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#1a1510;margin-bottom:3px;">ผลการประเมิน</div>
-                  <div style="font-size:12px;color:#7a6f64;">วิเคราะห์โดยระบบ AI CommCraft</div>
-                  <div style="font-size:12px;font-weight:700;margin-top:7px;color:${scoreColor};">${scoreLabel}</div>
-                </div>
-              </div>
+                  <div style="font-size:12px;color:#7a6f64;margin-bottom:6px;">วิเคราะห์โดยระบบ AI CommCraft</div>
+                  <div style="font-size:12px;font-weight:700;color:${scoreColor};">${scoreLabel}</div>
+                </td>
+              </tr></table>
             </div>`;
 
             // ── Summary ──
@@ -882,26 +884,34 @@
 
                 if (data.pros?.length) {
                     let items = data.pros.map(i => `
-                    <div style="display:flex;gap:8px;padding:9px 0;border-top:1px solid #e8e2d9;font-size:13px;color:#1a1510;line-height:1.6;">
-                      <div style="width:18px;height:18px;flex-shrink:0;border-radius:50%;background:#e8f5ee;color:#1a6b3a;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;margin-top:2px;">✓</div>
-                      <span>${ft(i)}</span>
-                    </div>`).join('');
+                    <table style="width:100%;border-collapse:collapse;border-top:1px solid #e8e2d9;">
+                      <tr>
+                        <td style="width:24px;vertical-align:top;padding:9px 8px 9px 0;">
+                          <div style="width:20px;height:20px;border-radius:50%;background:#e8f5ee;text-align:center;line-height:20px;font-size:11px;font-weight:700;color:#1a6b3a;">✓</div>
+                        </td>
+                        <td style="font-size:13px;color:#1a1510;line-height:1.6;padding:9px 0;">${ft(i)}</td>
+                      </tr>
+                    </table>`).join('');
                     body += `
                     <div style="background:#fff;border:1px solid #e8e2d9;border-top:3px solid #1a6b3a;border-radius:16px;padding:18px;">
-                      <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#1a6b3a;margin-bottom:10px;">✅ จุดเด่น</div>
+                      <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#1a6b3a;margin-bottom:6px;">✅ จุดเด่น</div>
                       ${items}
                     </div>`;
                 }
 
                 if (data.cons?.length) {
                     let items = data.cons.map(i => `
-                    <div style="display:flex;gap:8px;padding:9px 0;border-top:1px solid #e8e2d9;font-size:13px;color:#1a1510;line-height:1.6;">
-                      <div style="width:18px;height:18px;flex-shrink:0;border-radius:50%;background:#fdecea;color:#c0211f;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;margin-top:2px;">!</div>
-                      <span>${ft(i)}</span>
-                    </div>`).join('');
+                    <table style="width:100%;border-collapse:collapse;border-top:1px solid #e8e2d9;">
+                      <tr>
+                        <td style="width:24px;vertical-align:top;padding:9px 8px 9px 0;">
+                          <div style="width:20px;height:20px;border-radius:50%;background:#fdecea;text-align:center;line-height:20px;font-size:12px;font-weight:700;color:#c0211f;">!</div>
+                        </td>
+                        <td style="font-size:13px;color:#1a1510;line-height:1.6;padding:9px 0;">${ft(i)}</td>
+                      </tr>
+                    </table>`).join('');
                     body += `
                     <div style="background:#fff;border:1px solid #e8e2d9;border-top:3px solid #c0211f;border-radius:16px;padding:18px;">
-                      <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#c0211f;margin-bottom:10px;">⚠️ ควรปรับปรุง</div>
+                      <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#c0211f;margin-bottom:6px;">⚠️ ควรปรับปรุง</div>
                       ${items}
                     </div>`;
                 }
