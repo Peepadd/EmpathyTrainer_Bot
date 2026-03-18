@@ -790,33 +790,69 @@
         }
 
         // ─── Export Image ─────────────────────────────────────────────────────
-        // BUG FIX export: เปลี่ยนจาก html2canvas (ซึ่ง render CSS variables ผิด)
-        // มาใช้ dom-to-image ที่ capture computed style ได้ถูกต้อง
-        // และ capture เฉพาะ #exportSnapshot ไม่รวมปุ่ม export
+        // วิธี: สร้าง off-screen wrapper ขนาด 680px คงที่
+        // แล้ว clone #exportSnapshot เข้าไป พร้อม inject CSS variables
+        // เป็นค่า hard-coded light-mode ทั้งหมด เพื่อให้ภาพสวยเสมอ
         function exportImage() {
             const snapshot = document.getElementById('exportSnapshot');
             const btn = document.getElementById('exportBtn');
             const origHtml = btn.innerHTML;
-
             btn.innerHTML = '⏳ กำลังสร้างรูปภาพ...';
             btn.disabled = true;
 
-            // ให้ browser repaint ก่อน capture
-            requestAnimationFrame(() => {
-                const scale = window.devicePixelRatio || 2;
-                const w = snapshot.offsetWidth;
-                const h = snapshot.offsetHeight;
+            const EXPORT_W = 680;
+            const SCALE = 2;
 
-                domtoimage.toPng(snapshot, {
-                    width: w * scale,
-                    height: h * scale,
+            // Light-mode CSS variables ทั้งหมด hard-coded
+            const LIGHT_VARS = `
+                --bg:#f8f5f0; --surface:#ffffff; --border:#e8e2d9;
+                --text:#1a1510; --text-muted:#7a6f64;
+                --accent:#d4500a; --accent-light:#fff0e8;
+                --accent2:#1a4f8a; --accent2-light:#e8f0ff;
+                --green:#1a6b3a; --green-light:#e8f5ee;
+                --red:#c0211f; --red-light:#fdecea;
+            `;
+
+            // สร้าง off-screen container
+            const offscreen = document.createElement('div');
+            offscreen.style.cssText = `
+                position:fixed; top:-99999px; left:-99999px;
+                width:${EXPORT_W}px; overflow:visible; z-index:-1;
+                background:#f8f5f0; font-family:'Sarabun',sans-serif;
+            `;
+            document.body.appendChild(offscreen);
+
+            // clone และ inject
+            const clone = snapshot.cloneNode(true);
+            clone.style.cssText = `
+                width:${EXPORT_W}px; background:#f8f5f0;
+                padding:28px; border-radius:0; box-sizing:border-box;
+                font-family:'Sarabun',sans-serif;
+            `;
+            // inject light vars ลงใน clone โดยตรง
+            clone.setAttribute('style', clone.getAttribute('style') + `;${LIGHT_VARS}`);
+
+            // แก้ grid ใน clone ให้เป็น 2 คอลัมน์เสมอ
+            offscreen.appendChild(clone);
+
+            // ให้ browser layout clone ก่อน
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                // fix grid cols ใน clone หลัง append
+                clone.querySelectorAll('[style*="grid-template-columns:1fr 1fr"]').forEach(el => {
+                    el.style.gridTemplateColumns = '1fr 1fr';
+                    el.style.display = 'grid';
+                });
+
+                const h = clone.scrollHeight;
+
+                domtoimage.toPng(offscreen, {
+                    width: EXPORT_W * SCALE,
+                    height: h * SCALE,
                     style: {
-                        transform: `scale(${scale})`,
+                        transform: `scale(${SCALE})`,
                         transformOrigin: 'top left',
-                        width: w + 'px',
+                        width: EXPORT_W + 'px',
                         height: h + 'px',
-                        // BUG FIX #6: ล็อคสีพื้นหลังให้เป็น light mode เสมอในภาพ
-                        background: '#f8f5f0',
                     }
                 })
                 .then(dataUrl => {
@@ -830,10 +866,11 @@
                     showError('เกิดข้อผิดพลาดในการบันทึกรูปภาพ กรุณาลองใหม่');
                 })
                 .finally(() => {
+                    document.body.removeChild(offscreen);
                     btn.innerHTML = origHtml;
                     btn.disabled = false;
                 });
-            });
+            }));
         }
     </script>
 </body>
