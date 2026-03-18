@@ -645,6 +645,7 @@
                 if (!r.ok) throw new Error(data.error || 'Connection Error');
 
                 sk.style.display = 'none';
+                _lastResult = data;
                 updateUI(data);
 
                 // BUG FIX #1: reset animation ด้วยการ reflow ก่อน add class ใหม่
@@ -789,109 +790,223 @@
         }
 
         // ─── Export Image ─────────────────────────────────────────────────────
-        // ใช้ html2canvas พร้อม onclone callback เพื่อ:
-        // 1) inject CSS variables เป็น hard-coded light-mode ก่อน render
-        // 2) fix color-mix() ที่ html2canvas ไม่รองรับ → แทนด้วยค่าตรง
-        // 3) force grid 2 columns เสมอ ไม่ขึ้นกับ viewport
-        // 4) set width 680px คงที่บน cloned element
+        // แนวทาง: สร้าง HTML string ใหม่ทั้งหมดสำหรับ export โดยเฉพาะ
+        // ใช้แค่ inline style ที่เป็น hard-coded hex ทั้งหมด ไม่มี CSS variables,
+        // ไม่มี color-mix(), ไม่มี class จาก stylesheet
+        // แล้วยัดใส่ hidden iframe เพื่อ render แล้ว html2canvas จาก iframe
+
+        // เก็บ last result ไว้สำหรับ export
+        let _lastResult = null;
+
+        function buildExportHTML(data) {
+            // Colors hard-coded ทั้งหมด
+            const C = {
+                bg:        '#f8f5f0',
+                surface:   '#ffffff',
+                border:    '#e8e2d9',
+                borderAlt: '#f0ece5',
+                text:      '#1a1510',
+                muted:     '#7a6f64',
+                accent:    '#d4500a',
+                accent2:   '#1a4f8a',
+                accent2bg: '#edf2f9',
+                green:     '#1a6b3a',
+                greenbg:   '#e8f5ee',
+                greenbdr:  '#b8dfc7',
+                red:       '#c0211f',
+                redbg:     '#fdecea',
+                redbdr:    '#f0b8b7',
+            };
+
+            const TONES_EX = {
+                Aggressive: { label: '🔴 ก้าวร้าว / เสี่ยงปะทะ', bg: '#fdecea', color: '#c0211f', bar: '#c0211f' },
+                Professional:{ label: '🟢 มืออาชีพ / ยอดเยี่ยม', bg: '#e8f5ee', color: '#1a6b3a', bar: '#1a6b3a' },
+                Passive:     { label: '⚪ นิ่งเฉย / ขาดความมั่นใจ', bg: '#edf2f9', color: '#1a4f8a', bar: '#64748b' },
+                Neutral:     { label: '🔵 ปกติ / ทั่วไป', bg: '#edf2f9', color: '#1a4f8a', bar: '#1a4f8a' },
+            };
+
+            const score = data.score ?? 0;
+            const tone  = data.tone  || 'Neutral';
+            const T     = TONES_EX[tone] || TONES_EX.Neutral;
+
+            // Score ring SVG — circumference = 2π×52 ≈ 326.73
+            const offset = 326.73 - (score / 100 * 326.73);
+
+            let scoreColor = '#c0211f';
+            let scoreLabel = '⚡ ต้องปรับปรุงด่วน — คะแนนต่ำ';
+            if      (score >= 80) { scoreColor = '#1a6b3a'; scoreLabel = '✨ ยอดเยี่ยม — สื่อสารได้ดีมาก'; }
+            else if (score >= 60) { scoreColor = '#1a4f8a'; scoreLabel = '👍 ดี — มีบางจุดที่พัฒนาได้'; }
+            else if (score >= 40) { scoreColor = '#d97706'; scoreLabel = '📊 พอใช้ — ควรปรับปรุงหลายจุด'; }
+
+            const ft = s => escapeHtml(s || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+            let body = '';
+
+            // ── Score header card ──
+            body += `
+            <div style="background:#fff;border:1px solid #e8e2d9;border-radius:16px;padding:28px;margin-bottom:14px;position:relative;overflow:hidden;">
+              <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#d4500a,#1a4f8a);border-radius:16px 16px 0 0;"></div>
+              <div style="display:flex;gap:24px;align-items:center;">
+                <div style="position:relative;flex-shrink:0;width:110px;height:110px;">
+                  <svg width="110" height="110" viewBox="0 0 128 128" style="transform:rotate(-90deg);">
+                    <circle cx="64" cy="64" r="52" stroke-width="10" fill="transparent" stroke="#e8e2d9"/>
+                    <circle cx="64" cy="64" r="52" stroke-width="10" fill="transparent"
+                      stroke="${T.bar}" stroke-dasharray="326.73" stroke-dashoffset="${offset}" stroke-linecap="round"/>
+                  </svg>
+                  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                    <span style="font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;line-height:1;color:#1a1510;">${score}</span>
+                    <span style="font-size:10px;color:#7a6f64;font-weight:600;">คะแนน</span>
+                  </div>
+                </div>
+                <div style="flex:1;">
+                  <span style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;background:${T.bg};color:${T.color};border:1px solid ${T.color}33;margin-bottom:10px;">${T.label}</span>
+                  <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#1a1510;margin-bottom:3px;">ผลการประเมิน</div>
+                  <div style="font-size:12px;color:#7a6f64;">วิเคราะห์โดยระบบ AI CommCraft</div>
+                  <div style="font-size:12px;font-weight:700;margin-top:7px;color:${scoreColor};">${scoreLabel}</div>
+                </div>
+              </div>
+            </div>`;
+
+            // ── Summary ──
+            if (data.summary) {
+                body += `
+                <div style="background:#fff;border:1px solid #e8e2d9;border-left:4px solid #d4500a;border-radius:0 16px 16px 0;padding:20px 24px;margin-bottom:14px;">
+                  <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7a6f64;margin-bottom:8px;">📝 บทสรุปการประเมิน</div>
+                  <p style="font-size:13px;line-height:1.75;color:#1a1510;margin:0;">${ft(data.summary)}</p>
+                </div>`;
+            }
+
+            // ── Pros & Cons ──
+            if (data.pros?.length || data.cons?.length) {
+                body += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">`;
+
+                if (data.pros?.length) {
+                    let items = data.pros.map(i => `
+                    <div style="display:flex;gap:8px;padding:9px 0;border-top:1px solid #e8e2d9;font-size:13px;color:#1a1510;line-height:1.6;">
+                      <div style="width:18px;height:18px;flex-shrink:0;border-radius:50%;background:#e8f5ee;color:#1a6b3a;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;margin-top:2px;">✓</div>
+                      <span>${ft(i)}</span>
+                    </div>`).join('');
+                    body += `
+                    <div style="background:#fff;border:1px solid #e8e2d9;border-top:3px solid #1a6b3a;border-radius:16px;padding:18px;">
+                      <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#1a6b3a;margin-bottom:10px;">✅ จุดเด่น</div>
+                      ${items}
+                    </div>`;
+                }
+
+                if (data.cons?.length) {
+                    let items = data.cons.map(i => `
+                    <div style="display:flex;gap:8px;padding:9px 0;border-top:1px solid #e8e2d9;font-size:13px;color:#1a1510;line-height:1.6;">
+                      <div style="width:18px;height:18px;flex-shrink:0;border-radius:50%;background:#fdecea;color:#c0211f;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;margin-top:2px;">!</div>
+                      <span>${ft(i)}</span>
+                    </div>`).join('');
+                    body += `
+                    <div style="background:#fff;border:1px solid #e8e2d9;border-top:3px solid #c0211f;border-radius:16px;padding:18px;">
+                      <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#c0211f;margin-bottom:10px;">⚠️ ควรปรับปรุง</div>
+                      ${items}
+                    </div>`;
+                }
+
+                body += `</div>`;
+            }
+
+            // ── Comparison table ──
+            if (data.comparison_table?.length) {
+                let rows = data.comparison_table.map((row, i) => {
+                    const bg = i % 2 === 1 ? 'background:#f5f1eb;' : '';
+                    return `<tr>
+                      <td style="padding:12px 14px;font-size:11px;font-weight:600;color:#7a6f64;vertical-align:top;border-bottom:1px solid #e8e2d9;${bg}">${ft(row.aspect)}</td>
+                      <td style="padding:12px 14px;font-size:12px;color:#1a1510;vertical-align:top;border-bottom:1px solid #e8e2d9;${bg}">${ft(row.original)}</td>
+                      <td style="padding:12px 14px;font-size:12px;color:#1a6b3a;font-weight:600;vertical-align:top;border-bottom:1px solid #e8e2d9;${bg}">${ft(row.better)}</td>
+                    </tr>`;
+                }).join('');
+
+                body += `
+                <div style="background:#fff;border:1px solid #e8e2d9;border-radius:16px;padding:20px 24px;margin-bottom:14px;overflow:hidden;">
+                  <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7a6f64;margin-bottom:14px;">💡 แนวทางที่แนะนำ (Best Practice)</div>
+                  <div style="overflow:hidden;border-radius:10px;border:1px solid #e8e2d9;">
+                    <table style="width:100%;border-collapse:collapse;">
+                      <thead>
+                        <tr>
+                          <th style="width:22%;padding:10px 14px;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#1a4f8a;background:#edf2f9;text-align:left;border-bottom:2px solid #e8e2d9;">ประเด็น</th>
+                          <th style="width:36%;padding:10px 14px;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#1a4f8a;background:#edf2f9;text-align:left;border-bottom:2px solid #e8e2d9;">คำพูดเดิม</th>
+                          <th style="padding:10px 14px;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#1a4f8a;background:#edf2f9;text-align:left;border-bottom:2px solid #e8e2d9;">คำพูดที่แนะนำ</th>
+                        </tr>
+                      </thead>
+                      <tbody>${rows}</tbody>
+                    </table>
+                  </div>
+                </div>`;
+            }
+
+            // ── Watermark ──
+            body += `<div style="text-align:center;margin-top:6px;font-size:10px;color:#7a6f64;font-family:'Syne',sans-serif;letter-spacing:.08em;">CommCraft — AI Crisis Communication</div>`;
+
+            return `<!DOCTYPE html><html><head>
+              <meta charset="UTF-8">
+              <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+              <style>
+                * { box-sizing: border-box; margin: 0; padding: 0; }
+                body { font-family: 'Sarabun', sans-serif; background: #f8f5f0; padding: 28px; width: 680px; }
+                strong { font-weight: 700; }
+              </style>
+            </head><body>${body}</body></html>`;
+        }
+
         function exportImage() {
-            const snapshot = document.getElementById('exportSnapshot');
+            if (!_lastResult) return showError('ยังไม่มีผลการวิเคราะห์ที่จะบันทึก');
+
             const btn = document.getElementById('exportBtn');
             const origHtml = btn.innerHTML;
             btn.innerHTML = '⏳ กำลังสร้างรูปภาพ...';
             btn.disabled = true;
 
-            const LIGHT = {
-                '--bg':           '#f8f5f0',
-                '--surface':      '#ffffff',
-                '--border':       '#e8e2d9',
-                '--text':         '#1a1510',
-                '--text-muted':   '#7a6f64',
-                '--accent':       '#d4500a',
-                '--accent-light': '#fff0e8',
-                '--accent2':      '#1a4f8a',
-                '--accent2-light':'#e8f0ff',
-                '--green':        '#1a6b3a',
-                '--green-light':  '#e8f5ee',
-                '--red':          '#c0211f',
-                '--red-light':    '#fdecea',
+            const htmlStr = buildExportHTML(_lastResult);
+
+            // สร้าง iframe hidden แล้ว write HTML เข้าไป
+            const iframe = document.createElement('iframe');
+            iframe.style.cssText = 'position:fixed;top:0;left:0;width:680px;height:1px;opacity:0;pointer-events:none;border:none;z-index:-1;';
+            document.body.appendChild(iframe);
+
+            iframe.contentDocument.open();
+            iframe.contentDocument.write(htmlStr);
+            iframe.contentDocument.close();
+
+            // รอ fonts โหลด
+            const iframeWin = iframe.contentWindow;
+            const doCapture = () => {
+                const iframeDoc = iframe.contentDocument;
+                const bodyEl = iframeDoc.body;
+                const h = bodyEl.scrollHeight;
+                iframe.style.height = h + 'px';
+
+                html2canvas(bodyEl, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: false,
+                    backgroundColor: '#f8f5f0',
+                    width: 680,
+                    height: h,
+                    windowWidth: 680,
+                    windowHeight: h,
+                }).then(canvas => {
+                    const a = document.createElement('a');
+                    a.download = `CommCraft-Report-${Date.now()}.png`;
+                    a.href = canvas.toDataURL('image/png');
+                    a.click();
+                }).catch(err => {
+                    console.error('Export error:', err);
+                    showError('เกิดข้อผิดพลาดในการบันทึกรูปภาพ กรุณาลองใหม่');
+                }).finally(() => {
+                    document.body.removeChild(iframe);
+                    btn.innerHTML = origHtml;
+                    btn.disabled = false;
+                });
             };
 
-            // color-mix() fallbacks ที่ html2canvas ไม่รองรับ
-            // pre-computed เป็น solid hex แทน
-            const COLOR_MIX_MAP = {
-                'color-mix(in srgb, var(--accent) 12%, transparent)':  'rgba(212,80,10,0.12)',
-                'color-mix(in srgb, var(--accent) 30%, transparent)':  'rgba(212,80,10,0.30)',
-                'color-mix(in srgb, var(--accent) 35%, transparent)':  'rgba(212,80,10,0.35)',
-                'color-mix(in srgb, var(--accent) 85%, black)':        '#b34208',
-                'color-mix(in srgb, var(--accent2) 10%, var(--surface))': '#edf2f9',
-                'color-mix(in srgb, var(--accent2) 20%, transparent)': 'rgba(26,79,138,0.20)',
-                'color-mix(in srgb, var(--green) 20%, transparent)':   'rgba(26,107,58,0.20)',
-                'color-mix(in srgb, var(--red) 20%, transparent)':     'rgba(192,33,31,0.20)',
-                'color-mix(in srgb, var(--red) 15%, transparent)':     'rgba(192,33,31,0.15)',
-                'color-mix(in srgb, var(--red) 40%, transparent)':     'rgba(192,33,31,0.40)',
-                'color-mix(in srgb, var(--border) 30%, var(--surface))': '#f3efe8',
-                'color-mix(in srgb, var(--border) 60%, var(--surface))': '#ede8df',
-            };
-
-            html2canvas(snapshot, {
-                scale: 2,
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: '#f8f5f0',
-                width: 648,   // snapshot มี padding 28px × 2 = 56px → inner 648px
-                windowWidth: 680,
-                onclone: (doc, clonedEl) => {
-                    // 1) inject CSS vars ลงบน :root ของ cloned document
-                    const root = doc.documentElement;
-                    Object.entries(LIGHT).forEach(([k, v]) => root.style.setProperty(k, v));
-                    // ลบ dark class ออกถ้ามี
-                    root.classList.remove('dark');
-
-                    // 2) walk ทุก element — resolve color-mix() และ CSS vars ที่ค้างอยู่
-                    clonedEl.querySelectorAll('*').forEach(el => {
-                        const s = el.style;
-
-                        // เปลี่ยน CSS variable references ที่ยังไม่ถูก resolve
-                        ['color','background','backgroundColor','borderColor',
-                         'borderTopColor','borderLeftColor','borderBottomColor',
-                         'boxShadow','stroke'].forEach(prop => {
-                            const val = s[prop];
-                            if (!val) return;
-                            // replace color-mix
-                            let resolved = val;
-                            Object.entries(COLOR_MIX_MAP).forEach(([k, v]) => {
-                                resolved = resolved.replaceAll(k, v);
-                            });
-                            // replace var(--xxx)
-                            resolved = resolved.replace(/var\((--[\w-]+)\)/g, (_, name) => LIGHT[name] || '');
-                            if (resolved !== val) s[prop] = resolved;
-                        });
-
-                        // 3) fix grid 2 คอลัมน์
-                        if (s.gridTemplateColumns === '1fr 1fr' || el.style.cssText.includes('grid-template-columns:1fr 1fr')) {
-                            el.style.display = 'grid';
-                            el.style.gridTemplateColumns = '1fr 1fr';
-                        }
-                    });
-
-                    // 4) set width 648px บน cloned element เอง
-                    clonedEl.style.width = '648px';
-                    clonedEl.style.maxWidth = '648px';
-                    clonedEl.style.background = '#f8f5f0';
-                }
-            }).then(canvas => {
-                const a = document.createElement('a');
-                a.download = `CommCraft-Report-${Date.now()}.png`;
-                a.href = canvas.toDataURL('image/png');
-                a.click();
-            }).catch(err => {
-                console.error('Export error:', err);
-                showError('เกิดข้อผิดพลาดในการบันทึกรูปภาพ กรุณาลองใหม่');
-            }).finally(() => {
-                btn.innerHTML = origHtml;
-                btn.disabled = false;
-            });
+            // รอ fonts + layout: ให้เวลา 1.2s
+            iframeWin.addEventListener('load', () => setTimeout(doCapture, 600));
+            // fallback ถ้า load event ไม่ fire
+            setTimeout(doCapture, 1500);
         }
     </script>
 </body>
