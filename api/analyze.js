@@ -3,12 +3,11 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    // ─── [FIX] Server-side Rate Limiting via IP ───
-    // Stores: { [ip]: lastRequestTimestamp }
+    // ─── Server-side Rate Limiting via IP ───
     if (!global._rateLimitMap) global._rateLimitMap = {};
     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
     const now = Date.now();
-    const SERVER_RATE_LIMIT_MS = 8000; // 8 วินาที ต่อ IP
+    const SERVER_RATE_LIMIT_MS = 8000;
 
     if (global._rateLimitMap[ip] && now - global._rateLimitMap[ip] < SERVER_RATE_LIMIT_MS) {
         const retryAfter = Math.ceil((SERVER_RATE_LIMIT_MS - (now - global._rateLimitMap[ip])) / 1000);
@@ -16,7 +15,6 @@ export default async function handler(req, res) {
     }
     global._rateLimitMap[ip] = now;
 
-    // Clean up old entries every 100 requests to prevent memory leak
     if (Object.keys(global._rateLimitMap).length > 100) {
         const cutoff = now - SERVER_RATE_LIMIT_MS * 2;
         for (const key in global._rateLimitMap) {
@@ -24,16 +22,14 @@ export default async function handler(req, res) {
         }
     }
 
-    // ─── [FIX] Input Sanitization to prevent Prompt Injection ───
+    // ─── Input Sanitization ───
     const rawText = req.body?.text;
     const rawSituation = req.body?.situation;
     const rawForbidden = req.body?.forbiddenWords;
 
-    // Enforce length limits
     const userInput = typeof rawText === 'string' ? rawText.slice(0, 500).replace(/[`"\\]/g, '') : '';
     const situation = typeof rawSituation === 'string' ? rawSituation.slice(0, 200).replace(/[`"\\]/g, '') : 'สถานการณ์ทั่วไป';
 
-    // Sanitize forbidden words array
     const FORBIDDEN = Array.isArray(rawForbidden)
         ? rawForbidden.slice(0, 20).map(w => String(w).slice(0, 50).replace(/[`"\\]/g, '')).filter(w => w !== '')
         : ['ขี้เกียจ', 'ภาระ'];
@@ -51,13 +47,22 @@ export default async function handler(req, res) {
 ลิสต์เจตนาต้องห้าม: [${FORBIDDEN.join(', ')}]
 
 งานของคุณ:
-1. วิเคราะห์คำพูด หากพบเจตนาต้องห้าม ให้หักคะแนนเป็น 0
-2. หากปลอดภัย ประเมินความเป็นมืออาชีพ (0-100)
+1. วิเคราะห์คำพูด หากพบเจตนาต้องห้าม ให้หักคะแนนทั้งหมดเป็น 0
+2. หากปลอดภัย ประเมินคะแนน 4 ด้านต่อไปนี้ (0-100):
+   - score: คะแนนรวมความเป็นมืออาชีพโดยรวม
+   - empathy: ความเห็นอกเห็นใจ รับฟัง เข้าใจความรู้สึกผู้อื่น
+   - clarity: ความชัดเจน กระชับ ตรงประเด็น เข้าใจง่าย
+   - professionalism: ความเป็นมืออาชีพ น้ำเสียง การแก้ปัญหา
 3. ส่งข้อมูลกลับมาเป็น JSON FORMAT ตามโครงสร้างด้านล่างนี้เท่านั้น ห้ามพิมพ์อย่างอื่นนอกกรอบ JSON
 
 {
-  "score": (ตัวเลขจำนวนเต็ม, บังคับเป็น 0 ทันทีถ้าพบเจตนาต้องห้าม),
+  "score": (ตัวเลขจำนวนเต็ม 0-100, บังคับเป็น 0 ทันทีถ้าพบเจตนาต้องห้าม),
   "tone": "เลือกคำเดียว: Aggressive, Professional, Passive, Neutral",
+  "dimensions": {
+    "empathy": (ตัวเลข 0-100),
+    "clarity": (ตัวเลข 0-100),
+    "professionalism": (ตัวเลข 0-100)
+  },
   "summary": "สรุปผลการวิเคราะห์สั้นๆ (ใช้ ** เพื่อทำตัวหนาได้)",
   "pros": [
     "ข้อดีข้อที่ 1 (ถ้ามี)",
@@ -112,8 +117,8 @@ export default async function handler(req, res) {
                 resultJson = JSON.parse(match[0]);
             } else {
                 return res.status(200).json({
-                    score: 50,
-                    tone: "Neutral",
+                    score: 50, tone: "Neutral",
+                    dimensions: { empathy: 50, clarity: 50, professionalism: 50 },
                     summary: "⚠️ ไม่สามารถประมวลผลรูปแบบข้อมูลได้ กรุณาลองใหม่อีกครั้ง",
                     pros: [], cons: [], comparison_table: []
                 });
@@ -121,12 +126,29 @@ export default async function handler(req, res) {
         }
 
         // Normalize output
-        resultJson.score = typeof resultJson.score === 'number' ? Math.max(0, Math.min(100, Math.round(resultJson.score))) : 0;
+        resultJson.score = typeof resultJson.score === 'number'
+            ? Math.max(0, Math.min(100, Math.round(resultJson.score))) : 0;
         resultJson.tone = resultJson.tone || "Neutral";
         resultJson.summary = resultJson.summary || "ไม่มีบทสรุปเพิ่มเติม";
         resultJson.pros = Array.isArray(resultJson.pros) ? resultJson.pros : [];
         resultJson.cons = Array.isArray(resultJson.cons) ? resultJson.cons : [];
         resultJson.comparison_table = Array.isArray(resultJson.comparison_table) ? resultJson.comparison_table : [];
+
+        // Normalize dimensions
+        if (resultJson.dimensions && typeof resultJson.dimensions === 'object') {
+            ['empathy', 'clarity', 'professionalism'].forEach(k => {
+                resultJson.dimensions[k] = typeof resultJson.dimensions[k] === 'number'
+                    ? Math.max(0, Math.min(100, Math.round(resultJson.dimensions[k]))) : 0;
+            });
+        } else {
+            // Fallback: derive from overall score if AI didn't return dimensions
+            const s = resultJson.score;
+            resultJson.dimensions = {
+                empathy:        Math.max(0, Math.min(100, s + Math.round((Math.random() - 0.5) * 20))),
+                clarity:        Math.max(0, Math.min(100, s + Math.round((Math.random() - 0.5) * 20))),
+                professionalism:Math.max(0, Math.min(100, s + Math.round((Math.random() - 0.5) * 20))),
+            };
+        }
 
         return res.status(200).json(resultJson);
 

@@ -306,12 +306,192 @@
             padding: 24px;
             border-radius: 20px;
         }
+
+        /* ─── History Drawer ─────────────────────────────────── */
+        #historyDrawer {
+            position: fixed; top: 0; right: 0; bottom: 0;
+            width: 360px; max-width: 92vw;
+            background: var(--surface);
+            border-left: 1px solid var(--border);
+            z-index: 40;
+            transform: translateX(100%);
+            transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column;
+            box-shadow: -8px 0 40px rgba(0,0,0,0.12);
+            overflow: hidden;
+        }
+        #historyDrawer.open { transform: translateX(0); }
+
+        #historyOverlay {
+            position: fixed; inset: 0; z-index: 39;
+            background: rgba(0,0,0,0.35);
+            backdrop-filter: blur(3px);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.28s ease;
+        }
+        #historyOverlay.open { opacity: 1; pointer-events: all; }
+
+        .drawer-header {
+            padding: 24px 20px 16px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        #historyList {
+            flex: 1; overflow-y: auto;
+            padding: 12px 16px 20px;
+        }
+        #historyList::-webkit-scrollbar { width: 4px; }
+        #historyList::-webkit-scrollbar-track { background: transparent; }
+        #historyList::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .hist-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .hist-item:hover {
+            border-color: var(--accent);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        /* ─── 3-Dimension Bars ──────────────────────────────────── */
+        .dim-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .dim-bar-wrap:last-child { margin-bottom: 0; }
+        .dim-bar-label {
+            width: 90px;
+            flex-shrink: 0;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            font-family: 'Syne', sans-serif;
+            letter-spacing: .02em;
+        }
+        .dim-bar-track {
+            flex: 1;
+            height: 8px;
+            background: var(--border);
+            border-radius: 100px;
+            overflow: hidden;
+        }
+        .dim-bar-fill {
+            height: 100%;
+            border-radius: 100px;
+            width: 0%;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dim-bar-value {
+            width: 32px;
+            flex-shrink: 0;
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 800;
+            text-align: right;
+        }
+
+        #historyBtn {
+            position: fixed; top: 72px; right: 20px; z-index: 10;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 50%;
+            width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            position: fixed;
+        }
+        #historyBtn:hover { transform: scale(1.1); }
+
+        #historyBadge {
+            position: absolute; top: -4px; right: -4px;
+            background: var(--accent); color: white;
+            border-radius: 50%; width: 18px; height: 18px;
+            font-size: 10px; font-weight: 700;
+            display: none; align-items: center; justify-content: center;
+            font-family: 'Syne', sans-serif;
+        }
+
+        #weakPointBanner {
+            margin: 0 16px 12px;
+            padding: 14px 16px;
+            background: var(--accent-light);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text);
+            flex-shrink: 0;
+        }
+
+        #chartWrap {
+            margin: 0 16px 4px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px 10px;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
     <button id="themeToggle" onclick="toggleDark()">
         <span id="themeIcon">🌙</span>
     </button>
+
+    <!-- History Button -->
+    <button id="historyBtn" onclick="openHistory()" style="position:fixed;top:72px;right:20px;z-index:10;">
+        <span>📋</span>
+        <div id="historyBadge" style="position:absolute;top:-4px;right:-4px;background:var(--accent);color:white;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;font-family:'Syne',sans-serif;"></div>
+    </button>
+
+    <!-- History Overlay -->
+    <div id="historyOverlay" onclick="closeHistory()"></div>
+
+    <!-- History Drawer -->
+    <div id="historyDrawer">
+        <div class="drawer-header">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <h3 style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;">📋 ประวัติการวิเคราะห์</h3>
+                <button onclick="closeHistory()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted);padding:4px;line-height:1;">✕</button>
+            </div>
+            <p style="font-size:12px;color:var(--text-muted);" id="historySubtitle">ยังไม่มีประวัติ</p>
+        </div>
+
+        <!-- Sparkline Chart -->
+        <div id="chartWrap" style="display:none;">
+            <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">📈 แนวโน้มคะแนน</div>
+            <svg id="sparklineSvg" width="100%" height="60" viewBox="0 0 300 60" preserveAspectRatio="none" style="display:block;"></svg>
+            <div id="sparklineLabels" style="display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:var(--text-muted);"></div>
+        </div>
+
+        <!-- Weak Point Banner -->
+        <div id="weakPointBanner" style="display:none;"></div>
+
+        <!-- History List -->
+        <div id="historyList">
+            <div id="historyEmpty" style="text-align:center;padding:40px 20px;color:var(--text-muted);">
+                <div style="font-size:36px;margin-bottom:12px;">🗒️</div>
+                <div style="font-size:13px;">วิเคราะห์ครั้งแรกของคุณ<br>จะปรากฏที่นี่</div>
+            </div>
+        </div>
+
+        <!-- Clear button -->
+        <div style="padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;">
+            <button onclick="clearHistory()" class="btn-secondary" style="width:100%;justify-content:center;font-size:12px;padding:10px;">
+                🗑️ ล้างประวัติทั้งหมด
+            </button>
+        </div>
+    </div>
 
     <!-- BUG FIX #8: modal ใช้ style="display:none" เป็น fallback ป้องกัน Tailwind โหลดช้า -->
     <div id="modal" class="modal-backdrop" style="display:none;">
@@ -435,6 +615,13 @@
                     </div>
                 </div>
 
+                <!-- 3-Dimension Card -->
+                <div id="dimCard" class="card" style="padding:24px;margin-bottom:16px;display:none;">
+                    <div class="accent-bar" style="background:linear-gradient(90deg,var(--accent2),var(--green));"></div>
+                    <div class="section-label" style="margin-bottom:16px;">🎯 คะแนนรายมิติ</div>
+                    <div id="dimBars"></div>
+                </div>
+
                 <!-- Report Content -->
                 <div id="reportContent"></div>
             </div>
@@ -532,6 +719,7 @@
                 document.getElementById('themeIcon').textContent = '☀️';
             }
             renderForbiddenTags();
+            renderDrawer(); // init badge count
         };
 
         // ─── Custom Situation ─────────────────────────────────────────────────
@@ -648,6 +836,23 @@
                 _lastResult = data;
                 updateUI(data);
 
+                // Save to history
+                const sv2 = document.getElementById('situationSelect').value;
+                const cv2 = document.getElementById('customSituation').value.trim();
+                const sit2 = sv2 === 'custom' ? cv2 : sv2;
+                pushHistory({
+                    score:      data.score ?? 0,
+                    tone:       data.tone || 'Neutral',
+                    summary:    data.summary || '',
+                    pros:       data.pros || [],
+                    cons:       data.cons || [],
+                    comparison_table: data.comparison_table || [],
+                    dimensions: data.dimensions || null,
+                    situation:  sit2,
+                    inputText:  document.getElementById('userInput').value.trim(),
+                    timestamp:  Date.now()
+                });
+
                 // BUG FIX #1: reset animation ด้วยการ reflow ก่อน add class ใหม่
                 res.style.display = 'block';
                 res.style.animation = 'none';
@@ -673,6 +878,63 @@
             Passive: { label: '⚪ นิ่งเฉย / ขาดความมั่นใจ', tagClass: 'tag-blue', bar: '#64748b' },
             Neutral: { label: '🔵 ปกติ / ทั่วไป', tagClass: 'tag-blue', bar: '#1a4f8a' }
         };
+
+        // ─── 3-Dimension Renderer ─────────────────────────────────────────────
+        const DIMS = [
+            {
+                key: 'empathy',
+                label: '❤️ Empathy',
+                desc: 'ความเห็นอกเห็นใจ',
+                color: '#c0211f',
+                gradient: 'linear-gradient(90deg,#e05250,#c0211f)'
+            },
+            {
+                key: 'clarity',
+                label: '💡 Clarity',
+                desc: 'ความชัดเจน',
+                color: '#1a4f8a',
+                gradient: 'linear-gradient(90deg,#4a80c4,#1a4f8a)'
+            },
+            {
+                key: 'professionalism',
+                label: '🏆 Prof.',
+                desc: 'ความเป็นมืออาชีพ',
+                color: '#1a6b3a',
+                gradient: 'linear-gradient(90deg,#3aaf6a,#1a6b3a)'
+            }
+        ];
+
+        function renderDimensions(data) {
+            const card = document.getElementById('dimCard');
+            const barsEl = document.getElementById('dimBars');
+
+            const dims = data.dimensions;
+            if (!dims || typeof dims !== 'object') {
+                card.style.display = 'none';
+                return;
+            }
+
+            card.style.display = 'block';
+            barsEl.innerHTML = DIMS.map(d => {
+                const val = Math.max(0, Math.min(100, Math.round(dims[d.key] ?? 0)));
+                const valColor = val >= 70 ? d.color : val >= 40 ? '#d97706' : '#c0211f';
+                return `
+                <div class="dim-bar-wrap">
+                    <div class="dim-bar-label" title="${d.desc}">${d.label}</div>
+                    <div class="dim-bar-track">
+                        <div class="dim-bar-fill" data-target="${val}" style="background:${d.gradient};"></div>
+                    </div>
+                    <div class="dim-bar-value" style="color:${valColor};">${val}</div>
+                </div>`;
+            }).join('');
+
+            // Animate bars after paint
+            requestAnimationFrame(() => {
+                barsEl.querySelectorAll('.dim-bar-fill').forEach(el => {
+                    el.style.width = el.dataset.target + '%';
+                });
+            });
+        }
 
         function updateUI(data) {
             // BUG FIX #3: ใช้ ?? แทน || เพื่อให้ score: 0 ทำงานถูกต้อง
@@ -725,6 +987,9 @@
                 sl.textContent = '⚡ ต้องปรับปรุงด่วน — คะแนนต่ำ';
                 sl.style.color = 'var(--red)';
             }
+
+            // Render 3-dimension bars
+            renderDimensions(data);
 
             let html = '';
 
@@ -798,6 +1063,246 @@
         // เก็บ last result ไว้สำหรับ export
         let _lastResult = null;
 
+        // ─── History (localStorage) ───────────────────────────────────────────
+        const HISTORY_KEY = 'commcraft_history';
+        const MAX_HISTORY = 20;
+
+        function loadHistory() {
+            try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
+            catch { return []; }
+        }
+
+        function saveHistory(arr) {
+            try { localStorage.setItem(HISTORY_KEY, JSON.stringify(arr)); } catch {}
+        }
+
+        function pushHistory(entry) {
+            const arr = loadHistory();
+            arr.unshift(entry);
+            if (arr.length > MAX_HISTORY) arr.splice(MAX_HISTORY);
+            saveHistory(arr);
+            renderDrawer();
+        }
+
+        function clearHistory() {
+            if (!confirm('ลบประวัติทั้งหมด?')) return;
+            localStorage.removeItem(HISTORY_KEY);
+            renderDrawer();
+        }
+
+        // ─── Drawer open/close ────────────────────────────────────────────────
+        function openHistory() {
+            renderDrawer();
+            document.getElementById('historyDrawer').classList.add('open');
+            document.getElementById('historyOverlay').classList.add('open');
+        }
+        function closeHistory() {
+            document.getElementById('historyDrawer').classList.remove('open');
+            document.getElementById('historyOverlay').classList.remove('open');
+        }
+
+        // ─── Sparkline renderer ───────────────────────────────────────────────
+        function renderSparkline(scores) {
+            const svg = document.getElementById('sparklineSvg');
+            const labelsEl = document.getElementById('sparklineLabels');
+            const W = 300, H = 60, PAD = 8;
+
+            if (scores.length < 2) { svg.innerHTML = ''; labelsEl.innerHTML = ''; return; }
+
+            const min = 0, max = 100;
+            const xs = scores.map((_, i) => PAD + (i / (scores.length - 1)) * (W - PAD * 2));
+            const ys = scores.map(s => H - PAD - ((s - min) / (max - min)) * (H - PAD * 2));
+
+            // gradient fill path
+            let path = `M ${xs[0]} ${ys[0]}`;
+            for (let i = 1; i < xs.length; i++) {
+                const cx = (xs[i - 1] + xs[i]) / 2;
+                path += ` C ${cx} ${ys[i-1]}, ${cx} ${ys[i]}, ${xs[i]} ${ys[i]}`;
+            }
+            const fillPath = path + ` L ${xs[xs.length-1]} ${H} L ${xs[0]} ${H} Z`;
+
+            // color based on trend
+            const trend = scores[scores.length - 1] - scores[0];
+            const lineColor = trend >= 0 ? '#1a6b3a' : '#c0211f';
+            const fillColor = trend >= 0 ? 'rgba(26,107,58,0.12)' : 'rgba(192,33,31,0.10)';
+
+            svg.innerHTML = `
+                <defs>
+                    <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="${lineColor}" stop-opacity="0.2"/>
+                        <stop offset="100%" stop-color="${lineColor}" stop-opacity="0"/>
+                    </linearGradient>
+                </defs>
+                <path d="${fillPath}" fill="url(#sg)" stroke="none"/>
+                <path d="${path}" fill="none" stroke="${lineColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                ${xs.map((x, i) => `
+                    <circle cx="${x}" cy="${ys[i]}" r="3.5" fill="${lineColor}" stroke="white" stroke-width="1.5"/>
+                    <text x="${x}" y="${ys[i] - 7}" text-anchor="middle" font-size="9" font-family="Syne,sans-serif" font-weight="700" fill="${lineColor}">${scores[i]}</text>
+                `).join('')}
+            `;
+
+            // labels: first, last, or every 5
+            const labelItems = scores.map((s, i) => {
+                if (i === 0 || i === scores.length - 1) return `<span>${i + 1}</span>`;
+                return `<span style="opacity:0.3">${i + 1}</span>`;
+            });
+            labelsEl.innerHTML = labelItems.join('');
+        }
+
+        // ─── Weak Point Analyzer ──────────────────────────────────────────────
+        function analyzeWeakPoints(history) {
+            if (history.length < 3) return null;
+
+            // count cons patterns
+            const consCounts = {};
+            history.forEach(h => {
+                (h.cons || []).forEach(c => {
+                    // ตัดเป็น keyword สั้นๆ (10 ตัวแรก)
+                    const key = c.substring(0, 20);
+                    consCounts[key] = (consCounts[key] || 0) + 1;
+                });
+            });
+
+            // avg score
+            const avg = Math.round(history.reduce((a, b) => a + (b.score || 0), 0) / history.length);
+            const latest = history[0].score || 0;
+            const trend = latest - (history[history.length - 1].score || 0);
+
+            // most common tone
+            const toneCounts = {};
+            history.forEach(h => { const t = h.tone || 'Neutral'; toneCounts[t] = (toneCounts[t] || 0) + 1; });
+            const dominantTone = Object.entries(toneCounts).sort((a,b) => b[1]-a[1])[0]?.[0];
+
+            return { avg, trend, dominantTone, total: history.length };
+        }
+
+        // ─── Render Drawer ────────────────────────────────────────────────────
+        function renderDrawer() {
+            const history = loadHistory();
+            const badge = document.getElementById('historyBadge');
+            const subtitle = document.getElementById('historySubtitle');
+            const empty = document.getElementById('historyEmpty');
+            const chartWrap = document.getElementById('chartWrap');
+            const weakBanner = document.getElementById('weakPointBanner');
+            const list = document.getElementById('historyList');
+
+            // Badge
+            if (history.length > 0) {
+                badge.style.display = 'flex';
+                badge.textContent = history.length;
+            } else {
+                badge.style.display = 'none';
+            }
+
+            subtitle.textContent = history.length > 0
+                ? `${history.length} รายการ · บันทึกล่าสุด ${formatTimeAgo(history[0]?.timestamp)}`
+                : 'ยังไม่มีประวัติ';
+
+            // Sparkline
+            if (history.length >= 2) {
+                chartWrap.style.display = 'block';
+                const scores = [...history].reverse().map(h => h.score || 0);
+                renderSparkline(scores);
+            } else {
+                chartWrap.style.display = 'none';
+            }
+
+            // Weak point banner
+            const wp = analyzeWeakPoints(history);
+            if (wp) {
+                weakBanner.style.display = 'block';
+                const trendArrow = wp.trend > 0 ? '📈' : wp.trend < 0 ? '📉' : '➡️';
+                const trendText = wp.trend > 0
+                    ? `คะแนนเพิ่มขึ้น +${wp.trend} จากครั้งแรก`
+                    : wp.trend < 0
+                    ? `คะแนนลดลง ${wp.trend} จากครั้งแรก`
+                    : 'คะแนนคงที่';
+
+                const TONE_LABELS = {
+                    Aggressive: 'ก้าวร้าว', Professional: 'มืออาชีพ',
+                    Passive: 'นิ่งเฉย', Neutral: 'ปกติ'
+                };
+
+                weakBanner.innerHTML = `
+                    <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">🔍 สรุปพัฒนาการ</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                        <div style="background:var(--surface);border-radius:8px;padding:8px 10px;text-align:center;">
+                            <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--text);">${wp.avg}</div>
+                            <div style="font-size:10px;color:var(--text-muted);">คะแนนเฉลี่ย</div>
+                        </div>
+                        <div style="background:var(--surface);border-radius:8px;padding:8px 10px;text-align:center;">
+                            <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--text);">${wp.total}</div>
+                            <div style="font-size:10px;color:var(--text-muted);">ครั้งที่วิเคราะห์</div>
+                        </div>
+                    </div>
+                    <div style="font-size:12px;color:var(--text);">${trendArrow} ${trendText} · โทนหลัก: <strong>${TONE_LABELS[wp.dominantTone] || wp.dominantTone}</strong></div>
+                `;
+            } else {
+                weakBanner.style.display = 'none';
+            }
+
+            // History items
+            if (history.length === 0) {
+                empty.style.display = 'block';
+                // remove all hist-items
+                list.querySelectorAll('.hist-item').forEach(el => el.remove());
+                return;
+            }
+            empty.style.display = 'none';
+            list.querySelectorAll('.hist-item').forEach(el => el.remove());
+
+            const TONE_COLORS = {
+                Aggressive: '#c0211f', Professional: '#1a6b3a',
+                Passive: '#64748b', Neutral: '#1a4f8a'
+            };
+            const TONE_LABELS = {
+                Aggressive: '🔴 ก้าวร้าว', Professional: '🟢 มืออาชีพ',
+                Passive: '⚪ นิ่งเฉย', Neutral: '🔵 ปกติ'
+            };
+
+            history.forEach((h, idx) => {
+                const div = document.createElement('div');
+                div.className = 'hist-item';
+                div.onclick = () => { replayHistory(h); closeHistory(); };
+                const toneColor = TONE_COLORS[h.tone] || '#7a6f64';
+                const scoreColor = h.score >= 80 ? '#1a6b3a' : h.score >= 60 ? '#1a4f8a' : h.score >= 40 ? '#d97706' : '#c0211f';
+                const situSnip = h.situation ? h.situation.substring(0, 30) + (h.situation.length > 30 ? '…' : '') : '';
+                const textSnip = h.inputText ? h.inputText.substring(0, 50) + (h.inputText.length > 50 ? '…' : '') : '';
+
+                div.innerHTML = `
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                        <span style="font-size:10px;color:var(--text-muted);">#${history.length - idx} · ${formatTimeAgo(h.timestamp)}</span>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:10px;font-weight:700;color:${toneColor};">${TONE_LABELS[h.tone] || h.tone}</span>
+                            <span style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:${scoreColor};">${h.score}</span>
+                        </div>
+                    </div>
+                    ${situSnip ? `<div style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:3px;">📍 ${escapeHtml(situSnip)}</div>` : ''}
+                    <div style="font-size:12px;color:var(--text-muted);line-height:1.5;">"${escapeHtml(textSnip)}"</div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function formatTimeAgo(ts) {
+            if (!ts) return '';
+            const diff = Date.now() - ts;
+            const m = Math.floor(diff / 60000);
+            const h = Math.floor(diff / 3600000);
+            const d = Math.floor(diff / 86400000);
+            if (m < 1) return 'เมื่อกี้';
+            if (m < 60) return `${m} นาทีที่แล้ว`;
+            if (h < 24) return `${h} ชั่วโมงที่แล้ว`;
+            return `${d} วันที่แล้ว`;
+        }
+
+        function replayHistory(h) {
+            _lastResult = h;
+            updateUI(h);
+            document.getElementById('result').style.display = 'block';
+            setTimeout(() => document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+        }
+
         function buildExportHTML(data) {
             // Colors hard-coded ทั้งหมด
             const C = {
@@ -868,6 +1373,36 @@
                 </td>
               </tr></table>
             </div>`;
+
+            // ── 3-Dimension bars ──
+            if (data.dimensions && typeof data.dimensions === 'object') {
+                const D = data.dimensions;
+                const dimRows = [
+                    { label: '❤️ Empathy', key: 'empathy',        color: '#c0211f', bg: '#fdecea', gradient: 'linear-gradient(90deg,#e05250,#c0211f)' },
+                    { label: '💡 Clarity', key: 'clarity',        color: '#1a4f8a', bg: '#edf2f9', gradient: 'linear-gradient(90deg,#4a80c4,#1a4f8a)' },
+                    { label: '🏆 Prof.',   key: 'professionalism', color: '#1a6b3a', bg: '#e8f5ee', gradient: 'linear-gradient(90deg,#3aaf6a,#1a6b3a)' },
+                ].map(d => {
+                    const val = Math.max(0, Math.min(100, Math.round(D[d.key] ?? 0)));
+                    const pct = val + '%';
+                    const valColor = val >= 70 ? d.color : val >= 40 ? '#d97706' : '#c0211f';
+                    return `<tr>
+                      <td style="width:90px;padding:6px 10px 6px 0;font-size:11px;font-weight:700;color:#7a6f64;font-family:'Syne',sans-serif;vertical-align:middle;">${d.label}</td>
+                      <td style="padding:6px 10px 6px 0;vertical-align:middle;">
+                        <div style="height:8px;background:#e8e2d9;border-radius:100px;overflow:hidden;">
+                          <div style="height:100%;width:${pct};background:${d.gradient};border-radius:100px;"></div>
+                        </div>
+                      </td>
+                      <td style="width:32px;text-align:right;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:${valColor};vertical-align:middle;">${val}</td>
+                    </tr>`;
+                }).join('');
+
+                body += `
+                <div style="background:#fff;border:1px solid #e8e2d9;border-radius:16px;padding:20px 24px;margin-bottom:14px;">
+                  <div style="height:3px;background:linear-gradient(90deg,#1a4f8a,#1a6b3a);border-radius:4px;margin:-20px -24px 18px -24px;"></div>
+                  <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7a6f64;margin-bottom:14px;">🎯 คะแนนรายมิติ</div>
+                  <table style="width:100%;border-collapse:collapse;">${dimRows}</table>
+                </div>`;
+            }
 
             // ── Summary ──
             if (data.summary) {
