@@ -1,4 +1,4 @@
-# 🚀 Crisis Pulse Analyser PRO+
+# 🚀 CommCraft
 **AI-Powered Crisis Communication Analysis System**
 
 เครื่องมือวิเคราะห์ประสิทธิภาพการสื่อสารในภาวะวิกฤตโดยใช้ AI เพื่อประเมินทักษะการแก้ปัญหา น้ำเสียง และความเป็นมืออาชีพ พร้อมให้คำแนะนำเพื่อการพัฒนาทักษะ Soft Skills
@@ -26,7 +26,6 @@
     * [Google Fonts](https://fonts.google.com/) (Prompt Font)
 
 ---
-
 
 ## 📖 วิธีการใช้งาน
 

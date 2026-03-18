@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Crisis Pulse Analyser PRO+</title>
+    <title>CommCraft</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- BUG FIX #8: html2canvas ใช้ไม่ได้กับ export → เปลี่ยนเป็น dom-to-image-more ที่ support CSS variables -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -23,7 +24,6 @@
             --green-light: #e8f5ee;
             --red: #c0211f;
             --red-light: #fdecea;
-            --ring-offset: 351.85;
         }
         .dark {
             --bg: #0f0e0c;
@@ -41,7 +41,16 @@
             --red-light: #2d0a0a;
         }
 
-        * { transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease; }
+        /* BUG FIX: ตัด transition ออกจาก * เพราะทำให้ export ภาพมีปัญหา และ animation กระตุก */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+        body, .card, .input-field, .btn-primary, .btn-secondary, #themeToggle, .tag, .forbidden-tag {
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        /* BUG FIX: เพิ่ม @keyframes spin ไว้ที่นี่ถาวร แทนที่จะ inject ทุกครั้งที่กด scan */
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         body {
             font-family: 'Sarabun', sans-serif;
@@ -53,7 +62,6 @@
 
         h1, h2, h3, .font-display { font-family: 'Syne', sans-serif; }
 
-        /* Noise texture overlay */
         body::before {
             content: '';
             position: fixed;
@@ -87,7 +95,6 @@
             border-radius: 20px 20px 0 0;
         }
 
-        /* Input styles */
         .input-field {
             width: 100%;
             background: var(--bg);
@@ -108,7 +115,6 @@
 
         textarea.input-field { resize: vertical; min-height: 140px; line-height: 1.7; font-size: 15px; }
 
-        /* Button */
         .btn-primary {
             background: var(--accent);
             color: white;
@@ -153,13 +159,8 @@
         }
         .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
 
-        /* Score ring */
         #scoreRing { transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        /* Tone indicators */
-        .tone-strip { height: 4px; border-radius: 0 0 20px 20px; transition: background 0.4s; }
-
-        /* Tags */
         .tag {
             display: inline-flex;
             align-items: center;
@@ -175,7 +176,7 @@
         .tag-blue { background: var(--accent2-light); color: var(--accent2); border: 1px solid color-mix(in srgb, var(--accent2) 20%, transparent); }
         .tag-orange { background: var(--accent-light); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent); }
 
-        /* Modal */
+        /* BUG FIX #8: modal ใช้ style="display:none" เป็น fallback กรณี Tailwind โหลดช้า/fail */
         .modal-backdrop {
             position: fixed; inset: 0; z-index: 50;
             background: rgba(0,0,0,0.5);
@@ -183,6 +184,8 @@
             display: flex; align-items: center; justify-content: center;
             padding: 16px;
         }
+        .modal-backdrop.hidden { display: none !important; }
+
         .modal-box {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -197,7 +200,6 @@
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
-        /* Skeleton shimmer */
         .shimmer {
             background: linear-gradient(90deg, var(--border) 25%, color-mix(in srgb, var(--border) 60%, var(--surface)) 50%, var(--border) 75%);
             background-size: 200% 100%;
@@ -206,18 +208,15 @@
         }
         @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
-        /* Recording pulse */
         @keyframes recPulse {
             0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--red) 40%, transparent); }
             50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--red) 0%, transparent); }
         }
         .recording { animation: recPulse 1.2s infinite; background: var(--red) !important; color: white !important; }
 
-        /* Char counter */
         .char-warn { color: #d97706; font-weight: 700; }
         .char-danger { color: var(--red); font-weight: 700; }
 
-        /* Table */
         .result-table { width: 100%; border-collapse: collapse; }
         .result-table th {
             background: color-mix(in srgb, var(--accent2) 10%, var(--surface));
@@ -241,7 +240,6 @@
         .result-table tr:last-child td { border-bottom: none; }
         .result-table tr:nth-child(even) td { background: color-mix(in srgb, var(--border) 30%, var(--surface)); }
 
-        /* Section label */
         .section-label {
             font-family: 'Syne', sans-serif;
             font-size: 11px;
@@ -251,20 +249,14 @@
             color: var(--text-muted);
         }
 
-        /* Fade-in */
-        .fade-in { animation: fadeIn 0.4s ease; }
+        /* BUG FIX #1: fade-in ต้องมี animation-fill-mode เพื่อให้ reset ได้ถูกต้อง */
+        .fade-in {
+            animation: fadeIn 0.4s ease both;
+        }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Score label */
-        .score-label-excellent { color: var(--green); }
-        .score-label-good { color: var(--accent2); }
-        .score-label-average { color: #d97706; }
-        .score-label-poor { color: var(--red); }
-
-        /* Divider */
         .divider { height: 1px; background: var(--border); }
 
-        /* Theme toggle */
         #themeToggle {
             position: fixed; top: 20px; right: 20px; z-index: 10;
             background: var(--surface);
@@ -278,7 +270,6 @@
         }
         #themeToggle:hover { transform: scale(1.1); }
 
-        /* List items */
         .list-item {
             display: flex;
             align-items: flex-start;
@@ -296,12 +287,12 @@
             font-size: 10px; font-weight: 700; margin-top: 2px;
         }
 
-        select.input-field { cursor: pointer; appearance: none;
+        select.input-field {
+            cursor: pointer; appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238a8278' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
             background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
         }
 
-        /* Forbidden tags */
         .forbidden-tag {
             display: inline-flex; align-items: center; gap: 4px;
             padding: 2px 10px; border-radius: 100px;
@@ -310,11 +301,12 @@
             border: 1px solid color-mix(in srgb, var(--red) 15%, transparent);
         }
 
-        /* Score colors */
-        .ring-excellent { stroke: #1a6b3a !important; }
-        .ring-good { stroke: #1a4f8a !important; }
-        .ring-average { stroke: #d97706 !important; }
-        .ring-poor { stroke: #c0211f !important; }
+        /* export snapshot wrapper — ใช้ฟิกสีพื้นหลัง light mode เสมอ */
+        #exportSnapshot {
+            background: #f8f5f0;
+            padding: 24px;
+            border-radius: 20px;
+        }
     </style>
 </head>
 <body>
@@ -322,8 +314,8 @@
         <span id="themeIcon">🌙</span>
     </button>
 
-    <!-- Error Modal -->
-    <div id="modal" class="modal-backdrop hidden">
+    <!-- BUG FIX #8: modal ใช้ style="display:none" เป็น fallback ป้องกัน Tailwind โหลดช้า -->
+    <div id="modal" class="modal-backdrop" style="display:none;">
         <div class="modal-box">
             <div style="width:56px;height:56px;background:var(--red-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:24px;">⚠️</div>
             <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:8px;">แจ้งเตือนระบบ</h3>
@@ -342,9 +334,7 @@
                 <div style="width:8px;height:8px;background:var(--accent2);border-radius:50%;"></div>
             </div>
             <h1 style="font-size:clamp(32px,6vw,52px);font-weight:800;line-height:1.1;letter-spacing:-0.03em;margin-bottom:12px;">
-                Crisis Pulse<br>
-                <span style="color:var(--accent);">Analyser</span>
-                <span style="font-size:0.35em;font-weight:600;background:var(--accent2);color:white;padding:4px 10px;border-radius:6px;vertical-align:middle;margin-left:8px;letter-spacing:0.08em;">PRO+</span>
+                Comm<span style="color:var(--accent);">Craft</span>
             </h1>
             <p style="color:var(--text-muted);font-size:15px;">ระบบประเมินทักษะการสื่อสารในภาวะวิกฤตด้วย AI</p>
         </div>
@@ -364,7 +354,7 @@
                         <option value="ระบบเซิร์ฟเวอร์หลักล่มกระทบผู้ใช้จำนวนมาก ต้องแจ้งทีม">เซิร์ฟเวอร์ล่ม แจ้งทีม</option>
                         <option value="custom">✨ กำหนดเอง...</option>
                     </select>
-                    <input type="text" id="customSituation" class="input-field hidden" style="margin-top:10px;" placeholder="พิมพ์สถานการณ์..." maxlength="200">
+                    <input type="text" id="customSituation" class="input-field" style="margin-top:10px;display:none;" placeholder="พิมพ์สถานการณ์..." maxlength="200">
                 </div>
                 <div>
                     <label style="display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:8px;">🚫 คำต้องห้าม</label>
@@ -387,7 +377,8 @@
             <textarea id="userInput" class="input-field" maxlength="500" oninput="updateCharCount()" placeholder="พิมพ์หรือกดปุ่มไมค์เพื่อพูดประโยคของคุณ..."></textarea>
 
             <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 2px 24px;">
-                <div id="forbiddenWarning" class="tag tag-red hidden">⚠️ พบคำต้องห้าม — คะแนนจะเป็น 0</div>
+                <!-- BUG FIX #8: ใช้ style="display:none" แทน class="hidden" เป็น fallback -->
+                <div id="forbiddenWarning" class="tag tag-red" style="display:none;">⚠️ พบคำต้องห้าม — คะแนนจะเป็น 0</div>
                 <div style="flex:1;"></div>
                 <span id="charCount" style="font-size:12px;color:var(--text-muted);font-weight:500;">0 / 500</span>
             </div>
@@ -399,7 +390,7 @@
         </div>
 
         <!-- Skeleton -->
-        <div id="skeletonLoader" class="card hidden" style="padding:32px;">
+        <div id="skeletonLoader" class="card" style="padding:32px;display:none;">
             <div style="display:flex;gap:24px;align-items:center;margin-bottom:32px;padding-bottom:28px;border-bottom:1px solid var(--border);">
                 <div class="shimmer" style="width:120px;height:120px;border-radius:50%;flex-shrink:0;"></div>
                 <div style="flex:1;">
@@ -416,37 +407,41 @@
         </div>
 
         <!-- Result -->
-        <div id="result" class="hidden fade-in">
+        <div id="result" style="display:none;">
 
-            <!-- Score Header Card -->
-            <div class="card card-elevated" style="padding:32px;margin-bottom:16px;overflow:hidden;">
-                <div class="accent-bar" id="toneBar"></div>
-                <div style="display:flex;gap:28px;align-items:center;">
-                    <!-- Ring -->
-                    <div style="position:relative;flex-shrink:0;">
-                        <svg style="width:120px;height:120px;transform:rotate(-90deg);" viewBox="0 0 128 128">
-                            <circle cx="64" cy="64" r="52" stroke-width="10" fill="transparent" style="stroke:var(--border);"/>
-                            <circle id="scoreRing" cx="64" cy="64" r="52" stroke="#d4500a" stroke-width="10" fill="transparent" stroke-dasharray="326.73" stroke-dashoffset="326.73" stroke-linecap="round"/>
-                        </svg>
-                        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-                            <span id="scoreValue" style="font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;line-height:1;color:var(--text);">0</span>
-                            <span style="font-size:11px;color:var(--text-muted);font-weight:600;">คะแนน</span>
+            <!-- BUG FIX (export): ห่อเนื้อหาผลลัพธ์ด้วย exportSnapshot div เพื่อ capture ได้ถูกต้อง -->
+            <div id="exportSnapshot">
+                <!-- Score Header Card -->
+                <div class="card card-elevated" style="padding:32px;margin-bottom:16px;overflow:hidden;">
+                    <div class="accent-bar" id="toneBar"></div>
+                    <div style="display:flex;gap:28px;align-items:center;">
+                        <!-- Ring -->
+                        <div style="position:relative;flex-shrink:0;">
+                            <svg style="width:120px;height:120px;transform:rotate(-90deg);" viewBox="0 0 128 128">
+                                <circle cx="64" cy="64" r="52" stroke-width="10" fill="transparent" style="stroke:var(--border);"/>
+                                <circle id="scoreRing" cx="64" cy="64" r="52" stroke="#d4500a" stroke-width="10" fill="transparent" stroke-dasharray="326.73" stroke-dashoffset="326.73" stroke-linecap="round"/>
+                            </svg>
+                            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                                <span id="scoreValue" style="font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;line-height:1;color:var(--text);">0</span>
+                                <span style="font-size:11px;color:var(--text-muted);font-weight:600;">คะแนน</span>
+                            </div>
+                        </div>
+                        <!-- Info -->
+                        <div style="flex:1;min-width:0;">
+                            <div id="toneBadge" class="tag" style="margin-bottom:12px;">—</div>
+                            <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px;letter-spacing:-0.02em;">ผลการประเมิน</h2>
+                            <p style="color:var(--text-muted);font-size:13px;">วิเคราะห์โดยระบบ AI CommCraft</p>
+                            <div id="scoreLabel" style="font-size:12px;font-weight:700;margin-top:8px;"></div>
                         </div>
                     </div>
-                    <!-- Info -->
-                    <div style="flex:1;min-width:0;">
-                        <div id="toneBadge" class="tag" style="margin-bottom:12px;">—</div>
-                        <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px;letter-spacing:-0.02em;">ผลการประเมิน</h2>
-                        <p style="color:var(--text-muted);font-size:13px;">วิเคราะห์โดยระบบ AI Crisis Communication</p>
-                        <div id="scoreLabel" style="font-size:12px;font-weight:700;margin-top:8px;"></div>
-                    </div>
                 </div>
+
+                <!-- Report Content -->
+                <div id="reportContent"></div>
             </div>
+            <!-- /exportSnapshot -->
 
-            <!-- Report Content -->
-            <div id="reportContent"></div>
-
-            <!-- Export Image Only -->
+            <!-- Export button อยู่นอก snapshot -->
             <div style="margin-top:16px;">
                 <button onclick="exportImage()" id="exportBtn" class="btn-secondary" style="width:100%;justify-content:center;padding:14px 20px;font-size:14px;">
                     <svg xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -462,13 +457,14 @@
         let lastSubmitTime = 0;
         let recognition, isRecording = false;
 
-        // Speech
+        // ─── Speech Recognition ───────────────────────────────────────────────
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SR();
             recognition.continuous = false;
             recognition.interimResults = true;
             recognition.lang = 'th-TH';
+
             recognition.onresult = (e) => {
                 let t = '';
                 for (let i = e.resultIndex; i < e.results.length; i++)
@@ -479,29 +475,50 @@
                     updateCharCount();
                 }
             };
-            recognition.onend = stopRecording;
-            recognition.onerror = (e) => { stopRecording(); showError('เกิดข้อผิดพลาด: ' + e.error); };
+
+            recognition.onend = () => { stopRecording(); };
+
+            // BUG FIX #5: onerror ต้อง set isRecording = false ก่อน เพื่อป้องกัน stopRecording() เรียก recognition.stop() ซ้ำ
+            recognition.onerror = (e) => {
+                isRecording = false;
+                stopRecording();
+                // ไม่ show error สำหรับ 'no-speech' เพราะ user แค่ไม่ได้พูด
+                if (e.error !== 'no-speech') {
+                    showError('เกิดข้อผิดพลาดไมโครโฟน: ' + e.error);
+                }
+            };
         } else {
             document.getElementById('micBtn').style.display = 'none';
         }
 
         function toggleRecording() {
             if (!recognition) return;
-            if (isRecording) { stopRecording(); }
-            else {
-                recognition.start(); isRecording = true;
-                document.getElementById('micBtn').classList.add('recording');
-                document.getElementById('micText').textContent = 'กำลังฟัง...';
+            if (isRecording) {
+                stopRecording();
+            } else {
+                try {
+                    recognition.start();
+                    isRecording = true;
+                    document.getElementById('micBtn').classList.add('recording');
+                    document.getElementById('micText').textContent = 'กำลังฟัง...';
+                } catch(e) {
+                    // กรณี recognition กำลัง start อยู่แล้ว
+                    showError('ไม่สามารถเปิดไมโครโฟนได้ กรุณาลองใหม่');
+                }
             }
         }
+
         function stopRecording() {
-            if (recognition && isRecording) recognition.stop();
+            // BUG FIX #5: เช็ค isRecording ก่อน stop เพื่อป้องกัน double call
+            if (recognition && isRecording) {
+                try { recognition.stop(); } catch(e) { /* ignore */ }
+            }
             isRecording = false;
             document.getElementById('micBtn').classList.remove('recording');
             document.getElementById('micText').textContent = 'กดเพื่อพูด';
         }
 
-        // Theme
+        // ─── Theme ────────────────────────────────────────────────────────────
         function toggleDark() {
             document.documentElement.classList.toggle('dark');
             const d = document.documentElement.classList.contains('dark');
@@ -518,73 +535,107 @@
             renderForbiddenTags();
         };
 
+        // ─── Custom Situation ─────────────────────────────────────────────────
         function toggleCustomSituation() {
             const v = document.getElementById('situationSelect').value;
             const inp = document.getElementById('customSituation');
-            if (v === 'custom') { inp.classList.remove('hidden'); setTimeout(() => inp.focus(), 80); }
-            else inp.classList.add('hidden');
+            if (v === 'custom') {
+                inp.style.display = 'block';
+                setTimeout(() => inp.focus(), 80);
+            } else {
+                inp.style.display = 'none';
+            }
         }
 
+        // ─── Modal ────────────────────────────────────────────────────────────
         function showError(msg) {
             document.getElementById('modalMsg').textContent = msg;
-            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').style.display = 'flex';
         }
-        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // ─── Text Formatting ──────────────────────────────────────────────────
+        // BUG FIX #7: escape HTML ก่อน เพื่อป้องกัน XSS จาก AI response
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
 
         function formatText(t) {
             if (!t) return '';
-            return t.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight:700;color:var(--text)">$1</strong>');
+            // escape ก่อน แล้วค่อย convert **bold**
+            return escapeHtml(t).replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight:700;color:var(--text)">$1</strong>');
         }
 
+        // ─── Char Counter ─────────────────────────────────────────────────────
         function updateCharCount() {
             const l = document.getElementById('userInput').value.length;
             const el = document.getElementById('charCount');
             el.textContent = `${l} / 500`;
-            el.className = l >= 500 ? 'char-danger' : l > 450 ? 'char-warn' : '';
-            el.style.cssText = l >= 500 ? 'font-size:12px;font-weight:700;' : l > 450 ? 'font-size:12px;font-weight:700;color:#d97706;' : 'font-size:12px;color:var(--text-muted);';
+            if (l >= 500) {
+                el.style.cssText = 'font-size:12px;font-weight:700;color:var(--red);';
+            } else if (l > 450) {
+                el.style.cssText = 'font-size:12px;font-weight:700;color:#d97706;';
+            } else {
+                el.style.cssText = 'font-size:12px;color:var(--text-muted);font-weight:500;';
+            }
             checkForbidden();
         }
 
+        // ─── Forbidden Words ──────────────────────────────────────────────────
         function getForbiddenWords() {
-            return document.getElementById('forbiddenWordsInput').value.split(',').map(w => w.trim()).filter(Boolean);
+            return document.getElementById('forbiddenWordsInput').value
+                .split(',').map(w => w.trim()).filter(Boolean);
         }
 
         function renderForbiddenTags() {
             const words = getForbiddenWords();
             document.getElementById('forbiddenTagsPreview').innerHTML =
-                words.map(w => `<span class="forbidden-tag">🚫 ${w}</span>`).join('');
+                words.map(w => `<span class="forbidden-tag">🚫 ${escapeHtml(w)}</span>`).join('');
             checkForbidden();
         }
 
         function checkForbidden() {
             const t = document.getElementById('userInput').value.toLowerCase();
             const found = getForbiddenWords().some(w => w && t.includes(w.toLowerCase()));
-            document.getElementById('forbiddenWarning').classList.toggle('hidden', !found);
+            // BUG FIX #8: ใช้ style.display แทน classList.toggle('hidden')
+            document.getElementById('forbiddenWarning').style.display = found ? 'inline-flex' : 'none';
         }
 
+        // ─── Scan / Analyse ───────────────────────────────────────────────────
         async function scan() {
             const now = Date.now();
             if (now - lastSubmitTime < RATE_LIMIT_MS) {
                 const w = Math.ceil((RATE_LIMIT_MS - (now - lastSubmitTime)) / 1000);
                 return showError(`⏱️ กรุณารอ ${w} วินาทีก่อนวิเคราะห์ครั้งถัดไปครับ`);
             }
+
             const text = document.getElementById('userInput').value.trim();
             if (!text) return showError('🚨 กรุณาพิมพ์หรือพูดข้อความก่อนนะครับ');
+
             const sv = document.getElementById('situationSelect').value;
             const cv = document.getElementById('customSituation').value.trim();
             const situation = sv === 'custom' ? cv : sv;
             if (sv === 'custom' && !situation) return showError('✍️ กรุณาระบุสถานการณ์ของคุณด้วยครับ');
+
             const forbiddenWords = getForbiddenWords();
             const btn = document.getElementById('btn');
             const sk = document.getElementById('skeletonLoader');
             const res = document.getElementById('result');
+
             btn.disabled = true;
-            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;animation:spin 1s linear infinite;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> กำลังวิเคราะห์...';
-            res.classList.add('hidden'); sk.classList.remove('hidden');
+            // BUG FIX #2: ไม่ต้อง inject <style> แล้ว เพราะ @keyframes spin อยู่ใน CSS แล้ว
+            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;animation:spin 1s linear infinite;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> กำลังวิเคราะห์...`;
+
+            res.style.display = 'none';
+            sk.style.display = 'block';
             lastSubmitTime = Date.now();
-            const style = document.createElement('style');
-            style.textContent = '@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
-            document.head.appendChild(style);
+
             try {
                 const r = await fetch('/api/analyze', {
                     method: 'POST',
@@ -593,49 +644,64 @@
                 });
                 const data = await r.json();
                 if (!r.ok) throw new Error(data.error || 'Connection Error');
-                sk.classList.add('hidden');
+
+                sk.style.display = 'none';
                 updateUI(data);
-                res.classList.remove('hidden');
-                res.classList.add('fade-in');
+
+                // BUG FIX #1: reset animation ด้วยการ reflow ก่อน add class ใหม่
+                res.style.display = 'block';
+                res.style.animation = 'none';
+                void res.offsetWidth; // force reflow
+                res.style.animation = '';
+                res.style.animation = 'fadeIn 0.4s ease both';
+
                 setTimeout(() => res.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+
             } catch (err) {
                 showError(err.message);
-                sk.classList.add('hidden');
+                sk.style.display = 'none';
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> เริ่มวิเคราะห์การสื่อสาร';
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> เริ่มวิเคราะห์การสื่อสาร`;
             }
         }
 
+        // ─── Update UI ────────────────────────────────────────────────────────
         const TONES = {
-            Aggressive: { label: '🔴 ก้าวร้าว / เสี่ยงปะทะ', tagClass: 'tag-red', bar: '#c0211f', ringClass: 'ring-poor' },
-            Professional: { label: '🟢 มืออาชีพ / ยอดเยี่ยม', tagClass: 'tag-green', bar: '#1a6b3a', ringClass: 'ring-excellent' },
-            Passive: { label: '⚪ นิ่งเฉย / ขาดความมั่นใจ', tagClass: 'tag-blue', bar: '#64748b', ringClass: 'ring-good' },
-            Neutral: { label: '🔵 ปกติ / ทั่วไป', tagClass: 'tag-blue', bar: '#1a4f8a', ringClass: 'ring-good' }
+            Aggressive: { label: '🔴 ก้าวร้าว / เสี่ยงปะทะ', tagClass: 'tag-red', bar: '#c0211f' },
+            Professional: { label: '🟢 มืออาชีพ / ยอดเยี่ยม', tagClass: 'tag-green', bar: '#1a6b3a' },
+            Passive: { label: '⚪ นิ่งเฉย / ขาดความมั่นใจ', tagClass: 'tag-blue', bar: '#64748b' },
+            Neutral: { label: '🔵 ปกติ / ทั่วไป', tagClass: 'tag-blue', bar: '#1a4f8a' }
         };
 
         function updateUI(data) {
-            const score = data.score || 0;
+            // BUG FIX #3: ใช้ ?? แทน || เพื่อให้ score: 0 ทำงานถูกต้อง
+            const score = data.score ?? 0;
             const tone = data.tone || 'Neutral';
             const t = TONES[tone] || TONES.Neutral;
 
-            // Ring
+            // Score ring
             const ring = document.getElementById('scoreRing');
-            ring.style.strokeDashoffset = 326.73;
-            ring.className = '';
             ring.style.stroke = t.bar;
+            ring.style.strokeDashoffset = '326.73';
 
-            setTimeout(() => {
-                ring.style.strokeDashoffset = 326.73 - (score / 100 * 326.73);
-                const el = document.getElementById('scoreValue');
-                let cur = 0;
-                const step = Math.max(1, Math.ceil(score / 60));
-                const iv = setInterval(() => {
-                    cur = Math.min(cur + step, score);
-                    el.textContent = cur;
-                    if (cur >= score) clearInterval(iv);
-                }, 16);
-            }, 80);
+            // BUG FIX #4: ถ้า score = 0 ไม่ต้องรัน interval
+            const el = document.getElementById('scoreValue');
+            if (score === 0) {
+                el.textContent = '0';
+                // ไม่ต้อง animate ring ก็ตั้ง offset ถูกต้องอยู่แล้ว
+            } else {
+                setTimeout(() => {
+                    ring.style.strokeDashoffset = String(326.73 - (score / 100 * 326.73));
+                    let cur = 0;
+                    const step = Math.max(1, Math.ceil(score / 60));
+                    const iv = setInterval(() => {
+                        cur = Math.min(cur + step, score);
+                        el.textContent = String(cur);
+                        if (cur >= score) clearInterval(iv);
+                    }, 16);
+                }, 80);
+            }
 
             // Tone bar & badge
             document.getElementById('toneBar').style.background = t.bar;
@@ -646,10 +712,19 @@
 
             // Score label
             const sl = document.getElementById('scoreLabel');
-            if (score >= 80) { sl.textContent = '✨ ยอดเยี่ยม — สื่อสารได้ดีมาก'; sl.style.color = 'var(--green)'; }
-            else if (score >= 60) { sl.textContent = '👍 ดี — มีบางจุดที่พัฒนาได้'; sl.style.color = 'var(--accent2)'; }
-            else if (score >= 40) { sl.textContent = '📊 พอใช้ — ควรปรับปรุงหลายจุด'; sl.style.color = '#d97706'; }
-            else { sl.textContent = '⚡ ต้องปรับปรุงด่วน — คะแนนต่ำ'; sl.style.color = 'var(--red)'; }
+            if (score >= 80) {
+                sl.textContent = '✨ ยอดเยี่ยม — สื่อสารได้ดีมาก';
+                sl.style.color = 'var(--green)';
+            } else if (score >= 60) {
+                sl.textContent = '👍 ดี — มีบางจุดที่พัฒนาได้';
+                sl.style.color = 'var(--accent2)';
+            } else if (score >= 40) {
+                sl.textContent = '📊 พอใช้ — ควรปรับปรุงหลายจุด';
+                sl.style.color = '#d97706';
+            } else {
+                sl.textContent = '⚡ ต้องปรับปรุงด่วน — คะแนนต่ำ';
+                sl.style.color = 'var(--red)';
+            }
 
             let html = '';
 
@@ -662,24 +737,28 @@
             }
 
             // Pros & Cons
-            if ((data.pros?.length || data.cons?.length)) {
+            if (data.pros?.length || data.cons?.length) {
                 html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">`;
                 if (data.pros?.length) {
                     html += `<div class="card" style="padding:20px;border-top:3px solid var(--green);">
                         <div class="section-label" style="margin-bottom:12px;color:var(--green);">✅ จุดเด่น</div>`;
-                    data.pros.forEach(i => html += `<div class="list-item">
-                        <div class="list-dot" style="background:var(--green-light);color:var(--green);">✓</div>
-                        <span>${formatText(i)}</span>
-                    </div>`);
+                    data.pros.forEach(i => {
+                        html += `<div class="list-item">
+                            <div class="list-dot" style="background:var(--green-light);color:var(--green);">✓</div>
+                            <span>${formatText(i)}</span>
+                        </div>`;
+                    });
                     html += `</div>`;
                 }
                 if (data.cons?.length) {
                     html += `<div class="card" style="padding:20px;border-top:3px solid var(--red);">
                         <div class="section-label" style="margin-bottom:12px;color:var(--red);">⚠️ ควรปรับปรุง</div>`;
-                    data.cons.forEach(i => html += `<div class="list-item">
-                        <div class="list-dot" style="background:var(--red-light);color:var(--red);">!</div>
-                        <span>${formatText(i)}</span>
-                    </div>`);
+                    data.cons.forEach(i => {
+                        html += `<div class="list-item">
+                            <div class="list-dot" style="background:var(--red-light);color:var(--red);">!</div>
+                            <span>${formatText(i)}</span>
+                        </div>`;
+                    });
                     html += `</div>`;
                 }
                 html += `</div>`;
@@ -710,31 +789,51 @@
             document.getElementById('reportContent').innerHTML = html;
         }
 
-        // Export image
+        // ─── Export Image ─────────────────────────────────────────────────────
+        // BUG FIX export: เปลี่ยนจาก html2canvas (ซึ่ง render CSS variables ผิด)
+        // มาใช้ dom-to-image ที่ capture computed style ได้ถูกต้อง
+        // และ capture เฉพาะ #exportSnapshot ไม่รวมปุ่ม export
         function exportImage() {
-            const area = document.getElementById('result');
+            const snapshot = document.getElementById('exportSnapshot');
             const btn = document.getElementById('exportBtn');
-            const orig = btn.innerHTML;
+            const origHtml = btn.innerHTML;
+
             btn.innerHTML = '⏳ กำลังสร้างรูปภาพ...';
             btn.disabled = true;
-            const wasDark = document.documentElement.classList.contains('dark');
-            if (wasDark) document.documentElement.classList.remove('dark');
-            const cleanup = () => {
-                btn.innerHTML = orig;
-                btn.disabled = false;
-                if (wasDark) document.documentElement.classList.add('dark');
-            };
-            setTimeout(() => {
-                html2canvas(area, { backgroundColor: '#f8f5f0', scale: 2, useCORS: true, scrollY: 0 })
-                    .then(canvas => {
-                        const a = document.createElement('a');
-                        a.download = `Crisis-Report-${Date.now()}.png`;
-                        a.href = canvas.toDataURL('image/png');
-                        a.click();
-                        cleanup();
-                    })
-                    .catch(() => { showError('เกิดข้อผิดพลาดในการบันทึกรูปภาพ'); cleanup(); });
-            }, 500);
+
+            // ให้ browser repaint ก่อน capture
+            requestAnimationFrame(() => {
+                const scale = window.devicePixelRatio || 2;
+                const w = snapshot.offsetWidth;
+                const h = snapshot.offsetHeight;
+
+                domtoimage.toPng(snapshot, {
+                    width: w * scale,
+                    height: h * scale,
+                    style: {
+                        transform: `scale(${scale})`,
+                        transformOrigin: 'top left',
+                        width: w + 'px',
+                        height: h + 'px',
+                        // BUG FIX #6: ล็อคสีพื้นหลังให้เป็น light mode เสมอในภาพ
+                        background: '#f8f5f0',
+                    }
+                })
+                .then(dataUrl => {
+                    const a = document.createElement('a');
+                    a.download = `CommCraft-Report-${Date.now()}.png`;
+                    a.href = dataUrl;
+                    a.click();
+                })
+                .catch(err => {
+                    console.error('Export error:', err);
+                    showError('เกิดข้อผิดพลาดในการบันทึกรูปภาพ กรุณาลองใหม่');
+                })
+                .finally(() => {
+                    btn.innerHTML = origHtml;
+                    btn.disabled = false;
+                });
+            });
         }
     </script>
 </body>
