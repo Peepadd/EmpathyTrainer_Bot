@@ -34,10 +34,26 @@ export default async function handler(req, res) {
         ? rawForbidden.slice(0, 20).map(w => String(w).slice(0, 50).replace(/[`"\\]/g, '')).filter(w => w !== '')
         : ['ขี้เกียจ', 'ภาระ'];
 
-    let apiKey = process.env.GOOGLE_API_KEY || "";
+    // ─── MOCK DATA ทดสอบ UI (พิมพ์คำว่า test) ───
+    if (userInput.toLowerCase() === "test") {
+        return res.status(200).json({
+            score: 75,
+            tone: "Professional",
+            dimensions: { empathy: 80, clarity: 70, professionalism: 75 },
+            summary: "**(Mock Data)** ข้อมูลนี้ใช้สำหรับทดสอบหน้าจอ UI โดยไม่ต้องเรียกใช้ API จริง เพื่อประหยัดโควต้าครับ",
+            pros: ["การทดสอบระบบทำงานได้ถูกต้อง", "UI แสดงผลได้สมบูรณ์สวยงาม"],
+            cons: ["นี่คือข้อความจำลองเท่านั้น"],
+            comparison_table: [
+                { aspect: "การทดสอบระบบ", original: "test", better: "ควรใช้ประโยคที่สมบูรณ์ในการสื่อสารจริง" }
+            ]
+        });
+    }
+
+    // ─── เปลี่ยนมาใช้ GROQ API KEY ───
+    let apiKey = process.env.GROQ_API_KEY || "";
     apiKey = apiKey.replace(/['"]/g, '').trim();
 
-    if (!apiKey) return res.status(500).json({ error: "ไม่พบ API Key ในระบบหลังบ้าน" });
+    if (!apiKey) return res.status(500).json({ error: "ไม่พบ GROQ_API_KEY ในระบบหลังบ้าน กรุณาตั้งค่าใน Vercel" });
     if (!userInput) return res.status(400).json({ error: "กรุณากรอกข้อความ" });
 
     try {
@@ -53,7 +69,7 @@ export default async function handler(req, res) {
    - empathy: ความเห็นอกเห็นใจ รับฟัง เข้าใจความรู้สึกผู้อื่น
    - clarity: ความชัดเจน กระชับ ตรงประเด็น เข้าใจง่าย
    - professionalism: ความเป็นมืออาชีพ น้ำเสียง การแก้ปัญหา
-3. ส่งข้อมูลกลับมาเป็น JSON FORMAT ตามโครงสร้างด้านล่างนี้เท่านั้น ห้ามพิมพ์อย่างอื่นนอกกรอบ JSON
+3. ส่งข้อมูลกลับมาเป็น JSON FORMAT ตามโครงสร้างด้านล่างนี้เท่านั้น ตอบเป็นภาษาไทย ห้ามพิมพ์อย่างอื่นนอกกรอบ JSON
 
 {
   "score": (ตัวเลขจำนวนเต็ม 0-100, บังคับเป็น 0 ทันทีถ้าพบเจตนาต้องห้าม),
@@ -77,36 +93,37 @@ export default async function handler(req, res) {
       "aspect": "ประเด็นที่วิเคราะห์ (เช่น การแสดงความรับผิดชอบ)",
       "original": "คำพูดเดิมของผู้ใช้",
       "better": "คำพูดที่แนะนำ ควรพูดอย่างไรให้ดีขึ้น"
-    },
-    {
-      "aspect": "ประเด็นที่ 2",
-      "original": "...",
-      "better": "..."
     }
   ]
 }
 `;
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const url = `https://api.groq.com/openai/v1/chat/completions`;
 
         const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    response_mime_type: "application/json"
-                }
+                model: "llama-3.3-70b-versatile", // โมเดลที่ฉลาดและเก่งภาษาไทยมากของ Groq
+                messages: [
+                    { role: "system", content: "You are a crisis communication expert AI. You MUST respond ONLY in valid JSON format in Thai language." },
+                    { role: "user", content: prompt }
+                ],
+                response_format: { type: "json_object" },
+                temperature: 0.3
             })
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error?.message || "Google API Error");
+            throw new Error(data.error?.message || "Groq API Error");
         }
 
-        const rawResultText = data.candidates[0].content.parts[0].text;
+        const rawResultText = data.choices[0].message.content;
 
         let resultJson;
         try {
@@ -154,7 +171,7 @@ export default async function handler(req, res) {
 
     } catch (error) {
         const errMsg = error.message.toLowerCase();
-        if (errMsg.includes("high demand") || errMsg.includes("overloaded") || errMsg.includes("quota") || errMsg.includes("429")) {
+        if (errMsg.includes("rate limit") || errMsg.includes("429")) {
             return res.status(429).json({ error: "เซิร์ฟเวอร์ AI มีผู้ใช้งานจำนวนมากชั่วคราว กรุณารอสักครู่แล้วกดลองใหม่อีกครั้งครับ" });
         }
         return res.status(500).json({ error: `เกิดข้อผิดพลาด: ${error.message}` });
